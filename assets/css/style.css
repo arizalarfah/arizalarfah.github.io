@@ -1273,6 +1273,13 @@ thead {
   padding: 8px;
 }
 
+#research-table-wrapper table td,
+#research-table-wrapper table th {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
 .research-card {
   background: #262626;
   border-left: 3px solid #18d26e;

@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praktikum Pertemuan 14 – Secure SDLC: Enkripsi, Penyimpanan & Proteksi Data Pengguna | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-red: #e74c3c;
+    --accent-blue: #2980b9;
+    --accent-purple: #8e44ad;
+    --accent-teal: #16a085;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-light); color: var(--text-dark); }
+
+  /* HEADER */
+  .page-header { background: linear-gradient(135deg, #0d2b6b 0%, #6a1b9a 100%); color: white; padding: 36px 60px 28px; }
+  .header-badge { display: inline-block; background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold); color: var(--pssn-gold); border-radius: 20px; padding: 4px 16px; font-size: 12px; font-weight: 600; letter-spacing: 1px; margin-bottom: 16px; }
+  .page-header h1 { font-size: 30px; font-weight: 800; margin-bottom: 8px; }
+  .page-header p { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+  .header-meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+  .meta-item { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 18px; }
+  .meta-item .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.6); }
+  .meta-item .value { font-size: 13px; font-weight: 700; color: var(--pssn-lightgold); margin-top: 2px; }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 36px 24px 80px; }
+  .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--pssn-gold); margin-bottom: 8px; }
+  h2.lab-title { font-size: 22px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 6px; }
+  h3.sub-title { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 20px; }
+  h3.sub-title:first-child { margin-top: 0; }
+
+  /* LAB CARD */
+  .lab-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 36px; overflow: hidden; }
+  .lab-card-header { padding: 20px 28px; border-left: 6px solid; display: flex; align-items: center; gap: 16px; }
+  .lab-num { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; color: white; flex-shrink: 0; }
+  .lab-card-header h2 { font-size: 18px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 2px; }
+  .lab-card-header p { font-size: 13px; color: #666; }
+  .lab-body { padding: 24px 28px; }
+
+  /* INFO BOXES */
+  .info-box { background: #e3f2fd; border-left: 4px solid var(--accent-blue); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .info-box p, .info-box li { font-size: 13px; color: #333; line-height: 1.6; }
+  .info-box ul { padding-left: 18px; }
+  .warn-box { background: #fff8e1; border-left: 4px solid #f39c12; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .warn-box p { font-size: 13px; color: #555; line-height: 1.6; }
+  .warn-box .warn-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #e67e22; margin-bottom: 4px; }
+  .ok-box { background: #e8f5e9; border-left: 4px solid var(--accent-green); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .ok-box p { font-size: 13px; color: #333; line-height: 1.6; }
+  .note-box { background: #f3e5f5; border-left: 4px solid var(--accent-purple); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .note-box p { font-size: 13px; color: #444; line-height: 1.6; }
+  .note-box .note-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-purple); margin-bottom: 4px; }
+
+  /* STEP */
+  .step-list { list-style: none; padding: 0; margin-bottom: 16px; }
+  .step-list li { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
+  .step-badge { min-width: 28px; height: 28px; border-radius: 50%; background: var(--pssn-blue); color: white; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .step-content { font-size: 13.5px; color: #333; line-height: 1.7; }
+  .step-content strong { color: var(--pssn-blue); }
+  .step-content code { background: #f0f0f0; padding: 1px 6px; border-radius: 4px; font-size: 12px; font-family: 'Courier New', monospace; }
+
+  /* CODE BLOCK */
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 16px 18px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.7; margin: 10px 0 16px; overflow-x: auto; white-space: pre; }
+  .code-block .cmd { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .str { color: #fab387; }
+  .code-block .out { color: #89dceb; }
+  .code-block .warn { color: #f38ba8; }
+  .code-block .ok { color: #a6e3a1; }
+  .code-block .num { color: #f9e2af; }
+
+  /* TWO COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0 16px; }
+  .data-table th { background: var(--pssn-blue); color: white; padding: 10px 14px; text-align: left; font-size: 12px; }
+  .data-table td { padding: 9px 14px; border-bottom: 1px solid #e0e0e0; color: #444; line-height: 1.5; }
+  .data-table tr:nth-child(even) { background: #f8f9ff; }
+  .data-table td:first-child { font-weight: 700; color: var(--pssn-blue); }
+
+  /* CHECKLIST */
+  .checklist { list-style: none; padding: 0; margin: 10px 0 16px; }
+  .checklist li { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; font-size: 13.5px; color: #333; line-height: 1.5; }
+  .checklist li::before { content: '☐'; font-size: 16px; color: var(--pssn-blue); flex-shrink: 0; margin-top: 1px; }
+
+  /* FINDING TEMPLATE */
+  .finding-template { background: #fafafa; border: 2px dashed var(--pssn-blue); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .finding-template h4 { font-size: 14px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 14px; }
+  .field-row { display: grid; grid-template-columns: 160px 1fr; gap: 8px; margin-bottom: 8px; align-items: start; }
+  .field-label { font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; padding-top: 6px; }
+  .field-input { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; font-size: 13px; color: #888; font-style: italic; }
+
+  /* OBJECTIVE BOX */
+  .objective-box { background: linear-gradient(135deg,#e8f4fd,#f0f4ff); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; border: 1px solid #c5d8f0; }
+  .objective-box h4 { font-size: 13px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 8px; }
+  .objective-box li { font-size: 13px; color: #333; line-height: 1.7; }
+  .objective-box ul { padding-left: 20px; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: linear-gradient(to right, transparent, #ddd, transparent); margin: 30px 0; }
+
+  /* TAG */
+  .tag { display: inline-block; background: #e8eaf6; color: #3949ab; font-size: 11px; font-weight: 600; border-radius: 6px; padding: 3px 9px; margin: 2px; }
+  .tag.green { background: #e8f5e9; color: #2e7d32; }
+  .tag.red { background: #ffebee; color: #c62828; }
+  .tag.gold { background: #fff8e1; color: #e65100; }
+  .tag.purple { background: #f3e5f5; color: #6a1b9a; }
+  .tag.teal { background: #e0f7fa; color: #00695c; }
+
+  /* SEVERITY BADGE */
+  .sev-critical { background: #7b1fa2; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-high { background: #c62828; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-medium { background: #e65100; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-low { background: #f9a825; color: #333; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-info { background: #1565c0; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+
+  /* FOOTER */
+  .page-footer { background: var(--pssn-darkblue); color: rgba(255,255,255,0.6); text-align: center; padding: 20px; font-size: 12px; margin-top: 60px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="header-badge">RKS222 • Keamanan Perangkat Lunak • Semester 4</div>
+  <h1>Panduan Praktikum — Pertemuan 14</h1>
+  <p>Secure SDLC: Enkripsi Data, Keamanan Penyimpanan Data & Proteksi Data Pengguna</p>
+  <p>Referensi: OWASP Cryptographic Storage Cheat Sheet · NIST SP 800-218 (SSDF) · UU No. 27/2022 PDP</p>
+  <div class="header-meta">
+    <div class="meta-item">
+      <div class="label">Sub-CPMK</div>
+      <div class="value">263.1</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Durasi Praktikum</div>
+      <div class="value">150 menit</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Target</div>
+      <div class="value">Lab 1 + Lab 2 + Lab 3 + Lab 4</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Tools</div>
+      <div class="value">Python cryptography · bcrypt · Flask-Talisman</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Output</div>
+      <div class="value">Proyek Secure SDLC Final + Portofolio</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- PRASYARAT -->
+  <div class="lab-card" style="margin-bottom:28px;">
+    <div class="lab-card-header" style="border-left-color:#2c3e50;background:#f8f9fa;">
+      <div class="lab-num" style="background:#2c3e50;">⚙</div>
+      <div>
+        <h2 style="font-size:16px;">Prasyarat & Kelanjutan Proyek P13</h2>
+        <p>Praktikum ini melanjutkan langsung proyek <code>app_secure.py</code> dari Pertemuan 13</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="warn-box">
+        <div class="warn-label">Wajib!</div>
+        <p>Gunakan folder proyek <code>secure-sdlc-lab</code> yang sama dari Praktikum Pertemuan 13 (berisi <code>app_vulnerable.py</code> dan <code>app_secure.py</code> dengan mitigasi validasi input, parameterized query, session security, dan rate limiting). Jika belum menyelesaikan P13, selesaikan terlebih dahulu sebelum melanjutkan lab ini.</p>
+      </div>
+      <div class="two-col">
+        <div>
+          <h3 class="sub-title">Tools Tambahan yang Dibutuhkan</h3>
+          <table class="data-table">
+            <tr><th>Tool</th><th>Versi</th><th>Cara Install</th></tr>
+            <tr><td>cryptography</td><td>Latest</td><td><code>pip install cryptography</code></td></tr>
+            <tr><td>Flask-Talisman</td><td>Latest</td><td><code>pip install flask-talisman</code></td></tr>
+            <tr><td>bcrypt</td><td>Latest</td><td>sudah terinstal di P13</td></tr>
+            <tr><td>OpenSSL</td><td>Bawaan OS</td><td>untuk membuat sertifikat TLS self-signed (opsional)</td></tr>
+          </table>
+        </div>
+        <div>
+          <h3 class="sub-title">Skema Tabel yang Diperbarui</h3>
+          <div class="code-block"><span class="comment"># Tambahkan kolom baru pada tabel users</span>
+<span class="cmd">ALTER TABLE users ADD COLUMN nik_enc BLOB;</span>
+<span class="cmd">ALTER TABLE users ADD COLUMN email TEXT;</span>
+
+<span class="comment"># Kolom pass sebelumnya (dari P13) sudah</span>
+<span class="comment"># berupa pass_hash (bcrypt) — pastikan konsisten</span></div>
+          <div class="ok-box">
+            <p><strong>Verifikasi kelanjutan:</strong> jalankan <code>python app_secure.py</code> dari P13 dan pastikan login, pencarian, rate limiting masih berfungsi sebelum menambahkan modul baru.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 1: ENKRIPSI DATA AT-REST -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#8e44ad;background:#f5eef8;">
+      <div class="lab-num" style="background:#8e44ad;">1</div>
+      <div>
+        <h2>Lab 1 — Enkripsi Data At-Rest</h2>
+        <p>Mengenkripsi field sensitif (NIK) sebelum disimpan ke database | Estimasi: 40 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 1</h4>
+        <ul>
+          <li>Membangkitkan kunci enkripsi dan menyimpannya sebagai environment variable (bukan di kode)</li>
+          <li>Mengenkripsi field NIK menggunakan <code>cryptography.fernet</code> (AES-128-CBC + HMAC) sebelum disimpan</li>
+          <li>Mendekripsi data hanya saat benar-benar dibutuhkan, bukan pada listing massal</li>
+          <li>Memverifikasi bahwa data di database benar-benar tidak terbaca dalam bentuk plaintext</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Langkah 1.1 — Bangkitkan & Simpan Kunci Enkripsi</h3>
+      <ul class="step-list">
+        <li><div class="step-badge">1</div><div class="step-content">Bangkitkan kunci Fernet sekali menggunakan skrip Python interaktif</div></li>
+        <li><div class="step-badge">2</div><div class="step-content">Simpan kunci sebagai environment variable — <strong>jangan pernah</strong> menuliskannya langsung di source code</div></li>
+        <li><div class="step-badge">3</div><div class="step-content">Tambahkan file yang menyimpan kunci ke <code>.gitignore</code></div></li>
+      </ul>
+      <div class="code-block"><span class="comment"># Bangkitkan kunci sekali saja</span>
+<span class="cmd">python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"</span>
+<span class="out">gAAAAA... (contoh output kunci base64, 44 karakter)</span>
+
+<span class="comment"># Simpan sebagai environment variable (Linux/Mac)</span>
+<span class="cmd">export DATA_ENC_KEY="&lt;kunci_yang_dihasilkan&gt;"</span>
+
+<span class="comment"># Windows PowerShell</span>
+<span class="cmd">$env:DATA_ENC_KEY="&lt;kunci_yang_dihasilkan&gt;"</span></div>
+
+      <h3 class="sub-title">Langkah 1.2 — Terapkan Enkripsi pada Field NIK</h3>
+      <div class="code-block"><span class="kw">import</span> os
+<span class="kw">from</span> cryptography.fernet <span class="kw">import</span> Fernet
+<span class="kw">import</span> re
+
+fernet = Fernet(os.environ[<span class="str">'DATA_ENC_KEY'</span>].encode())
+NIK_RE = re.compile(<span class="str">r'^\d{16}$'</span>)  <span class="comment"># (A) validasi format NIK 16 digit</span>
+
+<span class="kw">@app.route</span>(<span class="str">'/register'</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">def</span> register():
+    u = request.form.get(<span class="str">'user'</span>, <span class="str">''</span>)
+    nik = request.form.get(<span class="str">'nik'</span>, <span class="str">''</span>)
+    p = request.form.get(<span class="str">'pass'</span>, <span class="str">''</span>)
+    <span class="kw">if not</span> (USERNAME_RE.match(u) <span class="kw">and</span> NIK_RE.match(nik)):
+        <span class="kw">return</span> <span class="str">"Input tidak valid"</span>, <span class="num">400</span>
+    <span class="ok">nik_enc = fernet.encrypt(nik.encode())  # enkripsi sebelum simpan</span>
+    pass_hash = bcrypt.hashpw(p.encode(), bcrypt.gensalt(rounds=<span class="num">12</span>))
+    db = get_db()
+    db.execute(
+        <span class="str">"INSERT INTO users (user, nik_enc, pass_hash) VALUES (?,?,?)"</span>,
+        [u, nik_enc, pass_hash])
+    db.commit()
+    <span class="kw">return</span> <span class="str">"Registrasi berhasil"</span>
+
+<span class="kw">def</span> get_nik_for_display(user_id):
+    <span class="comment"># Dekripsi HANYA saat satu record spesifik dibutuhkan</span>
+    row = get_db().execute(
+        <span class="str">"SELECT nik_enc FROM users WHERE id=?"</span>, [user_id]).fetchone()
+    <span class="ok">nik = fernet.decrypt(row[0]).decode()</span>
+    <span class="kw">return</span> nik[:<span class="num">4</span>] + <span class="str">'*'</span>*<span class="num">12</span>  <span class="comment"># tampilkan ter-mask (lihat Lab 3)</span></div>
+
+      <h3 class="sub-title">Langkah 1.3 — Verifikasi Data Terenkripsi di Database</h3>
+      <ul class="step-list">
+        <li><div class="step-badge">1</div><div class="step-content">Registrasikan satu akun baru melalui form</div></li>
+        <li><div class="step-badge">2</div><div class="step-content">Buka database langsung dengan <code>sqlite3 users.db</code> lalu <code>SELECT user, nik_enc FROM users;</code></div></li>
+        <li><div class="step-badge">3</div><div class="step-content">Pastikan kolom <code>nik_enc</code> berisi data biner/base64 acak, <strong>bukan</strong> 16 digit NIK asli</div></li>
+      </ul>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Tabel Verifikasi Lab 1</h3>
+      <table class="data-table">
+        <tr><th>Pemeriksaan</th><th>Sebelum Fix</th><th>Sesudah Fix</th></tr>
+        <tr><td>NIK terbaca langsung di database?</td><td style="color:#c62828;">Ya (plaintext)</td><td style="color:#888;font-style:italic;">[ isi hasil Anda ]</td></tr>
+        <tr><td>Kunci enkripsi ada di kode sumber?</td><td style="color:#c62828;">—</td><td style="color:#888;font-style:italic;">[ isi hasil Anda — seharusnya Tidak ]</td></tr>
+        <tr><td>Dekripsi berhasil mengembalikan NIK asli?</td><td style="color:#888;">—</td><td style="color:#888;font-style:italic;">[ isi hasil Anda ]</td></tr>
+      </table>
+
+      <div class="note-box">
+        <div class="note-label">Pertanyaan Refleksi Lab 1</div>
+        <p><strong>1.</strong> Jika database bocor (dicuri seluruh isinya) tetapi kunci enkripsi tersimpan aman di server terpisah, apa dampaknya terhadap kerahasiaan NIK?<br>
+        <strong>2.</strong> Mengapa enkripsi (bukan hashing) yang tepat digunakan untuk NIK, sedangkan password menggunakan hashing?<br>
+        <strong>3.</strong> Apa risiko jika kunci enkripsi hilang atau lupa dicatat?</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 2: ENKRIPSI IN-TRANSIT (TLS) -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#2980b9;background:#f0f6fc;">
+      <div class="lab-num" style="background:#2980b9;">2</div>
+      <div>
+        <h2>Lab 2 — Enkripsi In-Transit dengan HTTPS/TLS</h2>
+        <p>Mengaktifkan HTTPS lokal dan memaksa penggunaan cookie aman | Estimasi: 30 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 2</h4>
+        <ul>
+          <li>Membuat sertifikat TLS self-signed untuk lingkungan lab lokal</li>
+          <li>Menjalankan Flask dengan HTTPS dan mengaktifkan header HSTS</li>
+          <li>Mengaktifkan <code>SESSION_COOKIE_SECURE</code> setelah HTTPS tersedia</li>
+          <li>Membandingkan trafik HTTP vs HTTPS menggunakan Wireshark/DevTools Network tab</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Langkah 2.1 — Buat Sertifikat Self-Signed</h3>
+      <div class="code-block"><span class="comment"># Untuk keperluan LAB LOKAL saja — bukan untuk produksi</span>
+<span class="cmd">openssl req -x509 -newkey rsa:2048 -nodes \
+  -keyout key.pem -out cert.pem -days 30 \
+  -subj "/CN=localhost"</span></div>
+
+      <h3 class="sub-title">Langkah 2.2 — Jalankan Flask dengan HTTPS</h3>
+      <div class="code-block"><span class="kw">from</span> flask_talisman <span class="kw">import</span> Talisman
+
+Talisman(app,
+    force_https=<span class="kw">True</span>,
+    strict_transport_security=<span class="kw">True</span>,
+    strict_transport_security_max_age=<span class="num">31536000</span>)
+
+app.config[<span class="str">'SESSION_COOKIE_SECURE'</span>] = <span class="kw">True</span>  <span class="comment"># (C) lanjutan dari P13</span>
+
+<span class="kw">if</span> __name__ == <span class="str">'__main__'</span>:
+    <span class="ok">app.run(ssl_context=('cert.pem', 'key.pem'), port=5443)</span></div>
+
+      <h3 class="sub-title">Langkah 2.3 — Verifikasi & Bandingkan</h3>
+      <ul class="step-list">
+        <li><div class="step-badge">1</div><div class="step-content">Akses <code>https://localhost:5443</code> — browser akan menampilkan peringatan sertifikat tidak terpercaya (wajar untuk self-signed), lanjutkan untuk keperluan lab</div></li>
+        <li><div class="step-badge">2</div><div class="step-content">Buka DevTools → Network → periksa header response <code>Strict-Transport-Security</code></div></li>
+        <li><div class="step-badge">3</div><div class="step-content">Login, lalu periksa cookie <code>session</code> di DevTools → pastikan atribut <strong>Secure</strong> kini aktif</div></li>
+        <li><div class="step-badge">4</div><div class="step-content">Coba akses versi HTTP (port 5000 tanpa TLS) — amati apakah <code>force_https</code> mengalihkan otomatis ke HTTPS</div></li>
+      </ul>
+
+      <div class="note-box">
+        <div class="note-label">Pertanyaan Refleksi Lab 2</div>
+        <p><strong>1.</strong> Apa yang dapat dilihat oleh penyerang yang menyadap trafik HTTP (tanpa TLS) saat pengguna login?<br>
+        <strong>2.</strong> Mengapa header HSTS penting meskipun aplikasi sudah mengalihkan HTTP ke HTTPS?<br>
+        <strong>3.</strong> Mengapa <code>SESSION_COOKIE_SECURE</code> tidak boleh diaktifkan sebelum HTTPS benar-benar tersedia?</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 3: HASHING & MASKING -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#16a085;background:#f0fbf9;">
+      <div class="lab-num" style="background:#16a085;">3</div>
+      <div>
+        <h2>Lab 3 — Keamanan Penyimpanan & Masking Data Pengguna</h2>
+        <p>Audit hashing password & penerapan masking pada tampilan/log | Estimasi: 40 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 3</h4>
+        <ul>
+          <li>Mengaudit skema database untuk memastikan tidak ada kolom sensitif tersimpan plaintext</li>
+          <li>Menulis fungsi masking untuk email dan NIK, menerapkannya pada halaman profil dan log aplikasi</li>
+          <li>Menghapus/mengganti seluruh statement logging yang mencatat data sensitif mentah</li>
+          <li>Menguji bahwa file log tidak mengandung data pribadi lengkap</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Langkah 3.1 — Audit Skema Database</h3>
+      <ul class="step-list">
+        <li><div class="step-badge">1</div><div class="step-content">Jalankan <code>.schema users</code> di SQLite untuk melihat seluruh kolom</div></li>
+        <li><div class="step-badge">2</div><div class="step-content">Buat tabel audit sederhana: tandai setiap kolom sebagai <strong>Plaintext</strong>, <strong>Hashed</strong>, atau <strong>Encrypted</strong></div></li>
+      </ul>
+      <table class="data-table">
+        <tr><th>Kolom</th><th>Jenis Data</th><th>Status Perlindungan</th><th>Sudah Sesuai?</th></tr>
+        <tr><td>user</td><td>Identitas publik</td><td>Plaintext (memang tidak sensitif)</td><td style="color:#27ae60;">✓ Sesuai</td></tr>
+        <tr><td>pass_hash</td><td>Kredensial</td><td>Hashed (bcrypt)</td><td style="color:#27ae60;">✓ Sesuai</td></tr>
+        <tr><td>nik_enc</td><td>Data pribadi (PII)</td><td>Encrypted (Fernet/AES)</td><td style="color:#27ae60;">✓ Sesuai</td></tr>
+        <tr><td>email</td><td>Data pribadi (PII)</td><td style="color:#888;font-style:italic;">[ periksa milik Anda ]</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+      </table>
+
+      <h3 class="sub-title">Langkah 3.2 — Implementasikan Fungsi Masking</h3>
+      <div class="code-block"><span class="kw">def</span> mask_email(email):
+    <span class="kw">if</span> <span class="str">'@'</span> <span class="kw">not in</span> email:
+        <span class="kw">return</span> <span class="str">'***'</span>
+    user, domain = email.split(<span class="str">'@'</span>, <span class="num">1</span>)
+    <span class="kw">return</span> (user[:<span class="num">2</span>] + <span class="str">'***@'</span> + domain) <span class="kw">if</span> len(user) &gt; <span class="num">2</span> <span class="kw">else</span> <span class="str">'***@'</span>+domain
+
+<span class="kw">def</span> mask_nik(nik_plain):
+    <span class="kw">return</span> nik_plain[:<span class="num">4</span>] + <span class="str">'*'</span> * <span class="num">12</span>
+<span class="comment"># 3273010101990001 → 3273************</span>
+
+<span class="comment"># Terapkan pada endpoint profil (tampilan)</span>
+<span class="kw">@app.route</span>(<span class="str">'/profile'</span>)
+<span class="kw">@limiter.limit</span>(<span class="str">"30 per minute"</span>)
+<span class="kw">def</span> profile():
+    row = get_db().execute(
+        <span class="str">"SELECT user, email, nik_enc FROM users WHERE id=?"</span>,
+        [session[<span class="str">'uid'</span>]]).fetchone()
+    nik = fernet.decrypt(row[<span class="num">2</span>]).decode()
+    <span class="kw">return</span> {
+        <span class="str">"user"</span>: row[<span class="num">0</span>],
+        <span class="ok">"email": mask_email(row[1]),</span>
+        <span class="ok">"nik": mask_nik(nik)</span>
+    }</div>
+
+      <h3 class="sub-title">Langkah 3.3 — Bersihkan Logging dari Data Sensitif</h3>
+      <div class="code-block">
+<span class="comment"># SEBELUM — data mentah tercatat</span>
+<span class="warn">logging.info(f"Login attempt: user={u} pass={p} nik={nik}")</span>
+
+<span class="comment"># SESUDAH — hanya info yang diperlukan, ter-masking</span>
+<span class="ok">logging.info(f"Login attempt: user={u} email={mask_email(email)}")</span>
+<span class="comment"># password dan NIK TIDAK PERNAH dicatat dalam bentuk apapun</span></div>
+
+      <h3 class="sub-title">Langkah 3.4 — Uji Log Bersih dari Data Sensitif</h3>
+      <div class="code-block"><span class="comment"># Setelah menjalankan beberapa aksi (login, registrasi, search),</span>
+<span class="comment"># periksa file log tidak mengandung pola sensitif:</span>
+<span class="cmd">grep -E "pass=|nik=[0-9]{16}" app.log</span>
+<span class="out"># Seharusnya TIDAK ADA hasil (no match)</span></div>
+
+      <div class="divider"></div>
+      <div class="note-box">
+        <div class="note-label">Pertanyaan Refleksi Lab 3</div>
+        <p><strong>1.</strong> Mengapa masking dilakukan pada level aplikasi (sebelum dikirim ke tampilan/log), bukan hanya mengandalkan CSS untuk menyembunyikan data di frontend?<br>
+        <strong>2.</strong> Siapa yang seharusnya memiliki akses untuk melihat NIK/email lengkap (tidak ter-mask), dan bagaimana akses tersebut sebaiknya diaudit?<br>
+        <strong>3.</strong> Bagaimana prinsip minimisasi data dapat diterapkan pada tabel <code>users</code> di proyek ini — kolom mana yang sebenarnya tidak perlu disimpan?</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 4: INTEGRASI FINAL & PORTOFOLIO -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#e8a020;background:#fffbf0;">
+      <div class="lab-num" style="background:#e8a020;">4</div>
+      <div>
+        <h2>Lab 4 — Integrasi Final & Portofolio Proyek Secure SDLC</h2>
+        <p>Menggabungkan ketujuh mitigasi (A-G) menjadi satu proyek utuh | Estimasi: 40 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 4</h4>
+        <ul>
+          <li>Memastikan <code>app_secure.py</code> final menjalankan ketujuh mitigasi A-G secara bersamaan tanpa konflik</li>
+          <li>Menyusun laporan portofolio akhir Sub-CPMK 263.1 dengan bukti tiap mitigasi</li>
+          <li>Melakukan self-assessment menggunakan rubrik penilaian dari materi slide</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Checklist Integrasi 7 Mitigasi</h3>
+      <table class="data-table">
+        <tr><th>Kode</th><th>Mitigasi</th><th>Diterapkan di Fungsi</th><th>Status</th></tr>
+        <tr><td>A</td><td>Validasi Input</td><td><code>register()</code>, <code>login()</code>, <code>search()</code></td><td style="color:#888;font-style:italic;">[ centang ]</td></tr>
+        <tr><td>B</td><td>Parameterized Statements</td><td>Seluruh fungsi query database</td><td style="color:#888;font-style:italic;">[ centang ]</td></tr>
+        <tr><td>C</td><td>Keamanan Sesi</td><td><code>login()</code>, <code>logout()</code>, konfigurasi cookie</td><td style="color:#888;font-style:italic;">[ centang ]</td></tr>
+        <tr><td>D</td><td>Proteksi DDoS</td><td>Rate limiting pada <code>/login</code>, <code>/search</code>, <code>/profile</code></td><td style="color:#888;font-style:italic;">[ centang ]</td></tr>
+        <tr><td>E</td><td>Enkripsi Data</td><td><code>register()</code> (NIK), Talisman (HTTPS/TLS)</td><td style="color:#888;font-style:italic;">[ centang ]</td></tr>
+        <tr><td>F</td><td>Keamanan Penyimpanan</td><td>bcrypt hashing, environment variable kunci</td><td style="color:#888;font-style:italic;">[ centang ]</td></tr>
+        <tr><td>G</td><td>Proteksi Data Pengguna</td><td><code>profile()</code> (masking), logging bersih</td><td style="color:#888;font-style:italic;">[ centang ]</td></tr>
+      </table>
+
+      <h3 class="sub-title">Format Laporan Portofolio Akhir</h3>
+      <div class="finding-template">
+        <h4>📋 Template Laporan Mitigasi — Kategori E: Enkripsi Data</h4>
+        <div class="field-row"><div class="field-label">Lokasi Kode</div><div class="field-input">Contoh: app_secure.py, fungsi register() baris 20-28</div></div>
+        <div class="field-row"><div class="field-label">Sebelum Mitigasi</div><div class="field-input">Jelaskan kondisi data sebelum enkripsi diterapkan</div></div>
+        <div class="field-row"><div class="field-label">Mitigasi Diterapkan</div><div class="field-input">Algoritma, library, dan cara pengelolaan kunci yang digunakan</div></div>
+        <div class="field-row"><div class="field-label">Bukti Pengujian</div><div class="field-input">Screenshot query database yang menunjukkan data terenkripsi</div></div>
+      </div>
+      <div class="info-box">
+        <p><strong>Instruksi:</strong> Duplikasi template di atas untuk seluruh 7 kategori (A-G), mengacu pada hasil kerja Lab 1-3 Pertemuan 13 dan Lab 1-3 Pertemuan 14.</p>
+      </div>
+
+      <h3 class="sub-title">Self-Assessment — Rubrik Ringkas</h3>
+      <table class="data-table">
+        <tr><th>Aspek</th><th>Bobot</th><th>Skor Mandiri (0-100)</th></tr>
+        <tr><td>Enkripsi Data</td><td>25%</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+        <tr><td>Keamanan Penyimpanan</td><td>25%</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+        <tr><td>Proteksi Data Pengguna</td><td>25%</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+        <tr><td>Integrasi 7 Mitigasi</td><td>15%</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+        <tr><td>Dokumentasi</td><td>10%</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+      </table>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Checklist Penyelesaian Praktikum</h3>
+      <ul class="checklist">
+        <li>Lab 1: Field NIK terenkripsi di database, kunci disimpan sebagai environment variable</li>
+        <li>Lab 1: Dekripsi hanya dipanggil saat data spesifik dibutuhkan, bukan pada listing massal</li>
+        <li>Lab 2: HTTPS lokal aktif dengan sertifikat self-signed, header HSTS terverifikasi</li>
+        <li>Lab 2: SESSION_COOKIE_SECURE aktif dan diverifikasi via DevTools</li>
+        <li>Lab 3: Audit skema database selesai, semua kolom sensitif berstatus Hashed/Encrypted</li>
+        <li>Lab 3: Fungsi masking diterapkan pada endpoint profil dan seluruh logging</li>
+        <li>Lab 3: File log terbukti bersih dari data sensitif mentah (grep tidak menemukan hasil)</li>
+        <li>Lab 4: app_secure.py final menjalankan ketujuh mitigasi A-G tanpa error</li>
+        <li>Lab 4: Laporan portofolio 7 kategori terisi lengkap dengan bukti pengujian</li>
+        <li>Seluruh pertanyaan refleksi Lab 1-3 dijawab</li>
+      </ul>
+
+      <div class="note-box">
+        <div class="note-label">Pengumpulan</div>
+        <p>Kumpulkan ke LMS dalam bentuk <strong>arsip ZIP</strong> berisi: (1) source code final <code>app_secure.py</code> beserta <code>init_db.py</code>, (2) laporan portofolio 7 kategori mitigasi (PDF/DOCX), (3) screenshot bukti pengujian seluruh lab P13-P14, dan (4) jawaban pertanyaan refleksi. <strong>Jangan menyertakan</strong> file kunci enkripsi (<code>.env</code>/environment variable) di dalam arsip yang dikumpulkan.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFERENSI -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#2c3e50;background:#f8f9fa;">
+      <div class="lab-num" style="background:#2c3e50;">📚</div>
+      <div>
+        <h2>Referensi & Sumber Belajar</h2>
+        <p>Semua sumber dapat diakses gratis</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="two-col">
+        <div>
+          <h3 class="sub-title">Dokumentasi Resmi</h3>
+          <table class="data-table">
+            <tr><th>Sumber</th><th>URL</th></tr>
+            <tr><td>OWASP Cryptographic Storage Cheat Sheet</td><td style="font-size:11.5px;">cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html</td></tr>
+            <tr><td>OWASP Transport Layer Protection Cheat Sheet</td><td style="font-size:11.5px;">cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Security_Cheat_Sheet.html</td></tr>
+            <tr><td>Python cryptography Docs</td><td style="font-size:11.5px;">cryptography.io/en/latest</td></tr>
+            <tr><td>Flask-Talisman Docs</td><td style="font-size:11.5px;">github.com/GoogleCloudPlatform/flask-talisman</td></tr>
+            <tr><td>NIST SP 800-218 (SSDF)</td><td style="font-size:11.5px;">csrc.nist.gov/publications/detail/sp/800-218/final</td></tr>
+            <tr><td>UU No. 27 Tahun 2022 (PDP)</td><td style="font-size:11.5px;">peraturan.bpk.go.id — UU Pelindungan Data Pribadi</td></tr>
+          </table>
+        </div>
+        <div>
+          <h3 class="sub-title">Tags Materi</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
+            <span class="tag purple">Enkripsi Data</span>
+            <span class="tag">AES-256-GCM</span>
+            <span class="tag teal">TLS/HTTPS</span>
+            <span class="tag green">bcrypt</span>
+            <span class="tag gold">Secret Management</span>
+            <span class="tag">Masking / Anonymization</span>
+            <span class="tag red">UU PDP</span>
+            <span class="tag">Secure SDLC</span>
+          </div>
+          <h3 class="sub-title">Mapping ke Sub-CPMK 263.1</h3>
+          <table class="data-table">
+            <tr><th>Lab</th><th>Indikator</th></tr>
+            <tr><td>Lab 1 — Enkripsi At-Rest</td><td>Indikator E (enkripsi data)</td></tr>
+            <tr><td>Lab 2 — TLS/HTTPS</td><td>Indikator E (enkripsi in-transit)</td></tr>
+            <tr><td>Lab 3 — Hashing & Masking</td><td>Indikator F + G (penyimpanan & proteksi data pengguna)</td></tr>
+            <tr><td>Lab 4 — Integrasi Final</td><td>Indikator A-G (portofolio Secure SDLC utuh)</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .container -->
+
+<div class="page-footer">
+  RKS222 Keamanan Perangkat Lunak — Praktikum Pertemuan 14 | Sub-CPMK 263.1 | Program Studi D4 Rekayasa Keamanan Siber — Politeknik SSN | Semester Genap 2025/2026
+</div>
+
+</body>
+</html>

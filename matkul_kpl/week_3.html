@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pertemuan 3 – Mitigasi Keamanan Perangkat Lunak | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --pssn-red: #c0392b;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --text-light: #ffffff;
+    --card-bg: #ffffff;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-purple: #8e44ad;
+    --accent-red: #e74c3c;
+    --accent-teal: #16a085;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-light);
+    color: var(--text-dark);
+    overflow: hidden;
+    height: 100vh; width: 100vw;
+  }
+  #slideshow { width: 100%; height: 100vh; position: relative; }
+  .slide {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.45s ease;
+    overflow-y: auto;
+  }
+  .slide.active { opacity: 1; pointer-events: all; }
+
+  /* NAV */
+  #navbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+    background: var(--pssn-darkblue);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; gap: 12px;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.3);
+  }
+  .nav-btn {
+    background: var(--pssn-gold); color: var(--pssn-darkblue);
+    border: none; border-radius: 8px; padding: 8px 22px;
+    font-weight: 700; font-size: 14px; cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .nav-btn:hover { background: var(--pssn-lightgold); transform: translateY(-1px); }
+  .nav-btn:disabled { background: #555; color: #aaa; cursor: not-allowed; transform: none; }
+  #slide-counter { color: #aaa; font-size: 13px; min-width: 90px; text-align: center; }
+  #progress-bar { flex: 1; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+  #progress-fill { height: 100%; background: var(--pssn-gold); border-radius: 3px; transition: width 0.4s ease; }
+  #slide-title-bar { color: #ccc; font-size: 12px; flex: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .section-label {
+    display: inline-block;
+    background: var(--pssn-gold); color: var(--pssn-darkblue);
+    font-weight: 800; font-size: 11px; letter-spacing: 1.5px;
+    padding: 4px 12px; border-radius: 20px; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .slide-header {
+    background: var(--pssn-blue); padding: 28px 48px 22px; color: white;
+  }
+  .slide-header h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .slide-header p { font-size: 14px; color: rgba(255,255,255,0.7); }
+  .slide-body { padding: 28px 48px 100px; flex: 1; }
+
+  /* COVER s0 */
+  #s0 {
+    background: linear-gradient(135deg, #0d2b6b 0%, #1a3a8f 40%, #0a6b3a 100%);
+    justify-content: center; align-items: center; text-align: center;
+    position: relative; padding: 40px;
+  }
+  #s0::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .cover-badge {
+    background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold);
+    color: var(--pssn-gold); border-radius: 20px; padding: 6px 18px;
+    font-size: 13px; font-weight: 600; letter-spacing: 1px;
+    margin-bottom: 24px; display: inline-block;
+  }
+  .cover-title { color: white; font-size: 36px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .cover-subtitle { color: var(--pssn-lightgold); font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .cover-meta { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 36px; }
+  .cover-divider { width: 80px; height: 3px; background: var(--pssn-gold); border-radius: 2px; margin: 24px auto; }
+  .cover-pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .cover-pill { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; }
+  .cover-pill strong { color: var(--pssn-gold); }
+  .cover-inst { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 32px; }
+
+  /* INDIKATOR GRID */
+  .indikator-grid-7 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .indikator-card {
+    background: white; border-radius: var(--radius); padding: 14px 16px;
+    box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start;
+    border-top: 3px solid;
+  }
+  .ind-letter {
+    width: 32px; height: 32px; border-radius: 8px; display: flex;
+    align-items: center; justify-content: center; font-weight: 800; font-size: 14px;
+    flex-shrink: 0; color: white;
+  }
+  .ind-text { font-size: 13px; color: #333; line-height: 1.5; font-weight: 500; }
+  .ind-bloom { font-size: 11px; color: #888; margin-top: 3px; }
+
+  .cp-box {
+    background: white; border-radius: var(--radius); padding: 18px 22px;
+    box-shadow: var(--shadow); margin-bottom: 16px;
+    border-left: 5px solid var(--pssn-blue);
+  }
+  .cp-box h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 6px; }
+  .cp-box p { font-size: 14px; font-weight: 600; color: var(--pssn-blue); line-height: 1.5; }
+
+  /* OVERVIEW CARDS */
+  .mit-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .mit-card {
+    background: white; border-radius: var(--radius); padding: 18px 14px;
+    box-shadow: var(--shadow); text-align: center; cursor: pointer;
+    border-bottom: 4px solid; transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+  .mit-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.18); }
+  .mit-icon { font-size: 32px; margin-bottom: 10px; }
+  .mit-letter { font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .mit-card h4 { font-size: 13px; font-weight: 700; line-height: 1.3; }
+  .mit-card p { font-size: 11.5px; color: #666; margin-top: 6px; line-height: 1.4; }
+  .mit-badge { position: absolute; top: 10px; right: 10px; background: var(--pssn-gold); color: #000; font-size: 10px; font-weight: 800; border-radius: 10px; padding: 2px 7px; }
+
+  /* TOPIC SLIDES - general content */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .card {
+    background: white; border-radius: var(--radius); padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+  .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .card p, .card li { font-size: 13.5px; line-height: 1.7; color: #444; }
+  .card ul { padding-left: 18px; }
+  .card ul li { margin-bottom: 4px; }
+
+  .topic-header {
+    background: linear-gradient(135deg, var(--pssn-blue), #1a4a9f);
+    color: white; border-radius: var(--radius); padding: 18px 22px;
+    margin-bottom: 18px; box-shadow: var(--shadow);
+    display: flex; align-items: center; gap: 16px;
+  }
+  .topic-header .t-icon { font-size: 40px; flex-shrink: 0; }
+  .topic-header .t-letter { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--pssn-lightgold); margin-bottom: 4px; }
+  .topic-header h3 { font-size: 20px; font-weight: 800; }
+  .topic-header p { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+
+  .code-block {
+    background: #1e1e2e; color: #cdd6f4; border-radius: 8px;
+    padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 12.5px;
+    line-height: 1.6; margin: 10px 0; overflow-x: auto;
+  }
+  .code-block .bad { color: #f38ba8; }
+  .code-block .good { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .keyword { color: #cba6f7; }
+  .code-block .string { color: #a6e3a1; }
+
+  .do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+  .do-box { background: #e8f5e9; border: 2px solid #4caf50; border-radius: 10px; padding: 14px 16px; }
+  .dont-box { background: #ffebee; border: 2px solid #ef5350; border-radius: 10px; padding: 14px 16px; }
+  .do-box h4 { color: #2e7d32; font-size: 13px; font-weight: 800; margin-bottom: 8px; }
+  .dont-box h4 { color: #c62828; font-size: 13px; font-weight: 800; margin-bottom: 8px; }
+  .do-box li, .dont-box li { font-size: 12.5px; line-height: 1.6; margin-bottom: 4px; }
+  .do-box ul, .dont-box ul { padding-left: 16px; }
+
+  .tip-box {
+    background: linear-gradient(135deg, #fff8e1, #fffde7);
+    border-left: 4px solid var(--pssn-gold); border-radius: 8px;
+    padding: 12px 16px; margin-top: 12px;
+  }
+  .tip-box .tip-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-orange); margin-bottom: 4px; }
+  .tip-box p, .tip-box li { font-size: 12.5px; color: #555; line-height: 1.6; }
+
+  .warn-box {
+    background: #ffebee; border-left: 4px solid var(--accent-red);
+    border-radius: 8px; padding: 12px 16px; margin-top: 12px;
+  }
+  .warn-box .warn-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-red); margin-bottom: 4px; }
+  .warn-box p { font-size: 12.5px; color: #555; line-height: 1.6; }
+
+  .info-box {
+    background: #e3f2fd; border-left: 4px solid var(--pssn-blue);
+    border-radius: 8px; padding: 12px 16px; margin-top: 12px;
+  }
+  .info-box p, .info-box li { font-size: 12.5px; color: #333; line-height: 1.6; }
+
+  .step-flow { display: flex; gap: 0; align-items: stretch; margin: 14px 0; flex-wrap: wrap; }
+  .step-item {
+    flex: 1; min-width: 100px; background: white; border-radius: 8px;
+    padding: 14px 12px; text-align: center; box-shadow: var(--shadow);
+    position: relative; margin-right: 0;
+  }
+  .step-item:not(:last-child)::after {
+    content: '→'; position: absolute; right: -14px; top: 50%; transform: translateY(-50%);
+    font-size: 18px; color: var(--pssn-gold); font-weight: 900; z-index: 1;
+  }
+  .step-item + .step-item { margin-left: 18px; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--pssn-blue); color: white; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+  .step-item h5 { font-size: 12px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 4px; }
+  .step-item p { font-size: 11px; color: #666; line-height: 1.4; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag { background: #e8eaf6; color: #3949ab; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 4px 10px; }
+  .tag.green { background: #e8f5e9; color: #2e7d32; }
+  .tag.red { background: #ffebee; color: #c62828; }
+  .tag.gold { background: #fff8e1; color: #e65100; }
+  .tag.teal { background: #e0f7fa; color: #00695c; }
+
+  /* QUIZ */
+  .quiz-container { max-width: 720px; margin: 0 auto; }
+  .q-num { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--pssn-gold); margin-bottom: 6px; }
+  .q-text { font-size: 15px; font-weight: 600; color: var(--pssn-blue); margin-bottom: 14px; line-height: 1.5; }
+  .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  .q-option {
+    background: white; border: 2px solid #e0e0e0; border-radius: 10px;
+    padding: 12px 16px; cursor: pointer; transition: all 0.2s;
+    font-size: 13.5px; color: #333; font-weight: 500;
+  }
+  .q-option:hover { border-color: var(--pssn-blue); background: #f0f4ff; }
+  .q-option.correct { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; font-weight: 700; }
+  .q-option.wrong { border-color: #ef5350; background: #ffebee; color: #c62828; }
+  .q-feedback { font-size: 13px; padding: 10px 14px; border-radius: 8px; margin-top: 8px; display: none; line-height: 1.6; }
+  .q-feedback.show { display: block; }
+  .q-feedback.ok { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
+  .q-feedback.ko { background: #ffebee; color: #c62828; border-left: 3px solid #ef5350; }
+  .quiz-score { text-align: center; background: var(--pssn-blue); color: white; border-radius: var(--radius); padding: 16px; margin-top: 16px; display: none; }
+  .quiz-score h3 { font-size: 22px; font-weight: 900; color: var(--pssn-gold); }
+  .quiz-score p { font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+
+  .quiz-nav { display: flex; gap: 10px; margin-top: 12px; justify-content: center; }
+  .quiz-btn { background: var(--pssn-blue); color: white; border: none; border-radius: 8px; padding: 10px 24px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+  .quiz-btn:hover { background: #1a3a8f; }
+  .quiz-btn.secondary { background: #666; }
+
+  /* STUDI KASUS */
+  .case-header { background: linear-gradient(135deg, #b71c1c, #e53935); color: white; border-radius: var(--radius); padding: 16px 20px; margin-bottom: 16px; }
+  .case-header h3 { font-size: 17px; font-weight: 800; }
+  .case-header p { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+  .case-body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .case-box { background: white; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+  .case-box h4 { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .case-box li { font-size: 12.5px; color: #444; line-height: 1.7; margin-bottom: 4px; }
+  .case-box ul { padding-left: 16px; }
+
+  /* RANGKUMAN */
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+  .sum-card { background: white; border-radius: 10px; padding: 14px 12px; box-shadow: var(--shadow); text-align: center; border-top: 3px solid; }
+  .sum-card .sum-icon { font-size: 26px; margin-bottom: 6px; }
+  .sum-card h5 { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .sum-card p { font-size: 11px; color: #666; line-height: 1.4; }
+
+  .key-points { background: white; border-radius: var(--radius); padding: 18px 22px; box-shadow: var(--shadow); }
+  .key-points h4 { font-size: 14px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 12px; }
+  .kp-item { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+  .kp-check { width: 22px; height: 22px; background: var(--accent-green); border-radius: 50%; color: white; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .kp-text { font-size: 13px; color: #333; line-height: 1.5; }
+
+  /* TUGAS */
+  .task-card { background: white; border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid; }
+  .task-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+  .task-card p, .task-card li { font-size: 13.5px; color: #444; line-height: 1.7; }
+  .task-card ul { padding-left: 18px; margin-top: 6px; }
+  .task-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+  .task-chip { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 6px; padding: 4px 10px; font-size: 11.5px; color: #555; }
+  .task-chip strong { color: var(--pssn-blue); }
+
+  /* REFERENSI */
+  .ref-list { list-style: none; padding: 0; }
+  .ref-list li { background: white; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); font-size: 13px; color: #444; line-height: 1.5; border-left: 3px solid var(--pssn-blue); }
+  .ref-list li span { font-weight: 700; color: var(--pssn-blue); }
+  .ref-list li a { color: var(--accent-teal); text-decoration: none; }
+  .ref-list li a:hover { text-decoration: underline; }
+
+  /* TOOL CARDS */
+  .tool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .tool-card { background: white; border-radius: 10px; padding: 14px 14px; box-shadow: var(--shadow); border-top: 3px solid; }
+  .tool-card .tool-name { font-size: 13px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 4px; }
+  .tool-card .tool-type { font-size: 10.5px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 6px; }
+  .tool-card p { font-size: 12px; color: #555; line-height: 1.5; }
+
+  /* PIPELINE */
+  .pipeline { display: flex; gap: 0; overflow-x: auto; padding-bottom: 4px; }
+  .pipe-stage { flex: 1; min-width: 110px; padding: 14px 10px; text-align: center; color: white; position: relative; }
+  .pipe-stage:not(:last-child)::after { content: '▶'; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); font-size: 16px; z-index: 2; color: white; }
+  .pipe-stage h5 { font-size: 12px; font-weight: 800; margin-bottom: 4px; }
+  .pipe-stage p { font-size: 11px; opacity: 0.85; line-height: 1.3; }
+  .pipe-stage .pipe-icon { font-size: 22px; margin-bottom: 6px; }
+
+  /* MFA diagram */
+  .mfa-flow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 14px 0; }
+  .mfa-step { background: white; border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); flex: 1; min-width: 110px; text-align: center; border-bottom: 3px solid; }
+  .mfa-step .mfa-icon { font-size: 28px; margin-bottom: 6px; }
+  .mfa-step h5 { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
+  .mfa-step p { font-size: 11px; color: #666; }
+  .mfa-arrow { font-size: 22px; color: var(--pssn-gold); font-weight: 900; }
+
+  .factor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .factor-card { border-radius: var(--radius); padding: 16px 14px; text-align: center; box-shadow: var(--shadow); }
+  .factor-card .f-icon { font-size: 30px; margin-bottom: 8px; }
+  .factor-card h5 { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+  .factor-card p { font-size: 12px; color: #555; line-height: 1.4; }
+  .factor-card .f-example { font-size: 11px; color: #888; margin-top: 6px; font-style: italic; }
+  .fc1 { background: #e3f2fd; border-top: 4px solid #1565c0; }
+  .fc2 { background: #e8f5e9; border-top: 4px solid #2e7d32; }
+  .fc3 { background: #fff3e0; border-top: 4px solid #e65100; }
+</style>
+</head>
+<body>
+<div id="slideshow">
+
+<!-- ═══════════════════════════════ SLIDE 0 – COVER ═══════════════════════════════ -->
+<div class="slide active" id="s0" data-title="Cover">
+  <div style="position:relative;z-index:1;width:100%;max-width:800px;margin:0 auto;">
+    <div class="cover-badge">RKS222 · Pertemuan 3 · Bobot 4%</div>
+    <div class="cover-title">Mitigasi Keamanan<br>Perangkat Lunak</div>
+    <div class="cover-subtitle">Upaya Perlindungan Proaktif dalam SDLC</div>
+    <div class="cover-meta">Program Studi Rekayasa Keamanan Siber · PSSN</div>
+    <div class="cover-divider"></div>
+    <div class="cover-pills">
+      <div class="cover-pill"><strong>Sub-CPMK</strong> 261.2</div>
+      <div class="cover-pill"><strong>7</strong> Indikator Mitigasi</div>
+      <div class="cover-pill"><strong>Metode:</strong> Ceramah + Studi Kasus + Diskusi</div>
+      <div class="cover-pill"><strong>Referensi:</strong> OWASP · NIST SSDF · ISO 27001</div>
+    </div>
+    <div class="cover-inst">Gunakan tombol navigasi ▶ atau tekan → untuk berpindah slide</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 1 – CAPAIAN PEMBELAJARAN ═══════════════════════════════ -->
+<div class="slide" id="s1" data-title="Capaian Pembelajaran">
+  <div class="slide-header">
+    <h2>📋 Capaian Pembelajaran</h2>
+    <p>Sub-CPMK 261.2 · 7 Indikator Kompetensi</p>
+  </div>
+  <div class="slide-body">
+    <div class="cp-box">
+      <h3>Sub-CPMK 261.2</h3>
+      <p>Mahasiswa mampu <em>menjelaskan upaya mitigasi</em> yang bisa dilakukan untuk meningkatkan keamanan perangkat lunak dalam siklus pengembangan (S-SDLC).</p>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div class="section-label">7 Indikator Pencapaian</div>
+    </div>
+    <div class="indikator-grid-7">
+      <div class="indikator-card" style="border-color:#16a085;">
+        <div class="ind-letter" style="background:#16a085;">a</div>
+        <div><div class="ind-text"><strong>Secure Code Writing</strong> — Menulis kode aman dengan input validation, output encoding, dan parameterized query</div><div class="ind-bloom">Bloom C3 – Menerapkan</div></div>
+      </div>
+      <div class="indikator-card" style="border-color:#8e44ad;">
+        <div class="ind-letter" style="background:#8e44ad;">b</div>
+        <div><div class="ind-text"><strong>Secure Secret</strong> — Mengelola kredensial dan secret dengan aman, menghindari hardcoded credentials</div><div class="ind-bloom">Bloom C3 – Menerapkan</div></div>
+      </div>
+      <div class="indikator-card" style="border-color:#0d2b6b;">
+        <div class="ind-letter" style="background:#0d2b6b;">c</div>
+        <div><div class="ind-text"><strong>Secure Source Code</strong> — Menerapkan SAST, SCA, dan code review dalam proses pengembangan</div><div class="ind-bloom">Bloom C4 – Menganalisis</div></div>
+      </div>
+      <div class="indikator-card" style="border-color:#e67e22;">
+        <div class="ind-letter" style="background:#e67e22;">d</div>
+        <div><div class="ind-text"><strong>Secure Delivery</strong> — Mengamankan pipeline CI/CD, artifact signing, dan supply chain software</div><div class="ind-bloom">Bloom C4 – Menganalisis</div></div>
+      </div>
+      <div class="indikator-card" style="border-color:#27ae60;">
+        <div class="ind-letter" style="background:#27ae60;">e</div>
+        <div><div class="ind-text"><strong>Update &amp; Upgrade</strong> — Mengelola patch, dependency, dan SBOM untuk mengurangi exposure kerentanan</div><div class="ind-bloom">Bloom C3 – Menerapkan</div></div>
+      </div>
+      <div class="indikator-card" style="border-color:#c0392b;">
+        <div class="ind-letter" style="background:#c0392b;">f</div>
+        <div><div class="ind-text"><strong>Privacy &amp; Privilege</strong> — Menerapkan least privilege, RBAC, dan perlindungan data pribadi sesuai UU PDP</div><div class="ind-bloom">Bloom C4 – Menganalisis</div></div>
+      </div>
+      <div class="indikator-card" style="border-color:#1565c0; grid-column: 1 / -1;">
+        <div class="ind-letter" style="background:#1565c0;">g</div>
+        <div><div class="ind-text"><strong>Multi-Factor Authentication</strong> — Merancang mekanisme autentikasi multi-faktor (TOTP, FIDO2/WebAuthn) dan memilih faktor yang tepat</div><div class="ind-bloom">Bloom C5 – Mengevaluasi</div></div>
+      </div>
+    </div>
+    <div class="tip-box" style="margin-top:14px;">
+      <div class="tip-label">🗺️ Peta Materi</div>
+      <p>Ketujuh mitigasi ini membentuk lapisan pertahanan (<em>defense in depth</em>): dimulai dari kode sumber yang aman → pengelolaan rahasia → pemindaian kode → pengiriman aman → pembaruan rutin → kontrol hak akses → autentikasi kuat.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 2 – OVERVIEW 7 MITIGASI ═══════════════════════════════ -->
+<div class="slide" id="s2" data-title="Overview 7 Mitigasi">
+  <div class="slide-header">
+    <h2>🛡️ Tujuh Pilar Mitigasi Keamanan Perangkat Lunak</h2>
+    <p>Defense in Depth — berlapis dari kode hingga produksi</p>
+  </div>
+  <div class="slide-body">
+    <div class="info-box" style="margin-bottom:16px;">
+      <p>Mitigasi keamanan PL bukan sekadar "tambahkan firewall" — melainkan praktik menyeluruh yang ditanamkan di setiap fase SDLC. Setiap pilar di bawah ini mengatasi ancaman spesifik dalam OWASP Top 10 Web 2025 dan Mobile 2024.</p>
+    </div>
+    <div class="mit-grid">
+      <div class="mit-card" style="border-color:#16a085;">
+        <div class="mit-badge">a</div>
+        <div class="mit-icon">✍️</div>
+        <div class="mit-letter" style="color:#16a085;">Secure Code Writing</div>
+        <h4>Menulis Kode yang Aman</h4>
+        <p>Input validation, output encoding, parameterized queries, error handling</p>
+      </div>
+      <div class="mit-card" style="border-color:#8e44ad;">
+        <div class="mit-badge">b</div>
+        <div class="mit-icon">🔑</div>
+        <div class="mit-letter" style="color:#8e44ad;">Secure Secret</div>
+        <h4>Pengelolaan Rahasia</h4>
+        <p>Env vars, Vault, rotation otomatis, zero hardcoded credentials</p>
+      </div>
+      <div class="mit-card" style="border-color:#0d2b6b;">
+        <div class="mit-badge">c</div>
+        <div class="mit-icon">🔍</div>
+        <div class="mit-letter" style="color:#0d2b6b;">Secure Source Code</div>
+        <h4>Pemindaian Kode Sumber</h4>
+        <p>SAST, SCA, peer code review, security gate di PR</p>
+      </div>
+      <div class="mit-card" style="border-color:#e67e22;">
+        <div class="mit-badge">d</div>
+        <div class="mit-icon">🚚</div>
+        <div class="mit-letter" style="color:#e67e22;">Secure Delivery</div>
+        <h4>Pengiriman Aman</h4>
+        <p>CI/CD hardening, artifact signing, SLSA framework</p>
+      </div>
+      <div class="mit-card" style="border-color:#27ae60;">
+        <div class="mit-badge">e</div>
+        <div class="mit-icon">🔄</div>
+        <div class="mit-letter" style="color:#27ae60;">Update &amp; Upgrade</div>
+        <h4>Patch &amp; Dependency</h4>
+        <p>SLA patching, SBOM, Dependabot, CVE monitoring</p>
+      </div>
+      <div class="mit-card" style="border-color:#c0392b;">
+        <div class="mit-badge">f</div>
+        <div class="mit-icon">🔒</div>
+        <div class="mit-letter" style="color:#c0392b;">Privacy &amp; Privilege</div>
+        <h4>Privasi &amp; Hak Akses</h4>
+        <p>Least privilege, RBAC, data minimization, UU PDP</p>
+      </div>
+      <div class="mit-card" style="border-color:#1565c0; grid-column: 3 / 5;">
+        <div class="mit-badge">g</div>
+        <div class="mit-icon">📱</div>
+        <div class="mit-letter" style="color:#1565c0;">Multi-Factor Authentication</div>
+        <h4>Autentikasi Multi-Faktor</h4>
+        <p>TOTP, FIDO2/WebAuthn, push notification, hardware key</p>
+      </div>
+    </div>
+    <div class="tip-box" style="margin-top:14px;">
+      <div class="tip-label">📌 Keterkaitan OWASP 2025</div>
+      <p>a→A05 Injection | b→A02 Misconfig | c→A03 Supply Chain | d→A03 Supply Chain | e→A03+A08 | f→A01 BAC | g→A07 Auth Failures</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 3 – SECURE CODE WRITING ═══════════════════════════════ -->
+<div class="slide" id="s3" data-title="(a) Secure Code Writing">
+  <div class="slide-header">
+    <h2>✍️ (a) Secure Code Writing</h2>
+    <p>Menulis kode yang aman sejak awal — shift-left security</p>
+  </div>
+  <div class="slide-body">
+    <div class="topic-header">
+      <div class="t-icon">✍️</div>
+      <div>
+        <div class="t-letter">Indikator a · Bloom C3</div>
+        <h3>Secure Code Writing</h3>
+        <p>Kode yang aman bukan sekadar kode yang berjalan — melainkan kode yang menangani input berbahaya, melindungi output, dan gagal dengan aman.</p>
+      </div>
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="card" style="margin-bottom:14px;">
+          <h3 style="color:#16a085;">🔒 Input Validation</h3>
+          <p style="margin-bottom:8px;">Validasi semua data yang masuk ke aplikasi — jangan pernah percaya input pengguna.</p>
+          <div class="code-block">
+<span class="comment">// ❌ BURUK — SQL Injection risk</span>
+<span class="bad">query = "SELECT * FROM users WHERE id=" + id;</span>
+
+<span class="comment">// ✅ BAIK — Parameterized Query</span>
+<span class="good">query = "SELECT * FROM users WHERE id=?";</span>
+<span class="good">db.execute(query, [id]);</span>
+          </div>
+          <div class="tag-row">
+            <span class="tag">Whitelist</span>
+            <span class="tag">Type Check</span>
+            <span class="tag">Length Limit</span>
+            <span class="tag">Regex</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="color:#e67e22;">🔐 Output Encoding</h3>
+          <p style="margin-bottom:8px;">Encode output sesuai konteks untuk mencegah XSS dan injection.</p>
+          <div class="code-block">
+<span class="comment">// ❌ BURUK — Reflected XSS</span>
+<span class="bad">resp.write("Halo " + user.name);</span>
+
+<span class="comment">// ✅ BAIK — HTML Entity Encode</span>
+<span class="good">resp.write("Halo " + htmlEncode(user.name));</span>
+          </div>
+          <div class="tag-row">
+            <span class="tag">HTML Encode</span>
+            <span class="tag">JS Encode</span>
+            <span class="tag">URL Encode</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:14px;">
+          <h3 style="color:#8e44ad;">⚠️ Error Handling &amp; Logging</h3>
+          <p style="margin-bottom:8px;">Jangan bocorkan detail error ke pengguna — log secara aman di server.</p>
+          <div class="code-block">
+<span class="comment">// ❌ BURUK — Stack trace ke user</span>
+<span class="bad">catch(e) { response.send(e.stack); }</span>
+
+<span class="comment">// ✅ BAIK — Generic error + secure log</span>
+<span class="good">catch(e) {</span>
+<span class="good">  logger.error(e.stack); // server-side</span>
+<span class="good">  response.send("Terjadi kesalahan");</span>
+<span class="good">}</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="color:#1565c0;">📋 OWASP Secure Coding Practices</h3>
+          <ul>
+            <li>Gunakan <strong>prepared statements</strong> untuk semua query DB</li>
+            <li>Terapkan <strong>allowlist</strong> bukan blocklist untuk validasi</li>
+            <li>Hindari fungsi berbahaya: <code>eval()</code>, <code>exec()</code>, <code>gets()</code></li>
+            <li>Batasi ukuran buffer — cegah overflow</li>
+            <li>Fail securely — jika error, default ke <em>deny</em></li>
+            <li>Terapkan <strong>Content Security Policy (CSP)</strong></li>
+          </ul>
+          <div class="tip-box" style="margin-top:10px;">
+            <div class="tip-label">Referensi</div>
+            <p>OWASP Input Validation Cheat Sheet · CWE-89 · CWE-79 · CWE-119</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 4 – SECURE SECRET ═══════════════════════════════ -->
+<div class="slide" id="s4" data-title="(b) Secure Secret Management">
+  <div class="slide-header">
+    <h2>🔑 (b) Secure Secret Management</h2>
+    <p>Mengelola kredensial, API key, dan password dengan aman</p>
+  </div>
+  <div class="slide-body">
+    <div class="warn-box" style="margin-bottom:16px;">
+      <div class="warn-label">⚠️ Risiko Nyata</div>
+      <p>Pada 2024, lebih dari <strong>12 juta API key dan token</strong> ditemukan terbuka di GitHub publik (GitGuardian State of Secrets Sprawl). Hardcoded credentials adalah penyebab utama kebocoran data.</p>
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="card" style="margin-bottom:14px;">
+          <h3 style="color:#c0392b;">❌ Antipattern — Jangan Lakukan!</h3>
+          <div class="code-block">
+<span class="comment">// SANGAT BURUK — Hardcoded secret</span>
+<span class="bad">DB_PASS = "P@ssw0rd123"</span>
+<span class="bad">API_KEY = "sk-abc123xyz..."</span>
+<span class="bad">JWT_SECRET = "mysecret"</span>
+
+<span class="comment">// Commit ke Git = Kebocoran permanen!</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="color:#27ae60;">✅ Praktik Terbaik</h3>
+          <div class="code-block">
+<span class="comment"># Gunakan environment variable</span>
+<span class="good">DB_PASS = os.environ['DB_PASS']</span>
+<span class="good">API_KEY = os.environ['API_KEY']</span>
+
+<span class="comment"># .env hanya untuk lokal, jangan di-commit!</span>
+<span class="comment"># Tambahkan .env ke .gitignore</span>
+          </div>
+          <div class="tag-row" style="margin-top:10px;">
+            <span class="tag green">Env Variables</span>
+            <span class="tag green">Secrets Manager</span>
+            <span class="tag green">Vault</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:14px;">
+          <h3>🏛️ Secret Management Tools</h3>
+          <div class="tool-grid" style="grid-template-columns:1fr 1fr;">
+            <div class="tool-card" style="border-color:#0d2b6b;">
+              <div class="tool-name">HashiCorp Vault</div>
+              <div class="tool-type">Open Source</div>
+              <p>Dynamic secrets, lease & renewal, audit logging</p>
+            </div>
+            <div class="tool-card" style="border-color:#e67e22;">
+              <div class="tool-name">AWS Secrets Manager</div>
+              <div class="tool-type">Cloud (AWS)</div>
+              <p>Rotasi otomatis, integrasi IAM, KMS encryption</p>
+            </div>
+            <div class="tool-card" style="border-color:#1565c0;">
+              <div class="tool-name">Azure Key Vault</div>
+              <div class="tool-type">Cloud (Azure)</div>
+              <p>HSM-backed, RBAC, certificat management</p>
+            </div>
+            <div class="tool-card" style="border-color:#27ae60;">
+              <div class="tool-name">Doppler / Infisical</div>
+              <div class="tool-type">SaaS</div>
+              <p>Developer-friendly, sync ke CI/CD, open source</p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>📋 Secret Hygiene Checklist</h3>
+          <ul>
+            <li>✅ Tambahkan <code>.env</code>, <code>*.key</code>, <code>*.pem</code> ke <code>.gitignore</code></li>
+            <li>✅ Gunakan <strong>git-secrets</strong> atau <strong>truffleHog</strong> sebagai pre-commit hook</li>
+            <li>✅ Rotasi semua secret secara berkala (≤ 90 hari)</li>
+            <li>✅ Gunakan <strong>short-lived tokens</strong> (OAuth, JWT exp pendek)</li>
+            <li>✅ Audit akses secret — siapa, kapan, dari mana</li>
+            <li>✅ Revoke segera jika secret terekspos</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 5 – SECURE SOURCE CODE ═══════════════════════════════ -->
+<div class="slide" id="s5" data-title="(c) Secure Source Code">
+  <div class="slide-header">
+    <h2>🔍 (c) Secure Source Code</h2>
+    <p>SAST, SCA, dan Code Review — temukan kerentanan sebelum production</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col" style="margin-bottom:16px;">
+      <div class="card">
+        <h3 style="color:#0d2b6b;">🔬 SAST — Static Application Security Testing</h3>
+        <p style="margin-bottom:10px;">Menganalisis kode sumber <em>tanpa menjalankan program</em>. Menemukan kerentanan seperti SQL injection, XSS, buffer overflow dari source code langsung.</p>
+        <div class="tool-grid">
+          <div class="tool-card" style="border-color:#f39c12;">
+            <div class="tool-name">Semgrep</div>
+            <div class="tool-type">Open Source / SaaS</div>
+            <p>Pattern-based, multi-bahasa, CI/CD ready</p>
+          </div>
+          <div class="tool-card" style="border-color:#0d2b6b;">
+            <div class="tool-name">SonarQube</div>
+            <div class="tool-type">Free / Enterprise</div>
+            <p>Quality gate, 25+ bahasa, dashboard</p>
+          </div>
+          <div class="tool-card" style="border-color:#e74c3c;">
+            <div class="tool-name">Checkmarx</div>
+            <div class="tool-type">Enterprise</div>
+            <p>Deep SAST, compliance, IDE plugin</p>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="color:#8e44ad;">📦 SCA — Software Composition Analysis</h3>
+        <p style="margin-bottom:10px;">Memindai <em>library/dependency pihak ketiga</em> terhadap CVE yang diketahui. Sangat penting untuk mengatasi A03:2025 (Supply Chain Failures).</p>
+        <div class="tool-grid">
+          <div class="tool-card" style="border-color:#27ae60;">
+            <div class="tool-name">OWASP Dependency-Check</div>
+            <div class="tool-type">Open Source</div>
+            <p>NVD database, multi-bahasa, report HTML</p>
+          </div>
+          <div class="tool-card" style="border-color:#3498db;">
+            <div class="tool-name">Snyk</div>
+            <div class="tool-type">Free / Pro</div>
+            <p>Real-time fix PR, license compliance</p>
+          </div>
+          <div class="tool-card" style="border-color:#e67e22;">
+            <div class="tool-name">Dependabot</div>
+            <div class="tool-type">GitHub Native</div>
+            <p>Auto PR update, security alerts</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:12px;">👥 Security-Focused Code Review</h3>
+      <div class="two-col">
+        <div>
+          <p style="margin-bottom:8px;font-size:13px;">Code review adalah <strong>security gate manual</strong> yang melengkapi tool otomatis. Fokus pada:</p>
+          <ul>
+            <li>Semua titik entry data dari user (form, API, file upload)</li>
+            <li>Logika otentikasi dan otorisasi</li>
+            <li>Penanganan error dan exception</li>
+            <li>Penggunaan kriptografi (jangan buat sendiri!)</li>
+            <li>Race condition dan TOCTOU issues</li>
+          </ul>
+        </div>
+        <div>
+          <div class="step-flow">
+            <div class="step-item">
+              <div class="step-num">1</div>
+              <h5>Dev Push</h5>
+              <p>Code ke branch</p>
+            </div>
+            <div class="step-item">
+              <div class="step-num">2</div>
+              <h5>SAST/SCA</h5>
+              <p>Otomatis di CI</p>
+            </div>
+            <div class="step-item">
+              <div class="step-num">3</div>
+              <h5>Peer Review</h5>
+              <p>Manual checklist</p>
+            </div>
+            <div class="step-item">
+              <div class="step-num">4</div>
+              <h5>Merge Gate</h5>
+              <p>0 HIGH vuln</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 6 – SECURE DELIVERY ═══════════════════════════════ -->
+<div class="slide" id="s6" data-title="(d) Secure Delivery">
+  <div class="slide-header">
+    <h2>🚚 (d) Secure Delivery</h2>
+    <p>Mengamankan pipeline CI/CD dan rantai pasokan software</p>
+  </div>
+  <div class="slide-body">
+    <div class="info-box" style="margin-bottom:14px;">
+      <p><strong>A03:2025 — Software Supply Chain Failures</strong> (kategori BARU di OWASP 2025) mencakup serangan pada pipeline build, ketergantungan yang dikompromikan, dan artifact yang dimodifikasi. Contoh: <em>SolarWinds attack (2020)</em> — build server dikompromikan untuk menyisipkan malware.</p>
+    </div>
+    <div style="margin-bottom:14px;">
+      <h4 style="font-size:14px;font-weight:700;margin-bottom:10px;">🔒 Secure CI/CD Pipeline</h4>
+      <div class="pipeline">
+        <div class="pipe-stage" style="background:#1565c0;border-radius:8px 0 0 8px;">
+          <div class="pipe-icon">📝</div>
+          <h5>Source</h5>
+          <p>Signed commits, branch protection, MFA required</p>
+        </div>
+        <div class="pipe-stage" style="background:#1976d2;">
+          <div class="pipe-icon">🔬</div>
+          <h5>Build</h5>
+          <p>Isolated env, SAST, SCA, reproducible builds</p>
+        </div>
+        <div class="pipe-stage" style="background:#1565c0;">
+          <div class="pipe-icon">🧪</div>
+          <h5>Test</h5>
+          <p>DAST, unit test, integration test, fuzz</p>
+        </div>
+        <div class="pipe-stage" style="background:#0d47a1;">
+          <div class="pipe-icon">✍️</div>
+          <h5>Sign</h5>
+          <p>Artifact signing (Sigstore/cosign), SBOM gen</p>
+        </div>
+        <div class="pipe-stage" style="background:#002171;border-radius:0 8px 8px 0;">
+          <div class="pipe-icon">🚀</div>
+          <h5>Deploy</h5>
+          <p>Verify signature, immutable infra, audit log</p>
+        </div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <h3>📐 SLSA Framework (Supply-chain Levels for Software Artifacts)</h3>
+        <p style="margin-bottom:10px;font-size:13px;">Framework Google untuk meningkatkan kepercayaan rantai pasokan software secara bertahap:</p>
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+          <tr style="background:#0d2b6b;color:white;">
+            <th style="padding:8px;text-align:left;">Level</th>
+            <th style="padding:8px;text-align:left;">Requirement</th>
+          </tr>
+          <tr style="background:#f5f5f5;">
+            <td style="padding:8px;font-weight:700;color:#27ae60;">SLSA 1</td>
+            <td style="padding:8px;">Dokumentasi build process, provenance generated</td>
+          </tr>
+          <tr>
+            <td style="padding:8px;font-weight:700;color:#f39c12;">SLSA 2</td>
+            <td style="padding:8px;">Hosted build service, signed provenance</td>
+          </tr>
+          <tr style="background:#f5f5f5;">
+            <td style="padding:8px;font-weight:700;color:#e67e22;">SLSA 3</td>
+            <td style="padding:8px;">Hardened build platform, non-falsifiable provenance</td>
+          </tr>
+          <tr>
+            <td style="padding:8px;font-weight:700;color:#c0392b;">SLSA 4</td>
+            <td style="padding:8px;">Two-person review, hermetic builds, reproducible</td>
+          </tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>🛡️ Praktik Secure Delivery</h3>
+        <ul style="margin-bottom:10px;">
+          <li>Gunakan <strong>immutable artifact registry</strong> (tidak bisa di-overwrite)</li>
+          <li>Tanda tangani semua artifact dengan <strong>cosign/Sigstore</strong></li>
+          <li>Generate dan validasi <strong>SBOM</strong> (Software Bill of Materials)</li>
+          <li>Batasi akses CI/CD — prinsip least privilege</li>
+          <li>Audit semua perubahan pipeline configuration</li>
+          <li>Gunakan <strong>ephemeral build environments</strong> (destroy setelah build)</li>
+        </ul>
+        <div class="warn-box" style="margin-top:0;">
+          <div class="warn-label">⚠️ Jangan Lakukan</div>
+          <p>Jangan pernah mengizinkan script dari PR eksternal langsung dieksekusi di CI/CD tanpa review — ini vektor serangan supply chain klasik!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 7 – UPDATE & UPGRADE ═══════════════════════════════ -->
+<div class="slide" id="s7" data-title="(e) Update & Upgrade Software">
+  <div class="slide-header">
+    <h2>🔄 (e) Update &amp; Upgrade Software</h2>
+    <p>Patch management, dependency monitoring, dan SBOM</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col" style="margin-bottom:16px;">
+      <div class="card">
+        <h3 style="color:#27ae60;">📅 Patch Management SLA</h3>
+        <p style="margin-bottom:10px;font-size:13px;">Tentukan batas waktu patching berdasarkan tingkat keparahan (<em>CVSS Score</em>):</p>
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+          <tr style="background:#0d2b6b;color:white;">
+            <th style="padding:8px;">Severity</th>
+            <th style="padding:8px;">CVSS</th>
+            <th style="padding:8px;">SLA Patch</th>
+          </tr>
+          <tr style="background:#ffebee;">
+            <td style="padding:8px;font-weight:700;color:#c62828;">🔴 Critical</td>
+            <td style="padding:8px;">9.0–10.0</td>
+            <td style="padding:8px;font-weight:700;">≤ 24 jam</td>
+          </tr>
+          <tr style="background:#fff8e1;">
+            <td style="padding:8px;font-weight:700;color:#e65100;">🟠 High</td>
+            <td style="padding:8px;">7.0–8.9</td>
+            <td style="padding:8px;font-weight:700;">≤ 7 hari</td>
+          </tr>
+          <tr style="background:#fff3e0;">
+            <td style="padding:8px;font-weight:700;color:#f57c00;">🟡 Medium</td>
+            <td style="padding:8px;">4.0–6.9</td>
+            <td style="padding:8px;font-weight:700;">≤ 30 hari</td>
+          </tr>
+          <tr style="background:#e8f5e9;">
+            <td style="padding:8px;font-weight:700;color:#388e3c;">🟢 Low</td>
+            <td style="padding:8px;">0.1–3.9</td>
+            <td style="padding:8px;font-weight:700;">≤ 90 hari</td>
+          </tr>
+        </table>
+        <div class="tip-box" style="margin-top:10px;">
+          <div class="tip-label">Referensi</div>
+          <p>NIST SP 800-40r4 (Guide to Enterprise Patch Management) · BSSN Panduan Manajemen Kerentanan</p>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="color:#0d2b6b;">📋 SBOM — Software Bill of Materials</h3>
+        <p style="margin-bottom:10px;font-size:13px;">SBOM adalah <em>daftar inventaris lengkap</em> semua komponen software: library, versi, lisensi, dan ketergantungan transitif.</p>
+        <div style="background:#f5f5f5;border-radius:8px;padding:12px;font-size:12px;margin-bottom:10px;">
+          <strong>Format Standar SBOM:</strong>
+          <ul style="padding-left:16px;margin-top:6px;">
+            <li><strong>SPDX</strong> (ISO/IEC 5962:2021) — Linux Foundation</li>
+            <li><strong>CycloneDX</strong> — OWASP Foundation</li>
+          </ul>
+        </div>
+        <div style="background:#f5f5f5;border-radius:8px;padding:12px;font-size:12px;">
+          <strong>Cara Generate SBOM:</strong>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment"># syft — generate SBOM dari image/dir</span>
+<span class="good">syft myapp:latest -o cyclonedx-json</span>
+<span class="comment"># grype — scan SBOM untuk CVE</span>
+<span class="good">grype sbom:sbom.json</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:12px;">🔧 Dependency Monitoring Tools</h3>
+      <div class="tool-grid">
+        <div class="tool-card" style="border-color:#2196f3;">
+          <div class="tool-name">Dependabot</div>
+          <div class="tool-type">GitHub Native · Free</div>
+          <p>Auto-scan &amp; PR update untuk npm, pip, Maven, Gradle, dsb.</p>
+        </div>
+        <div class="tool-card" style="border-color:#9c27b0;">
+          <div class="tool-name">Renovate Bot</div>
+          <div class="tool-type">Open Source</div>
+          <p>Lebih fleksibel dari Dependabot, schedule update grouping</p>
+        </div>
+        <div class="tool-card" style="border-color:#4caf50;">
+          <div class="tool-name">OWASP Dep-Check</div>
+          <div class="tool-type">Open Source</div>
+          <p>Scan local project, NVD/OSS Index, CI/CD plugin tersedia</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 8 – PRIVACY & PRIVILEGE ═══════════════════════════════ -->
+<div class="slide" id="s8" data-title="(f) Privacy & Privilege">
+  <div class="slide-header">
+    <h2>🔒 (f) Privacy &amp; Privilege</h2>
+    <p>Least privilege, RBAC, data minimization, dan UU PDP</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col" style="margin-bottom:16px;">
+      <div>
+        <div class="card" style="margin-bottom:14px;">
+          <h3 style="color:#c0392b;">🎯 Prinsip Least Privilege</h3>
+          <p style="margin-bottom:10px;font-size:13px;">Setiap komponen, user, atau proses hanya memiliki <em>hak akses minimum</em> yang diperlukan untuk tugasnya.</p>
+          <div class="do-dont" style="grid-template-columns:1fr;">
+            <div class="do-box">
+              <h4>✅ Terapkan</h4>
+              <ul>
+                <li>DB user aplikasi hanya READ+WRITE, bukan ADMIN</li>
+                <li>Service account hanya akses resource yang diperlukan</li>
+                <li>Token API dengan scope spesifik (bukan wildcard)</li>
+                <li>Rotate credential secara berkala</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="color:#8e44ad;">👥 RBAC — Role-Based Access Control</h3>
+          <p style="margin-bottom:8px;font-size:13px;">Kelola hak akses berdasarkan <em>peran</em>, bukan individu:</p>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <tr style="background:#0d2b6b;color:white;">
+              <th style="padding:7px;">Role</th>
+              <th style="padding:7px;">Akses</th>
+            </tr>
+            <tr style="background:#f5f5f5;">
+              <td style="padding:7px;font-weight:700;">Admin</td>
+              <td style="padding:7px;">Full control, audit log access</td>
+            </tr>
+            <tr>
+              <td style="padding:7px;font-weight:700;">Developer</td>
+              <td style="padding:7px;">Read/write code, staging env only</td>
+            </tr>
+            <tr style="background:#f5f5f5;">
+              <td style="padding:7px;font-weight:700;">Analyst</td>
+              <td style="padding:7px;">Read-only data (anonymized)</td>
+            </tr>
+            <tr>
+              <td style="padding:7px;font-weight:700;">App Service</td>
+              <td style="padding:7px;">Specific API endpoints only</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:14px;">
+          <h3 style="color:#1565c0;">🇮🇩 UU PDP No. 27/2022 — Implikasi Teknis</h3>
+          <p style="margin-bottom:10px;font-size:13px;">Undang-Undang Perlindungan Data Pribadi mengatur kewajiban teknis bagi pengembang:</p>
+          <ul style="font-size:12.5px;padding-left:16px;">
+            <li style="margin-bottom:6px;"><strong>Data Minimization</strong> — hanya kumpulkan data yang diperlukan</li>
+            <li style="margin-bottom:6px;"><strong>Purpose Limitation</strong> — data hanya untuk tujuan yang dinyatakan</li>
+            <li style="margin-bottom:6px;"><strong>Storage Limitation</strong> — hapus data setelah tidak diperlukan</li>
+            <li style="margin-bottom:6px;"><strong>Breach Notification</strong> — laporkan dalam <strong>14 hari</strong> ke BSSN &amp; subjek data</li>
+            <li style="margin-bottom:6px;"><strong>Right to Erasure</strong> — implementasikan mekanisme hapus data</li>
+          </ul>
+          <div class="warn-box" style="margin-top:8px;">
+            <div class="warn-label">⚠️ Sanksi Pidana</div>
+            <p>Pelanggaran UU PDP dapat dikenai pidana penjara maksimal <strong>6 tahun</strong> dan/atau denda <strong>Rp 6 miliar</strong>.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>🔏 Data Protection Techniques</h3>
+          <div class="tag-row">
+            <span class="tag">Enkripsi at-rest (AES-256)</span>
+            <span class="tag">Enkripsi in-transit (TLS 1.3)</span>
+            <span class="tag">Tokenisasi</span>
+            <span class="tag">Pseudonymization</span>
+            <span class="tag">Anonymization</span>
+            <span class="tag">Data Masking</span>
+            <span class="tag green">Field-level Encryption</span>
+          </div>
+          <div class="tip-box" style="margin-top:10px;">
+            <div class="tip-label">Privacy by Design</div>
+            <p>Integrasikan privasi sejak fase desain — bukan sebagai tambahan di akhir. Terapkan Privacy Impact Assessment (PIA) untuk fitur yang memproses data sensitif.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 9 – MFA ═══════════════════════════════ -->
+<div class="slide" id="s9" data-title="(g) Multi-Factor Authentication">
+  <div class="slide-header">
+    <h2>📱 (g) Multi-Factor Authentication (MFA)</h2>
+    <p>Lapisan autentikasi tambahan — mitigasi A07:2025 Authentication Failures</p>
+  </div>
+  <div class="slide-body">
+    <div class="mfa-flow" style="margin-bottom:16px;">
+      <div class="mfa-step" style="border-color:#1565c0;">
+        <div class="mfa-icon">👤</div>
+        <h5>Identitas</h5>
+        <p>Siapa kamu?</p>
+      </div>
+      <div class="mfa-arrow">→</div>
+      <div class="mfa-step" style="border-color:#27ae60;">
+        <div class="mfa-icon">🔑</div>
+        <h5>Faktor 1</h5>
+        <p>Password/PIN</p>
+      </div>
+      <div class="mfa-arrow">+</div>
+      <div class="mfa-step" style="border-color:#e67e22;">
+        <div class="mfa-icon">📲</div>
+        <h5>Faktor 2</h5>
+        <p>OTP/Token</p>
+      </div>
+      <div class="mfa-arrow">+</div>
+      <div class="mfa-step" style="border-color:#8e44ad;">
+        <div class="mfa-icon">👁️</div>
+        <h5>Faktor 3</h5>
+        <p>Biometrik</p>
+      </div>
+      <div class="mfa-arrow">→</div>
+      <div class="mfa-step" style="border-color:#c0392b;background:#e8f5e9;">
+        <div class="mfa-icon">✅</div>
+        <h5>Akses Diberikan</h5>
+        <p>Setelah ≥ 2 faktor</p>
+      </div>
+    </div>
+    <div class="factor-grid" style="margin-bottom:14px;">
+      <div class="factor-card fc1">
+        <div class="f-icon">🧠</div>
+        <h5>Something You Know</h5>
+        <p>Faktor pengetahuan — yang hanya diketahui pengguna</p>
+        <div class="f-example">Password, PIN, Security Question, Passphrase</div>
+      </div>
+      <div class="factor-card fc2">
+        <div class="f-icon">📱</div>
+        <h5>Something You Have</h5>
+        <p>Faktor kepemilikan — perangkat atau token fisik</p>
+        <div class="f-example">TOTP App (Google Auth), SMS OTP, Hardware Key (YubiKey), Smart Card</div>
+      </div>
+      <div class="factor-card fc3">
+        <div class="f-icon">👁️</div>
+        <h5>Something You Are</h5>
+        <p>Faktor inherensi — karakteristik biologis unik</p>
+        <div class="f-example">Sidik jari, Retina, Wajah, Suara, Pola ketikan</div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <h3>⏱️ TOTP vs FIDO2/WebAuthn</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+          <tr style="background:#0d2b6b;color:white;">
+            <th style="padding:8px;text-align:left;">Aspek</th>
+            <th style="padding:8px;text-align:center;">TOTP</th>
+            <th style="padding:8px;text-align:center;">FIDO2/WebAuthn</th>
+          </tr>
+          <tr style="background:#f5f5f5;">
+            <td style="padding:7px;">Phishing-resistant</td>
+            <td style="padding:7px;text-align:center;">❌</td>
+            <td style="padding:7px;text-align:center;color:#27ae60;font-weight:700;">✅</td>
+          </tr>
+          <tr>
+            <td style="padding:7px;">Kebutuhan device</td>
+            <td style="padding:7px;text-align:center;">Smartphone</td>
+            <td style="padding:7px;text-align:center;">Platform auth / HW key</td>
+          </tr>
+          <tr style="background:#f5f5f5;">
+            <td style="padding:7px;">UX</td>
+            <td style="padding:7px;text-align:center;">Mudah</td>
+            <td style="padding:7px;text-align:center;">Sangat mudah</td>
+          </tr>
+          <tr>
+            <td style="padding:7px;">Implementasi</td>
+            <td style="padding:7px;text-align:center;">TOTP library</td>
+            <td style="padding:7px;text-align:center;">WebAuthn API</td>
+          </tr>
+          <tr style="background:#f5f5f5;">
+            <td style="padding:7px;">Standar</td>
+            <td style="padding:7px;text-align:center;">RFC 6238</td>
+            <td style="padding:7px;text-align:center;">FIDO Alliance / W3C</td>
+          </tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>📌 Rekomendasi Implementasi MFA</h3>
+        <ul style="font-size:13px;padding-left:16px;line-height:1.8;">
+          <li>Wajibkan MFA untuk semua akun <strong>admin dan privileged</strong></li>
+          <li>Gunakan <strong>FIDO2/WebAuthn</strong> (passkey) sebagai default terbaik</li>
+          <li>Hindari SMS OTP sebagai satu-satunya pilihan — rentan SIM-swap</li>
+          <li>Sediakan <strong>recovery code</strong> cadangan (simpan offline)</li>
+          <li>Log semua event MFA (success &amp; failure)</li>
+          <li>Nonaktifkan MFA bypass yang tidak diperlukan</li>
+        </ul>
+        <div class="warn-box" style="margin-top:10px;">
+          <div class="warn-label">⚠️ SMS OTP</div>
+          <p>SMS OTP rentan terhadap serangan <strong>SIM-swapping</strong> dan <strong>SS7 interception</strong>. NIST SP 800-63B sudah mengategorikannya sebagai <em>RESTRICTED authenticator</em>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 10 – STUDI KASUS ═══════════════════════════════ -->
+<div class="slide" id="s10" data-title="Studi Kasus">
+  <div class="slide-header">
+    <h2>📰 Studi Kasus — Insiden Nyata &amp; Mitigasinya</h2>
+    <p>Analisis kasus riil untuk memahami dampak &amp; solusi mitigasi</p>
+  </div>
+  <div class="slide-body">
+    <div class="case-header">
+      <h3>💥 Kasus: Kebocoran Data Nasabah Bank (Simulasi)</h3>
+      <p>Aplikasi mobile banking — 2.3 juta data nasabah terekspos akibat kombinasi kelemahan teknis</p>
+    </div>
+    <div class="case-body" style="margin-bottom:16px;">
+      <div class="case-box" style="border-left:4px solid #c62828;">
+        <h4 style="color:#c62828;">🔍 Temuan Insiden</h4>
+        <ul>
+          <li>API key AWS tertanam dalam source code mobile app yang dipublikasikan ke Play Store</li>
+          <li>No input validation pada endpoint transfer — SQL injection berhasil dieksekusi</li>
+          <li>Session token tidak expire — valid 30 hari tanpa MFA</li>
+          <li>Dependency <code>log4j v2.14</code> yang rentan (Log4Shell) belum dipatch 3 bulan setelah CVE rilis</li>
+          <li>Error message menampilkan detail database stack trace</li>
+        </ul>
+      </div>
+      <div class="case-box" style="border-left:4px solid #27ae60;">
+        <h4 style="color:#27ae60;">🛡️ Mitigasi yang Diperlukan</h4>
+        <ul>
+          <li><strong>(b) Secure Secret</strong> — Hapus API key dari kode, gunakan AWS Secrets Manager, revoke key lama</li>
+          <li><strong>(a) Secure Code Writing</strong> — Implementasikan parameterized query, validasi input, generic error</li>
+          <li><strong>(g) MFA</strong> — Wajibkan TOTP untuk semua transaksi, session expire 15 menit</li>
+          <li><strong>(e) Update</strong> — Patch log4j segera (SLA critical ≤ 24 jam), aktifkan Dependabot</li>
+          <li><strong>(c) Secure Source Code</strong> — Tambahkan SAST ke CI/CD, secret scanning (truffleHog)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <h3>📊 Pemetaan ke OWASP 2025</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+          <tr style="background:#0d2b6b;color:white;">
+            <th style="padding:7px;">Temuan</th>
+            <th style="padding:7px;">OWASP 2025</th>
+            <th style="padding:7px;">CWE</th>
+          </tr>
+          <tr style="background:#ffebee;">
+            <td style="padding:7px;">Hardcoded API Key</td>
+            <td style="padding:7px;font-weight:700;color:#c62828;">A02 Misconfig</td>
+            <td style="padding:7px;">CWE-798</td>
+          </tr>
+          <tr>
+            <td style="padding:7px;">SQL Injection</td>
+            <td style="padding:7px;font-weight:700;color:#c62828;">A05 Injection</td>
+            <td style="padding:7px;">CWE-89</td>
+          </tr>
+          <tr style="background:#ffebee;">
+            <td style="padding:7px;">Tidak ada MFA</td>
+            <td style="padding:7px;font-weight:700;color:#c62828;">A07 Auth Fail</td>
+            <td style="padding:7px;">CWE-308</td>
+          </tr>
+          <tr>
+            <td style="padding:7px;">Log4j unpatched</td>
+            <td style="padding:7px;font-weight:700;color:#c62828;">A03 Supply Chain</td>
+            <td style="padding:7px;">CVE-2021-44228</td>
+          </tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>⚖️ Dampak Regulasi</h3>
+        <ul style="font-size:13px;padding-left:16px;line-height:1.8;">
+          <li><strong>UU PDP</strong> — Wajib notifikasi ke BSSN + subjek data dalam <strong>14 hari</strong></li>
+          <li><strong>OJK POJK 11/2022</strong> — Kewajiban pelaporan insiden siber ke OJK</li>
+          <li>Potensi denda administratif + pidana jika terbukti lalai</li>
+          <li>Reputasi — kehilangan kepercayaan nasabah</li>
+          <li>BSSN dapat memanggil untuk audit keamanan forensik</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 11 – RANGKUMAN ═══════════════════════════════ -->
+<div class="slide" id="s11" data-title="Rangkuman">
+  <div class="slide-header">
+    <h2>📚 Rangkuman</h2>
+    <p>7 Pilar Mitigasi Keamanan Perangkat Lunak — Sub-CPMK 261.2</p>
+  </div>
+  <div class="slide-body">
+    <div class="summary-grid">
+      <div class="sum-card" style="border-color:#16a085;">
+        <div class="sum-icon">✍️</div>
+        <h5 style="color:#16a085;">(a) Secure Code</h5>
+        <p>Input validation, output encoding, parameterized queries, fail securely</p>
+      </div>
+      <div class="sum-card" style="border-color:#8e44ad;">
+        <div class="sum-icon">🔑</div>
+        <h5 style="color:#8e44ad;">(b) Secure Secret</h5>
+        <p>No hardcoded creds, Vault/env vars, rotation ≤90 hari, secret scanning</p>
+      </div>
+      <div class="sum-card" style="border-color:#0d2b6b;">
+        <div class="sum-icon">🔍</div>
+        <h5 style="color:#0d2b6b;">(c) Secure Source</h5>
+        <p>SAST (Semgrep/SonarQube), SCA (Snyk), peer review, quality gate</p>
+      </div>
+      <div class="sum-card" style="border-color:#e67e22;">
+        <div class="sum-icon">🚚</div>
+        <h5 style="color:#e67e22;">(d) Secure Delivery</h5>
+        <p>CI/CD hardening, artifact signing, SLSA, SBOM generation</p>
+      </div>
+      <div class="sum-card" style="border-color:#27ae60;">
+        <div class="sum-icon">🔄</div>
+        <h5 style="color:#27ae60;">(e) Update</h5>
+        <p>Patch SLA (Critical ≤24j), SBOM, Dependabot, CVE monitoring</p>
+      </div>
+      <div class="sum-card" style="border-color:#c0392b;">
+        <div class="sum-icon">🔒</div>
+        <h5 style="color:#c0392b;">(f) Privacy/Privilege</h5>
+        <p>Least privilege, RBAC, data minimization, UU PDP 14 hari notif</p>
+      </div>
+      <div class="sum-card" style="border-color:#1565c0;">
+        <div class="sum-icon">📱</div>
+        <h5 style="color:#1565c0;">(g) MFA</h5>
+        <p>FIDO2/WebAuthn terbaik, hindari SMS OTP, wajib admin accounts</p>
+      </div>
+      <div class="sum-card" style="border-color:var(--pssn-gold);">
+        <div class="sum-icon">🎯</div>
+        <h5 style="color:var(--accent-orange);">Defense in Depth</h5>
+        <p>Kombinasi semua pilar = perlindungan berlapis yang saling melengkapi</p>
+      </div>
+    </div>
+    <div class="key-points">
+      <h4>🔑 Poin Kunci yang Harus Diingat</h4>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Mitigasi bukan opsi — ini kewajiban teknis dan legal (UU PDP, PP 71/2019, BSSN)</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Shift-left security: temukan kerentanan sedini mungkin dalam SDLC — biaya fix di fase requirement 100× lebih murah dari production</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Gunakan tools otomatis (SAST, SCA, secret scanner) sebagai safety net — bukan pengganti berpikir kritis</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Hardcoded credentials dan unpatched dependency adalah dua penyebab terbesar kebocoran data saat ini (GitGuardian &amp; Veracode Report 2024)</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">MFA dengan FIDO2/WebAuthn adalah mitigasi paling efektif untuk phishing-based account takeover</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 12 – TUGAS ═══════════════════════════════ -->
+<div class="slide" id="s12" data-title="Tugas">
+  <div class="slide-header">
+    <h2>📝 Tugas Pertemuan 3</h2>
+    <p>Sub-CPMK 261.2 · Analisis &amp; Implementasi Mitigasi</p>
+  </div>
+  <div class="slide-body">
+    <div class="task-card" style="border-color:#16a085;">
+      <h4>🔍 Tugas 1 — Audit Kode &amp; Identifikasi Kerentanan (Individu)</h4>
+      <p>Diberikan potongan kode Python/PHP/Node.js berikut, lakukan:</p>
+      <ul>
+        <li>Identifikasi minimal <strong>3 kerentanan keamanan</strong> yang ada dalam kode</li>
+        <li>Petakan setiap kerentanan ke <strong>OWASP Top 10 2025</strong> dan <strong>CWE</strong> yang relevan</li>
+        <li>Tulis <strong>versi kode yang sudah diperbaiki</strong> dengan penjelasan perubahan</li>
+        <li>Tentukan <em>mitigasi mana dari 7 pilar</em> yang paling relevan untuk tiap kerentanan</li>
+      </ul>
+      <div class="task-meta">
+        <span class="task-chip"><strong>Bobot:</strong> 40%</span>
+        <span class="task-chip"><strong>Format:</strong> PDF/DOCX</span>
+        <span class="task-chip"><strong>Deadline:</strong> Sebelum pertemuan berikutnya</span>
+        <span class="task-chip"><strong>Sub-CPMK:</strong> 261.2a, 261.2c</span>
+      </div>
+    </div>
+    <div class="task-card" style="border-color:#8e44ad;">
+      <h4>🔑 Tugas 2 — Secret Management Lab (Kelompok 2 orang)</h4>
+      <p>Lakukan praktikum secret management:</p>
+      <ul>
+        <li>Setup aplikasi demo dengan <strong>hardcoded credentials</strong> (sengaja)</li>
+        <li>Jalankan <strong>truffleHog</strong> atau <strong>git-secrets</strong> — dokumentasikan temuannya</li>
+        <li>Migrasi ke <strong>environment variable</strong> atau <strong>HashiCorp Vault</strong> (pilih salah satu)</li>
+        <li>Screenshot dan laporan singkat perbandingan <em>sebelum &amp; sesudah</em></li>
+      </ul>
+      <div class="task-meta">
+        <span class="task-chip"><strong>Bobot:</strong> 35%</span>
+        <span class="task-chip"><strong>Format:</strong> Laporan + source code</span>
+        <span class="task-chip"><strong>Sub-CPMK:</strong> 261.2b</span>
+      </div>
+    </div>
+    <div class="task-card" style="border-color:#1565c0;">
+      <h4>📱 Tugas 3 — Desain MFA untuk Aplikasi (Individu)</h4>
+      <p>Rancang implementasi MFA untuk sistem informasi akademik (SIAKAD):</p>
+      <ul>
+        <li>Pilih <strong>2 jenis MFA</strong> yang akan diimplementasikan — justifikasi pilihan</li>
+        <li>Buat <strong>flow diagram autentikasi</strong> lengkap (bisa menggunakan draw.io / Mermaid)</li>
+        <li>Analisis <strong>tradeoff UX vs keamanan</strong> untuk setiap pilihan</li>
+        <li>Identifikasi <strong>attack vector</strong> yang dapat dimitigasi dan yang tidak</li>
+      </ul>
+      <div class="task-meta">
+        <span class="task-chip"><strong>Bobot:</strong> 25%</span>
+        <span class="task-chip"><strong>Format:</strong> PDF + diagram</span>
+        <span class="task-chip"><strong>Sub-CPMK:</strong> 261.2g</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 13 – KUIS ═══════════════════════════════ -->
+<div class="slide" id="s13" data-title="Kuis Interaktif">
+  <div class="slide-header">
+    <h2>🎯 Kuis Interaktif — Pertemuan 3</h2>
+    <p>4 soal pilihan ganda · Sub-CPMK 261.2</p>
+  </div>
+  <div class="slide-body">
+    <div class="quiz-container">
+      <!-- Q1 -->
+      <div id="q1-block">
+        <div class="q-num">Soal 1 dari 4</div>
+        <div class="q-text">Seorang developer menemukan bahwa API key AWS tersimpan langsung dalam file <code>config.py</code> dan sudah ter-commit ke repositori Git publik. Langkah PERTAMA yang harus dilakukan adalah…</div>
+        <div class="q-options">
+          <div class="q-option" onclick="answer(1,'A')">A. Hapus file config.py dari repositori</div>
+          <div class="q-option" onclick="answer(1,'B')">B. Revoke API key segera di AWS Console, lalu rotasi dengan key baru</div>
+          <div class="q-option" onclick="answer(1,'C')">C. Tambahkan .gitignore untuk mencegah commit berikutnya</div>
+          <div class="q-option" onclick="answer(1,'D')">D. Enkripsi file config.py dengan password</div>
+        </div>
+        <div id="f1" class="q-feedback"></div>
+      </div>
+      <!-- Q2 -->
+      <div id="q2-block" style="display:none;margin-top:20px;">
+        <div class="q-num">Soal 2 dari 4</div>
+        <div class="q-text">SAST (Static Application Security Testing) berbeda dari DAST (Dynamic Application Security Testing) karena SAST…</div>
+        <div class="q-options">
+          <div class="q-option" onclick="answer(2,'A')">A. Menjalankan aplikasi di lingkungan produksi untuk menemukan bug</div>
+          <div class="q-option" onclick="answer(2,'B')">B. Menganalisis kode sumber tanpa menjalankan program, cocok di fase development awal</div>
+          <div class="q-option" onclick="answer(2,'C')">C. Mensimulasikan serangan dari luar jaringan seperti penetration tester</div>
+          <div class="q-option" onclick="answer(2,'D')">D. Memindai dependency pihak ketiga untuk kerentanan CVE yang diketahui</div>
+        </div>
+        <div id="f2" class="q-feedback"></div>
+      </div>
+      <!-- Q3 -->
+      <div id="q3-block" style="display:none;margin-top:20px;">
+        <div class="q-num">Soal 3 dari 4</div>
+        <div class="q-text">Sebuah aplikasi e-commerce memberikan hak akses database <code>CREATE, DROP, ALTER, SELECT, INSERT, UPDATE, DELETE</code> kepada user aplikasi. Prinsip keamanan mana yang DILANGGAR?</div>
+        <div class="q-options">
+          <div class="q-option" onclick="answer(3,'A')">A. Defense in Depth</div>
+          <div class="q-option" onclick="answer(3,'B')">B. Separation of Duties</div>
+          <div class="q-option" onclick="answer(3,'C')">C. Principle of Least Privilege</div>
+          <div class="q-option" onclick="answer(3,'D')">D. Fail Secure</div>
+        </div>
+        <div id="f3" class="q-feedback"></div>
+      </div>
+      <!-- Q4 -->
+      <div id="q4-block" style="display:none;margin-top:20px;">
+        <div class="q-num">Soal 4 dari 4</div>
+        <div class="q-text">Mengapa FIDO2/WebAuthn dianggap lebih aman dibandingkan SMS OTP untuk implementasi MFA?</div>
+        <div class="q-options">
+          <div class="q-option" onclick="answer(4,'A')">A. FIDO2 lebih murah dari SMS dan tidak memerlukan nomor telepon</div>
+          <div class="q-option" onclick="answer(4,'B')">B. SMS OTP memerlukan koneksi internet, sedangkan FIDO2 bekerja offline</div>
+          <div class="q-option" onclick="answer(4,'C')">C. FIDO2 menggunakan public key cryptography dan terikat pada domain — tidak bisa di-phishing atau di-intercept via SIM-swap</div>
+          <div class="q-option" onclick="answer(4,'D')">D. SMS OTP sudah dilarang oleh standar NIST untuk semua penggunaan</div>
+        </div>
+        <div id="f4" class="q-feedback"></div>
+      </div>
+      <div class="quiz-score" id="quiz-score">
+        <h3 id="score-text"></h3>
+        <p id="score-sub"></p>
+      </div>
+      <div class="quiz-nav">
+        <button class="quiz-btn secondary" onclick="resetQuiz()">🔄 Ulangi Kuis</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 14 – REFERENSI ═══════════════════════════════ -->
+<div class="slide" id="s14" data-title="Referensi">
+  <div class="slide-header">
+    <h2>📖 Referensi</h2>
+    <p>Sumber materi Pertemuan 3 — Sub-CPMK 261.2</p>
+  </div>
+  <div class="slide-body">
+    <div class="section-label">Buku Teks</div>
+    <ul class="ref-list" style="margin-bottom:18px;">
+      <li><span>[1]</span> Bulmash, G. (2024). <em>Software Security Engineering: Integrating Security into the SDLC</em>. Addison-Wesley.</li>
+      <li><span>[2]</span> Khan, M.E. (2003). <em>Software Security Engineering: A Guide for Project Managers</em>. Carnegie Mellon SEI.</li>
+      <li><span>[3]</span> Howard, M., &amp; LeBlanc, D. (2002). <em>Writing Secure Code</em> (2nd ed.). Microsoft Press.</li>
+    </ul>
+    <div class="section-label">Standar &amp; Framework</div>
+    <ul class="ref-list" style="margin-bottom:18px;">
+      <li><span>[4]</span> OWASP Foundation. (2025). <em>OWASP Top 10 Web Application Security Risks 2025</em>. <a href="https://owasp.org/Top10" target="_blank">owasp.org/Top10</a></li>
+      <li><span>[5]</span> OWASP Foundation. (2021). <em>OWASP Desktop Application Security Top 10</em>. <a href="https://owasp.org/www-project-desktop-app-security-top-10" target="_blank">owasp.org</a></li>
+      <li><span>[6]</span> NIST. (2022). <em>SP 800-218 Secure Software Development Framework (SSDF) v1.1</em>. <a href="https://csrc.nist.gov/publications/detail/sp/800-218/final" target="_blank">csrc.nist.gov</a></li>
+      <li><span>[7]</span> NIST. (2022). <em>SP 800-63B Digital Identity Guidelines — Authentication</em>. <a href="https://pages.nist.gov/800-63-3/sp800-63b.html" target="_blank">pages.nist.gov</a></li>
+      <li><span>[8]</span> SLSA Project. (2023). <em>Supply-chain Levels for Software Artifacts (SLSA) Framework</em>. <a href="https://slsa.dev" target="_blank">slsa.dev</a></li>
+    </ul>
+    <div class="section-label">Regulasi Indonesia</div>
+    <ul class="ref-list" style="margin-bottom:18px;">
+      <li><span>[9]</span> Republik Indonesia. (2022). <em>Undang-Undang No. 27 Tahun 2022 tentang Perlindungan Data Pribadi (UU PDP)</em>.</li>
+      <li><span>[10]</span> BSSN. (2021). <em>Peraturan BSSN No. 4 Tahun 2021 tentang Pedoman Manajemen Keamanan Informasi</em>.</li>
+    </ul>
+    <div class="section-label">Tools &amp; Cheat Sheets</div>
+    <ul class="ref-list">
+      <li><span>[11]</span> OWASP Cheat Sheet Series. <em>Input Validation, SQL Injection Prevention, Authentication</em>. <a href="https://cheatsheetseries.owasp.org" target="_blank">cheatsheetseries.owasp.org</a></li>
+      <li><span>[12]</span> GitGuardian. (2024). <em>State of Secrets Sprawl Report 2024</em>. <a href="https://www.gitguardian.com/state-of-secrets-sprawl" target="_blank">gitguardian.com</a></li>
+      <li><span>[13]</span> FIDO Alliance. (2023). <em>FIDO2/WebAuthn Specifications</em>. <a href="https://fidoalliance.org/fido2" target="_blank">fidoalliance.org</a></li>
+    </ul>
+  </div>
+</div>
+
+</div><!-- end slideshow -->
+
+<!-- NAVBAR -->
+<div id="navbar">
+  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>◀ Prev</button>
+  <span id="slide-title-bar"></span>
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+  <span id="slide-counter"></span>
+  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Next ▶</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let current = 0;
+
+// Quiz state
+const correct = { 1:'B', 2:'B', 3:'C', 4:'C' };
+const explanations = {
+  1: '✅ Benar! Langkah pertama adalah REVOKE key yang sudah terekspos — karena key tersebut mungkin sudah dilihat/disalahgunakan. Menghapus dari Git tidak cukup karena Git history tetap ada. Setelah revoke, baru gunakan secret manager.',
+  2: '✅ Benar! SAST menganalisis kode sumber secara statis tanpa menjalankannya. Ideal di fase development awal karena developer langsung tahu di baris mana masalahnya. DAST menjalankan aplikasi; SCA untuk dependency.',
+  3: '✅ Benar! Principle of Least Privilege dilanggar. User aplikasi DB hanya perlu SELECT, INSERT, UPDATE, DELETE — bukan DDL (CREATE, DROP, ALTER). Akses berlebih memperbesar blast radius jika akun dikompromikan.',
+  4: '✅ Benar! FIDO2/WebAuthn menggunakan asymmetric cryptography berbasis domain origin. Token tidak bisa digunakan di domain palsu (phishing-resistant), dan tidak ada shared secret yang bisa di-intercept. SMS OTP rentan SIM-swap dan SS7 attack.'
+};
+const wrongExp = {
+  1: '❌ Kurang tepat. Menghapus file atau menambah .gitignore tidak mencabut key yang sudah terekspos. Key tersebut mungkin sudah di-scrape oleh bot scanner. Langkah PERTAMA harus REVOKE key di AWS Console.',
+  2: '❌ Kurang tepat. Pilihan D mendeskripsikan SCA (Software Composition Analysis). SAST fokus pada source code sendiri, bukan dependency. DAST melakukan serangan runtime, bukan analisis statis kode.',
+  3: '❌ Kurang tepat. Defense in Depth adalah strategi berlapis; Separation of Duties memisahkan fungsi antar individu; Fail Secure adalah perilaku saat error. Yang dilanggar adalah Least Privilege — memberikan hak berlebih.',
+  4: '❌ Kurang tepat. FIDO2 sebenarnya juga bekerja online. NIST mengkategorikan SMS sebagai RESTRICTED (bukan dilarang total). Keunggulan FIDO2 adalah resistensi phishing via domain binding dan tidak ada shared secret.'
+};
+
+let answered = {};
+let qVisible = 1;
+
+function answer(q, opt) {
+  if (answered[q]) return;
+  answered[q] = opt;
+  const block = document.getElementById('q'+q+'-block');
+  const opts = block.querySelectorAll('.q-option');
+  const fb = document.getElementById('f'+q);
+  opts.forEach((el,i) => {
+    const ltr = String.fromCharCode(65+i);
+    if (ltr === correct[q]) { el.classList.add('correct'); }
+    else if (ltr === opt) { el.classList.add('wrong'); }
+    el.style.pointerEvents = 'none';
+  });
+  const isOk = opt === correct[q];
+  fb.className = 'q-feedback show ' + (isOk ? 'ok' : 'ko');
+  fb.textContent = isOk ? explanations[q] : wrongExp[q];
+
+  // Show next question after 800ms
+  if (q < 4) {
+    setTimeout(() => {
+      qVisible = q+1;
+      const nb = document.getElementById('q'+(q+1)+'-block');
+      nb.style.display = 'block';
+      nb.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }, 1200);
+  } else {
+    setTimeout(showScore, 1200);
+  }
+}
+
+function showScore() {
+  let score = 0;
+  for (let q=1; q<=4; q++) { if (answered[q] === correct[q]) score++; }
+  const el = document.getElementById('quiz-score');
+  el.style.display = 'block';
+  document.getElementById('score-text').textContent = score + ' / 4 benar';
+  const msgs = ['Pelajari lagi materi mitigasi 🔁','Cukup baik — review poin yang salah 📖','Bagus! Hampir sempurna 👍','Sempurna! Semua benar 🎉'];
+  document.getElementById('score-sub').textContent = msgs[score];
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function resetQuiz() {
+  answered = {}; qVisible = 1;
+  for (let q=1; q<=4; q++) {
+    const block = document.getElementById('q'+q+'-block');
+    block.style.display = q===1 ? 'block' : 'none';
+    const opts = block.querySelectorAll('.q-option');
+    opts.forEach(el => { el.className = 'q-option'; el.style.pointerEvents = ''; });
+    document.getElementById('f'+q).className = 'q-feedback';
+    document.getElementById('f'+q).textContent = '';
+  }
+  document.getElementById('quiz-score').style.display = 'none';
+}
+
+function goTo(idx) {
+  slides[current].classList.remove('active');
+  current = Math.max(0, Math.min(idx, slides.length-1));
+  slides[current].classList.add('active');
+  slides[current].scrollTop = 0;
+  updateNav();
+}
+
+function changeSlide(dir) { goTo(current + dir); }
+
+function updateNav() {
+  const total = slides.length;
+  document.getElementById('btn-prev').disabled = current === 0;
+  document.getElementById('btn-next').disabled = current === total-1;
+  document.getElementById('slide-counter').textContent = (current+1) + ' / ' + total;
+  document.getElementById('progress-fill').style.width = ((current+1)/total*100) + '%';
+  document.getElementById('slide-title-bar').textContent = slides[current].dataset.title || '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+  if (e.key === 'Home') goTo(0);
+  if (e.key === 'End') goTo(slides.length-1);
+});
+
+// Framework tab toggle (reused concept)
+document.querySelectorAll('.fw-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const parent = btn.closest('.slide-body') || btn.parentElement.parentElement;
+    parent.querySelectorAll('.fw-tab').forEach(t => t.classList.remove('active'));
+    parent.querySelectorAll('.fw-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const target = parent.querySelector('#'+btn.dataset.target);
+    if (target) target.classList.add('active');
+  });
+});
+
+updateNav();
+</script>
+</body>
+</html>

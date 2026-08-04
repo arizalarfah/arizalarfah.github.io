@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praktikum Pertemuan 13 – Secure SDLC: Validasi Input, Query & Sesi | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-red: #e74c3c;
+    --accent-blue: #2980b9;
+    --accent-purple: #8e44ad;
+    --accent-teal: #16a085;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-light); color: var(--text-dark); }
+
+  /* HEADER */
+  .page-header { background: linear-gradient(135deg, #0d2b6b 0%, #16a085 100%); color: white; padding: 36px 60px 28px; }
+  .header-badge { display: inline-block; background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold); color: var(--pssn-gold); border-radius: 20px; padding: 4px 16px; font-size: 12px; font-weight: 600; letter-spacing: 1px; margin-bottom: 16px; }
+  .page-header h1 { font-size: 30px; font-weight: 800; margin-bottom: 8px; }
+  .page-header p { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+  .header-meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+  .meta-item { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 18px; }
+  .meta-item .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.6); }
+  .meta-item .value { font-size: 13px; font-weight: 700; color: var(--pssn-lightgold); margin-top: 2px; }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 36px 24px 80px; }
+  .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--pssn-gold); margin-bottom: 8px; }
+  h2.lab-title { font-size: 22px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 6px; }
+  h3.sub-title { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 20px; }
+  h3.sub-title:first-child { margin-top: 0; }
+
+  /* LAB CARD */
+  .lab-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 36px; overflow: hidden; }
+  .lab-card-header { padding: 20px 28px; border-left: 6px solid; display: flex; align-items: center; gap: 16px; }
+  .lab-num { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; color: white; flex-shrink: 0; }
+  .lab-card-header h2 { font-size: 18px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 2px; }
+  .lab-card-header p { font-size: 13px; color: #666; }
+  .lab-body { padding: 24px 28px; }
+
+  /* INFO BOXES */
+  .info-box { background: #e3f2fd; border-left: 4px solid var(--accent-blue); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .info-box p, .info-box li { font-size: 13px; color: #333; line-height: 1.6; }
+  .info-box ul { padding-left: 18px; }
+  .warn-box { background: #fff8e1; border-left: 4px solid #f39c12; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .warn-box p { font-size: 13px; color: #555; line-height: 1.6; }
+  .warn-box .warn-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #e67e22; margin-bottom: 4px; }
+  .ok-box { background: #e8f5e9; border-left: 4px solid var(--accent-green); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .ok-box p { font-size: 13px; color: #333; line-height: 1.6; }
+  .note-box { background: #f3e5f5; border-left: 4px solid var(--accent-purple); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .note-box p { font-size: 13px; color: #444; line-height: 1.6; }
+  .note-box .note-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-purple); margin-bottom: 4px; }
+
+  /* STEP */
+  .step-list { list-style: none; padding: 0; margin-bottom: 16px; }
+  .step-list li { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
+  .step-badge { min-width: 28px; height: 28px; border-radius: 50%; background: var(--pssn-blue); color: white; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .step-content { font-size: 13.5px; color: #333; line-height: 1.7; }
+  .step-content strong { color: var(--pssn-blue); }
+  .step-content code { background: #f0f0f0; padding: 1px 6px; border-radius: 4px; font-size: 12px; font-family: 'Courier New', monospace; }
+
+  /* CODE BLOCK */
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 16px 18px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.7; margin: 10px 0 16px; overflow-x: auto; white-space: pre; }
+  .code-block .cmd { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .str { color: #fab387; }
+  .code-block .out { color: #89dceb; }
+  .code-block .warn { color: #f38ba8; }
+  .code-block .ok { color: #a6e3a1; }
+  .code-block .num { color: #f9e2af; }
+
+  /* TWO COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0 16px; }
+  .data-table th { background: var(--pssn-blue); color: white; padding: 10px 14px; text-align: left; font-size: 12px; }
+  .data-table td { padding: 9px 14px; border-bottom: 1px solid #e0e0e0; color: #444; line-height: 1.5; }
+  .data-table tr:nth-child(even) { background: #f8f9ff; }
+  .data-table td:first-child { font-weight: 700; color: var(--pssn-blue); }
+
+  /* CHECKLIST */
+  .checklist { list-style: none; padding: 0; margin: 10px 0 16px; }
+  .checklist li { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; font-size: 13.5px; color: #333; line-height: 1.5; }
+  .checklist li::before { content: '☐'; font-size: 16px; color: var(--pssn-blue); flex-shrink: 0; margin-top: 1px; }
+
+  /* FINDING TEMPLATE */
+  .finding-template { background: #fafafa; border: 2px dashed var(--pssn-blue); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .finding-template h4 { font-size: 14px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 14px; }
+  .field-row { display: grid; grid-template-columns: 160px 1fr; gap: 8px; margin-bottom: 8px; align-items: start; }
+  .field-label { font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; padding-top: 6px; }
+  .field-input { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; font-size: 13px; color: #888; font-style: italic; }
+
+  /* OBJECTIVE BOX */
+  .objective-box { background: linear-gradient(135deg,#e8f4fd,#f0f4ff); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; border: 1px solid #c5d8f0; }
+  .objective-box h4 { font-size: 13px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 8px; }
+  .objective-box li { font-size: 13px; color: #333; line-height: 1.7; }
+  .objective-box ul { padding-left: 20px; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: linear-gradient(to right, transparent, #ddd, transparent); margin: 30px 0; }
+
+  /* TAG */
+  .tag { display: inline-block; background: #e8eaf6; color: #3949ab; font-size: 11px; font-weight: 600; border-radius: 6px; padding: 3px 9px; margin: 2px; }
+  .tag.green { background: #e8f5e9; color: #2e7d32; }
+  .tag.red { background: #ffebee; color: #c62828; }
+  .tag.gold { background: #fff8e1; color: #e65100; }
+  .tag.purple { background: #f3e5f5; color: #6a1b9a; }
+  .tag.teal { background: #e0f7fa; color: #00695c; }
+
+  /* SEVERITY BADGE */
+  .sev-critical { background: #7b1fa2; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-high { background: #c62828; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-medium { background: #e65100; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-low { background: #f9a825; color: #333; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-info { background: #1565c0; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+
+  /* FOOTER */
+  .page-footer { background: var(--pssn-darkblue); color: rgba(255,255,255,0.6); text-align: center; padding: 20px; font-size: 12px; margin-top: 60px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="header-badge">RKS222 • Keamanan Perangkat Lunak • Semester 4</div>
+  <h1>Panduan Praktikum — Pertemuan 13</h1>
+  <p>Secure SDLC: Validasi Input, Parameterized Statements, Keamanan Sesi & Proteksi DDoS</p>
+  <p>Referensi: OWASP Cheat Sheet Series · NIST SP 800-218 (SSDF) · Howard & LeBlanc, Writing Secure Code</p>
+  <div class="header-meta">
+    <div class="meta-item">
+      <div class="label">Sub-CPMK</div>
+      <div class="value">263.1</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Durasi Praktikum</div>
+      <div class="value">150 menit</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Target</div>
+      <div class="value">Lab 1 + Lab 2 + Lab 3 + Lab 4</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Tools</div>
+      <div class="value">Python/Flask · SQLite · Flask-Limiter · bcrypt</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Output</div>
+      <div class="value">Proyek Aplikasi Termitigasi + Laporan</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- PRASYARAT -->
+  <div class="lab-card" style="margin-bottom:28px;">
+    <div class="lab-card-header" style="border-left-color:#2c3e50;background:#f8f9fa;">
+      <div class="lab-num" style="background:#2c3e50;">⚙</div>
+      <div>
+        <h2 style="font-size:16px;">Prasyarat & Setup Lingkungan</h2>
+        <p>Siapkan proyek dasar sebelum menerapkan mitigasi</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="two-col">
+        <div>
+          <h3 class="sub-title">Tools yang Dibutuhkan</h3>
+          <table class="data-table">
+            <tr><th>Tool</th><th>Versi</th><th>Cara Install</th></tr>
+            <tr><td>Python 3</td><td>3.8+</td><td>python.org atau paket distro</td></tr>
+            <tr><td>Flask</td><td>Latest</td><td><code>pip install flask</code></td></tr>
+            <tr><td>Flask-Limiter</td><td>Latest</td><td><code>pip install flask-limiter</code></td></tr>
+            <tr><td>bcrypt</td><td>Latest</td><td><code>pip install bcrypt</code></td></tr>
+            <tr><td>SQLite3</td><td>Bawaan Python</td><td>tidak perlu instalasi terpisah</td></tr>
+            <tr><td>curl / Apache Bench (ab)</td><td>Latest</td><td>bawaan Linux/WSL, atau <code>apt install apache2-utils</code></td></tr>
+            <tr><td>Browser DevTools</td><td>—</td><td>bawaan Chrome/Firefox — untuk inspeksi cookie</td></tr>
+          </table>
+        </div>
+        <div>
+          <h3 class="sub-title">Setup Proyek Dasar (Aplikasi Rentan)</h3>
+          <div class="code-block"><span class="comment"># Buat folder proyek</span>
+<span class="cmd">mkdir secure-sdlc-lab && cd secure-sdlc-lab</span>
+<span class="cmd">python -m venv venv</span>
+<span class="cmd">source venv/bin/activate</span>  <span class="comment"># Windows: venv\Scripts\activate</span>
+
+<span class="comment"># Install dependencies</span>
+<span class="cmd">pip install flask flask-limiter bcrypt</span>
+
+<span class="comment"># Inisialisasi database SQLite dengan data dummy</span>
+<span class="cmd">python init_db.py</span></div>
+          <div class="warn-box">
+            <div class="warn-label">Penting!</div>
+            <p>Modul praktikum ini menyediakan kerangka <strong>app_vulnerable.py</strong> (versi rentan, sengaja tanpa mitigasi) yang akan Anda perbaiki menjadi <strong>app_secure.py</strong> pada tiap lab.</p>
+          </div>
+          <div class="ok-box">
+            <p><strong>Verifikasi setup berhasil:</strong> jalankan <code>python app_vulnerable.py</code> → buka <code>http://localhost:5000</code> → halaman login & pencarian tampil.</p>
+          </div>
+        </div>
+      </div>
+      <h3 class="sub-title">Kerangka Aplikasi Rentan — app_vulnerable.py</h3>
+      <div class="code-block"><span class="kw">from</span> flask <span class="kw">import</span> Flask, request, session, redirect
+<span class="kw">import</span> sqlite3
+
+app = Flask(__name__)
+app.secret_key = <span class="str">"hardcoded-secret"</span>  <span class="comment"># akan diperbaiki di Lab 3</span>
+
+<span class="kw">def</span> get_db():
+    <span class="kw">return</span> sqlite3.connect(<span class="str">"users.db"</span>)
+
+<span class="kw">@app.route</span>(<span class="str">'/login'</span>, methods=[<span class="str">'GET'</span>, <span class="str">'POST'</span>])
+<span class="kw">def</span> login():
+    <span class="kw">if</span> request.method == <span class="str">'POST'</span>:
+        u = request.form[<span class="str">'user'</span>]
+        p = request.form[<span class="str">'pass'</span>]
+        db = get_db()
+        <span class="comment"># RENTAN: string concatenation ke SQL</span>
+        query = <span class="str">"SELECT * FROM users WHERE user='"</span>+u+<span class="str">"' AND pass='"</span>+p+<span class="str">"'"</span>
+        row = db.execute(query).fetchone()
+        <span class="kw">if</span> row:
+            <span class="comment"># RENTAN: tidak ada regenerasi session ID</span>
+            session[<span class="str">'uid'</span>] = row[<span class="num">0</span>]
+            <span class="kw">return</span> redirect(<span class="str">'/search'</span>)
+        <span class="kw">return</span> <span class="str">"Login gagal"</span>
+    <span class="kw">return</span> <span class="str">'''&lt;form method="post"&gt;
+        &lt;input name="user"&gt;&lt;input name="pass" type="password"&gt;
+        &lt;button&gt;Login&lt;/button&gt;&lt;/form&gt;'''</span>
+
+<span class="kw">@app.route</span>(<span class="str">'/search'</span>)
+<span class="kw">def</span> search():
+    q = request.args.get(<span class="str">'q'</span>, <span class="str">''</span>)
+    db = get_db()
+    <span class="comment"># RENTAN: tidak ada validasi & string concatenation</span>
+    rows = db.execute(<span class="str">"SELECT * FROM products WHERE name LIKE '%"</span>+q+<span class="str">"%'"</span>).fetchall()
+    <span class="kw">return</span> str(rows)
+
+<span class="kw">if</span> __name__ == <span class="str">'__main__'</span>:
+    app.run(debug=<span class="kw">True</span>)</div>
+    </div>
+  </div>
+
+  <!-- LAB 1: VALIDASI INPUT & PARAMETERIZED STATEMENTS -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#e74c3c;background:#fff5f5;">
+      <div class="lab-num" style="background:#e74c3c;">1</div>
+      <div>
+        <h2>Lab 1 — Validasi Input & Parameterized Statements</h2>
+        <p>Menutup celah SQL Injection pada endpoint login & pencarian | Estimasi: 40 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 1</h4>
+        <ul>
+          <li>Membuktikan endpoint <code>/login</code> dan <code>/search</code> rentan SQL Injection pada versi awal</li>
+          <li>Menerapkan validasi input berbasis whitelist (regex) pada field username</li>
+          <li>Mengganti seluruh query string concatenation dengan parameterized statement</li>
+          <li>Memverifikasi bahwa payload SQLi tidak lagi berhasil setelah perbaikan</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Langkah 1.1 — Buktikan Kerentanan SQL Injection</h3>
+      <ul class="step-list">
+        <li><div class="step-badge">1</div><div class="step-content">Jalankan <code>app_vulnerable.py</code>, buka <code>http://localhost:5000/login</code></div></li>
+        <li><div class="step-badge">2</div><div class="step-content">Pada field <strong>user</strong>, masukkan payload: <code>admin' --</code> dan field password bebas isi apa saja</div></li>
+        <li><div class="step-badge">3</div><div class="step-content">Amati bahwa login berhasil tanpa mengetahui password asli — buktikan dengan mencatat query final yang terbentuk</div></li>
+        <li><div class="step-badge">4</div><div class="step-content">Uji juga endpoint <code>/search?q=' UNION SELECT username,password FROM users --</code> dan amati hasilnya</div></li>
+      </ul>
+      <div class="code-block"><span class="comment"># Query final yang terbentuk saat payload admin' -- disisipkan:</span>
+<span class="warn">SELECT * FROM users WHERE user='admin' --' AND pass='apapun'</span>
+<span class="comment"># -- mengomentari sisa query, sehingga cek password diabaikan!</span></div>
+
+      <h3 class="sub-title">Langkah 1.2 — Terapkan Validasi Input (Whitelist)</h3>
+      <div class="info-box">
+        <p>Tambahkan validasi regex untuk username sebelum diproses lebih lanjut. Field password tidak divalidasi dengan regex (agar tidak membatasi karakter password pengguna), namun tetap dibatasi panjangnya.</p>
+      </div>
+      <div class="code-block"><span class="kw">import</span> re
+USERNAME_RE = re.compile(<span class="str">r'^[a-zA-Z0-9_]{3,20}$'</span>)
+
+<span class="kw">def</span> login():
+    <span class="kw">if</span> request.method == <span class="str">'POST'</span>:
+        u = request.form.get(<span class="str">'user'</span>, <span class="str">''</span>)
+        p = request.form.get(<span class="str">'pass'</span>, <span class="str">''</span>)
+        <span class="ok">if not USERNAME_RE.match(u) or len(p) > 128:
+            return "Input tidak valid", 400</span>
+        ...</div>
+
+      <h3 class="sub-title">Langkah 1.3 — Ganti ke Parameterized Statement</h3>
+      <div class="code-block"><span class="kw">def</span> login():
+    <span class="kw">if</span> request.method == <span class="str">'POST'</span>:
+        u = request.form.get(<span class="str">'user'</span>, <span class="str">''</span>)
+        p = request.form.get(<span class="str">'pass'</span>, <span class="str">''</span>)
+        <span class="kw">if not</span> USERNAME_RE.match(u) <span class="kw">or</span> len(p) &gt; <span class="num">128</span>:
+            <span class="kw">return</span> <span class="str">"Input tidak valid"</span>, <span class="num">400</span>
+        db = get_db()
+        <span class="ok"># AMAN: parameterized query</span>
+        <span class="ok">row = db.execute(
+            "SELECT id, pass_hash FROM users WHERE user=?", [u]
+        ).fetchone()</span>
+        <span class="kw">if</span> row <span class="kw">and</span> bcrypt.checkpw(p.encode(), row[<span class="num">1</span>]):
+            session[<span class="str">'uid'</span>] = row[<span class="num">0</span>]
+            <span class="kw">return</span> redirect(<span class="str">'/search'</span>)
+        <span class="kw">return</span> <span class="str">"Login gagal"</span>, <span class="num">401</span>
+
+<span class="kw">def</span> search():
+    q = request.args.get(<span class="str">'q'</span>, <span class="str">''</span>)[:<span class="num">100</span>]  <span class="comment"># batasi panjang</span>
+    db = get_db()
+    <span class="ok"># AMAN: parameterized LIKE query</span>
+    <span class="ok">rows = db.execute(
+        "SELECT * FROM products WHERE name LIKE ?", ['%'+q+'%']
+    ).fetchall()</span>
+    <span class="kw">return</span> str(rows)</div>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Tabel Verifikasi Lab 1</h3>
+      <p style="font-size:13px;color:#555;margin-bottom:12px;">Uji ulang payload dari Langkah 1.1 terhadap versi yang sudah diperbaiki, catat hasilnya.</p>
+      <table class="data-table">
+        <tr><th>Payload</th><th>Endpoint</th><th>Hasil Sebelum Fix</th><th>Hasil Sesudah Fix</th></tr>
+        <tr>
+          <td><code>admin' --</code></td>
+          <td>/login</td>
+          <td style="color:#c62828;">Login berhasil (bypass)</td>
+          <td style="color:#888;font-style:italic;">[ isi hasil pengujian Anda ]</td>
+        </tr>
+        <tr>
+          <td><code>' UNION SELECT ...</code></td>
+          <td>/search</td>
+          <td style="color:#c62828;">Data user bocor</td>
+          <td style="color:#888;font-style:italic;">[ isi hasil pengujian Anda ]</td>
+        </tr>
+      </table>
+
+      <div class="note-box">
+        <div class="note-label">Pertanyaan Refleksi Lab 1</div>
+        <p><strong>1.</strong> Mengapa payload <code>admin' --</code> berhasil melewati autentikasi pada versi rentan?<br>
+        <strong>2.</strong> Selain parameterized query, kontrol apa lagi yang membantu mengurangi dampak jika suatu saat ada celah SQLi yang lolos (defense-in-depth)?<br>
+        <strong>3.</strong> Mengapa validasi whitelist pada username tidak diterapkan dengan cara yang sama pada field password?</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 2: KEAMANAN SESI PENGGUNA -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#2980b9;background:#f0f6fc;">
+      <div class="lab-num" style="background:#2980b9;">2</div>
+      <div>
+        <h2>Lab 2 — Mengamankan Sesi Pengguna</h2>
+        <p>Regenerasi session ID, cookie flags, dan timeout | Estimasi: 40 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 2</h4>
+        <ul>
+          <li>Mengamati session ID menggunakan DevTools browser sebelum dan sesudah login</li>
+          <li>Menerapkan regenerasi session ID setelah autentikasi berhasil</li>
+          <li>Mengonfigurasi cookie flags: HttpOnly, Secure, SameSite</li>
+          <li>Menerapkan idle timeout dan invalidasi sesi saat logout</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Langkah 2.1 — Amati Session Cookie via DevTools</h3>
+      <ul class="step-list">
+        <li><div class="step-badge">1</div><div class="step-content">Buka <code>http://localhost:5000/login</code>, buka DevTools (F12) → tab <strong>Application/Storage → Cookies</strong></div></li>
+        <li><div class="step-badge">2</div><div class="step-content">Catat nilai cookie <code>session</code> SEBELUM login</div></li>
+        <li><div class="step-badge">3</div><div class="step-content">Login dengan kredensial valid, lalu catat kembali nilai cookie <code>session</code> SESUDAH login</div></li>
+        <li><div class="step-badge">4</div><div class="step-content">Pada versi rentan, nilai session ID <strong>sama persis</strong> sebelum & sesudah login — ini celah session fixation</div></li>
+      </ul>
+
+      <h3 class="sub-title">Langkah 2.2 — Konfigurasi Cookie Aman & Regenerasi Session</h3>
+      <div class="code-block"><span class="kw">import</span> os
+<span class="kw">from</span> datetime <span class="kw">import</span> timedelta
+
+app.secret_key = os.environ.get(<span class="str">'SECRET_KEY'</span>, os.urandom(<span class="num">32</span>))
+app.config.update(
+    <span class="ok">SESSION_COOKIE_HTTPONLY=True,</span>
+    <span class="ok">SESSION_COOKIE_SAMESITE='Lax',</span>
+    <span class="comment"># SESSION_COOKIE_SECURE=True   # aktifkan saat sudah pakai HTTPS</span>
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=<span class="num">15</span>)
+)
+
+<span class="kw">@app.route</span>(<span class="str">'/login'</span>, methods=[<span class="str">'GET'</span>, <span class="str">'POST'</span>])
+<span class="kw">def</span> login():
+    <span class="kw">if</span> request.method == <span class="str">'POST'</span>:
+        <span class="comment"># ... validasi & autentikasi seperti Lab 1 ...</span>
+        <span class="kw">if</span> row <span class="kw">and</span> bcrypt.checkpw(p.encode(), row[<span class="num">1</span>]):
+            <span class="ok">session.clear()          # (1) hapus sesi lama sepenuhnya</span>
+            <span class="ok">session['uid'] = row[0]  # (2) Flask otomatis membuat session ID baru</span>
+            <span class="ok">session.permanent = True # (3) berlaku idle timeout 15 menit</span>
+            <span class="kw">return</span> redirect(<span class="str">'/search'</span>)
+        <span class="kw">return</span> <span class="str">"Login gagal"</span>, <span class="num">401</span>
+
+<span class="kw">@app.route</span>(<span class="str">'/logout'</span>)
+<span class="kw">def</span> logout():
+    <span class="ok">session.clear()  # invalidasi sesi di server</span>
+    <span class="kw">return</span> redirect(<span class="str">'/login'</span>)</div>
+      <div class="warn-box">
+        <div class="warn-label">Catatan Flask</div>
+        <p>Secara default, <code>session.clear()</code> yang diikuti penulisan ulang data ke <code>session</code> akan membuat Flask menerbitkan cookie session baru pada response berikutnya — ini efektif meregenerasi session ID.</p>
+      </div>
+
+      <h3 class="sub-title">Langkah 2.3 — Verifikasi Ulang dengan DevTools</h3>
+      <ul class="step-list">
+        <li><div class="step-badge">1</div><div class="step-content">Ulangi Langkah 2.1 pada versi yang sudah diperbaiki — pastikan session ID SEBELUM dan SESUDAH login berbeda</div></li>
+        <li><div class="step-badge">2</div><div class="step-content">Pada kolom cookie di DevTools, periksa kolom <strong>HttpOnly</strong> dan <strong>SameSite</strong> — pastikan tercentang/terisi sesuai konfigurasi</div></li>
+        <li><div class="step-badge">3</div><div class="step-content">Tunggu lebih dari 15 menit tanpa aktivitas (atau perkecil nilai timeout untuk pengujian cepat), lalu akses <code>/search</code> — pastikan sesi sudah expired</div></li>
+      </ul>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Tabel Verifikasi Lab 2</h3>
+      <table class="data-table">
+        <tr><th>Pemeriksaan</th><th>Sebelum Fix</th><th>Sesudah Fix</th></tr>
+        <tr><td>Session ID berubah setelah login?</td><td style="color:#c62828;">Tidak</td><td style="color:#888;font-style:italic;">[ isi hasil Anda ]</td></tr>
+        <tr><td>Flag HttpOnly aktif?</td><td style="color:#c62828;">Tidak</td><td style="color:#888;font-style:italic;">[ isi hasil Anda ]</td></tr>
+        <tr><td>Flag SameSite diterapkan?</td><td style="color:#c62828;">Tidak</td><td style="color:#888;font-style:italic;">[ isi hasil Anda ]</td></tr>
+        <tr><td>Sesi expired setelah idle timeout?</td><td style="color:#c62828;">Tidak</td><td style="color:#888;font-style:italic;">[ isi hasil Anda ]</td></tr>
+      </table>
+
+      <div class="note-box">
+        <div class="note-label">Pertanyaan Refleksi Lab 2</div>
+        <p><strong>1.</strong> Jelaskan skenario serangan session fixation yang dapat terjadi jika session ID tidak diregenerasi setelah login.<br>
+        <strong>2.</strong> Mengapa flag <code>SESSION_COOKIE_SECURE</code> belum diaktifkan pada lab ini? Kapan seharusnya flag ini diaktifkan di lingkungan produksi?<br>
+        <strong>3.</strong> Apa perbedaan antara idle timeout dan absolute timeout pada manajemen sesi?</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 3: PROTEKSI DDOS (RATE LIMITING) -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#16a085;background:#f0fbf9;">
+      <div class="lab-num" style="background:#16a085;">3</div>
+      <div>
+        <h2>Lab 3 — Proteksi Dasar terhadap Serangan DDoS</h2>
+        <p>Simulasi HTTP flood/brute-force & mitigasi rate limiting | Estimasi: 40 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 3</h4>
+        <ul>
+          <li>Mensimulasikan serangan brute-force/HTTP flood terhadap endpoint <code>/login</code> menggunakan Apache Bench</li>
+          <li>Menerapkan rate limiting dengan Flask-Limiter pada endpoint sensitif</li>
+          <li>Memverifikasi respons HTTP 429 saat batas rate limit terlampaui</li>
+          <li>Membandingkan beban server sebelum dan sesudah mitigasi diterapkan</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Langkah 3.1 — Simulasikan Serangan (Sebelum Mitigasi)</h3>
+      <div class="warn-box">
+        <div class="warn-label">Penting!</div>
+        <p>Simulasi ini <strong>hanya boleh dijalankan terhadap aplikasi lab Anda sendiri</strong> di localhost. Tidak pernah menjalankan load testing/DDoS terhadap sistem milik pihak lain tanpa izin tertulis.</p>
+      </div>
+      <div class="code-block"><span class="comment"># Simulasi 200 request, 20 concurrent, ke endpoint /login</span>
+<span class="cmd">ab -n 200 -c 20 -p login_payload.txt -T application/x-www-form-urlencoded \
+  http://localhost:5000/login</span>
+
+<span class="comment"># login_payload.txt berisi:</span>
+<span class="out">user=admin&pass=coba1</span>
+
+<span class="comment"># Amati hasil: seluruh 200 request diproses server tanpa penolakan
+# → indikasi tidak ada proteksi brute-force/flood</span></div>
+
+      <h3 class="sub-title">Langkah 3.2 — Terapkan Rate Limiting dengan Flask-Limiter</h3>
+      <div class="code-block"><span class="kw">from</span> flask_limiter <span class="kw">import</span> Limiter
+<span class="kw">from</span> flask_limiter.util <span class="kw">import</span> get_remote_address
+
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=[<span class="str">"200 per day"</span>, <span class="str">"50 per hour"</span>]
+)
+
+<span class="kw">@app.route</span>(<span class="str">'/login'</span>, methods=[<span class="str">'GET'</span>, <span class="str">'POST'</span>])
+<span class="ok">@limiter.limit("5 per minute")</span>  <span class="comment"># cegah brute-force</span>
+<span class="kw">def</span> login():
+    ...
+
+<span class="kw">@app.route</span>(<span class="str">'/search'</span>)
+<span class="ok">@limiter.limit("30 per minute")</span>
+<span class="kw">def</span> search():
+    ...
+
+<span class="kw">@app.errorhandler</span>(<span class="num">429</span>)
+<span class="kw">def</span> ratelimit_handler(e):
+    <span class="kw">return</span> {<span class="str">"error"</span>: <span class="str">"Terlalu banyak permintaan, coba lagi nanti"</span>}, <span class="num">429</span></div>
+
+      <h3 class="sub-title">Langkah 3.3 — Uji Ulang & Bandingkan</h3>
+      <ul class="step-list">
+        <li><div class="step-badge">1</div><div class="step-content">Restart aplikasi (<code>app_secure.py</code>), ulangi perintah <code>ab</code> dari Langkah 3.1</div></li>
+        <li><div class="step-badge">2</div><div class="step-content">Amati bagian ringkasan output <code>ab</code>: cari baris <strong>"Non-2xx responses"</strong> — seharusnya muncul banyak respons non-2xx (429)</div></li>
+        <li><div class="step-badge">3</div><div class="step-content">Uji manual: kirim 6 request login berturut-turut dalam 1 menit dengan <code>curl</code>, request ke-6 harus mengembalikan status 429</div></li>
+      </ul>
+      <div class="code-block"><span class="comment"># Uji manual dengan curl (jalankan 6x berturut-turut)</span>
+<span class="cmd">for i in {1..6}; do
+  curl -s -o /dev/null -w "Percobaan $i: %{http_code}\n" \
+    -X POST -d "user=admin&pass=salah" \
+    http://localhost:5000/login
+done</span>
+
+<span class="out">Percobaan 1: 401
+Percobaan 2: 401
+Percobaan 3: 401
+Percobaan 4: 401
+Percobaan 5: 401
+Percobaan 6: 429   ← rate limit aktif!</span></div>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Tabel Perbandingan Beban Server</h3>
+      <table class="data-table">
+        <tr><th>Metrik (dari output <code>ab</code>)</th><th>Sebelum Rate Limiting</th><th>Sesudah Rate Limiting</th></tr>
+        <tr><td>Complete requests</td><td style="color:#888;font-style:italic;">[ isi ]</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+        <tr><td>Non-2xx responses</td><td style="color:#888;font-style:italic;">[ isi ]</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+        <tr><td>Requests per second</td><td style="color:#888;font-style:italic;">[ isi ]</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+      </table>
+
+      <div class="note-box">
+        <div class="note-label">Pertanyaan Refleksi Lab 3</div>
+        <p><strong>1.</strong> Mengapa rate limiting saja tidak cukup untuk menangkal serangan DDoS volumetrik skala besar? Kontrol apa yang diperlukan di lapisan jaringan/infrastruktur?<br>
+        <strong>2.</strong> Apa risiko jika limit terlalu ketat (misal 1 per menit) pada endpoint publik yang sering diakses pengguna sah?<br>
+        <strong>3.</strong> Selain rate limiting per IP, kapan sebaiknya rate limiting diterapkan per akun pengguna (bukan per IP)?</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 4: INTEGRASI & LAPORAN PROYEK -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#8e44ad;background:#f5eef8;">
+      <div class="lab-num" style="background:#8e44ad;">4</div>
+      <div>
+        <h2>Lab 4 — Integrasi & Laporan Proyek Secure SDLC</h2>
+        <p>Menggabungkan Lab 1-3 menjadi satu proyek utuh & menyusun laporan | Estimasi: 30 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 4</h4>
+        <ul>
+          <li>Menggabungkan seluruh mitigasi (validasi input, parameterized query, session security, rate limiting) menjadi satu <code>app_secure.py</code> yang utuh</li>
+          <li>Mengisi laporan mitigasi per kategori sebagai bukti penerapan Secure SDLC</li>
+          <li>Menyiapkan proyek yang sama untuk dilanjutkan pada Pertemuan 14 (enkripsi & keamanan penyimpanan data)</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Format Laporan Mitigasi (Isi untuk Setiap Kategori)</h3>
+      <div class="finding-template">
+        <h4>📋 Template Laporan Mitigasi — Kategori A: Validasi Input</h4>
+        <div class="field-row"><div class="field-label">Lokasi Kode</div><div class="field-input">Contoh: app_secure.py, fungsi login() baris 12-15</div></div>
+        <div class="field-row"><div class="field-label">Kerentanan Awal</div><div class="field-input">Jelaskan kerentanan sebelum mitigasi diterapkan</div></div>
+        <div class="field-row"><div class="field-label">Mitigasi Diterapkan</div><div class="field-input">Jelaskan validasi/regex yang digunakan dan alasannya</div></div>
+        <div class="field-row"><div class="field-label">Bukti Pengujian</div><div class="field-input">Screenshot/log hasil pengujian dengan input tidak valid</div></div>
+      </div>
+      <div class="info-box">
+        <p><strong>Instruksi:</strong> Duplikasi template di atas untuk empat kategori: <strong>A. Validasi Input</strong>, <strong>B. Parameterized Statements</strong>, <strong>C. Keamanan Sesi</strong>, dan <strong>D. Proteksi DDoS</strong> — masing-masing mengacu pada hasil kerja Lab 1-3.</p>
+      </div>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Checklist Penyelesaian Praktikum</h3>
+      <ul class="checklist">
+        <li>Lab 1: Kerentanan SQL Injection pada versi awal terbukti dan terdokumentasi</li>
+        <li>Lab 1: Validasi whitelist username diterapkan dan diuji</li>
+        <li>Lab 1: Seluruh query diubah menjadi parameterized statement</li>
+        <li>Lab 1: Payload SQLi tidak lagi berhasil setelah perbaikan</li>
+        <li>Lab 2: Session ID terbukti sama sebelum fix, berbeda sesudah fix (regenerasi)</li>
+        <li>Lab 2: Cookie flags HttpOnly & SameSite dikonfigurasi dan terverifikasi via DevTools</li>
+        <li>Lab 2: Idle timeout diterapkan dan diuji</li>
+        <li>Lab 3: Simulasi request beruntun terhadap /login dijalankan sebelum & sesudah rate limiting</li>
+        <li>Lab 3: Rate limiting Flask-Limiter aktif, respons 429 terbukti muncul</li>
+        <li>Lab 4: app_secure.py final menggabungkan seluruh mitigasi A-D</li>
+        <li>Lab 4: Laporan mitigasi 4 kategori terisi lengkap dengan bukti pengujian</li>
+        <li>Seluruh pertanyaan refleksi Lab 1-3 dijawab</li>
+      </ul>
+
+      <div class="note-box">
+        <div class="note-label">Pengumpulan</div>
+        <p>Kumpulkan ke LMS dalam bentuk <strong>arsip ZIP</strong> berisi: (1) source code <code>app_vulnerable.py</code> dan <code>app_secure.py</code>, (2) laporan mitigasi 4 kategori (PDF/DOCX), (3) screenshot bukti pengujian tiap lab, dan (4) jawaban pertanyaan refleksi. <strong>Simpan proyek ini</strong> — akan dilanjutkan pada Pertemuan 14.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFERENSI -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#2c3e50;background:#f8f9fa;">
+      <div class="lab-num" style="background:#2c3e50;">📚</div>
+      <div>
+        <h2>Referensi & Sumber Belajar</h2>
+        <p>Semua sumber dapat diakses gratis</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="two-col">
+        <div>
+          <h3 class="sub-title">Dokumentasi Resmi</h3>
+          <table class="data-table">
+            <tr><th>Sumber</th><th>URL</th></tr>
+            <tr><td>OWASP Input Validation Cheat Sheet</td><td style="font-size:11.5px;">cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html</td></tr>
+            <tr><td>OWASP SQL Injection Prevention</td><td style="font-size:11.5px;">cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html</td></tr>
+            <tr><td>OWASP Session Management Cheat Sheet</td><td style="font-size:11.5px;">cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html</td></tr>
+            <tr><td>OWASP DoS Prevention Cheat Sheet</td><td style="font-size:11.5px;">cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html</td></tr>
+            <tr><td>Flask-Limiter Docs</td><td style="font-size:11.5px;">flask-limiter.readthedocs.io</td></tr>
+            <tr><td>NIST SP 800-218 (SSDF)</td><td style="font-size:11.5px;">csrc.nist.gov/publications/detail/sp/800-218/final</td></tr>
+          </table>
+        </div>
+        <div>
+          <h3 class="sub-title">Tags Materi</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
+            <span class="tag red">SQL Injection</span>
+            <span class="tag">Input Validation</span>
+            <span class="tag green">Parameterized Query</span>
+            <span class="tag purple">Session Security</span>
+            <span class="tag teal">Rate Limiting</span>
+            <span class="tag gold">DDoS Mitigation</span>
+            <span class="tag">Secure SDLC</span>
+            <span class="tag">NIST SSDF</span>
+          </div>
+          <h3 class="sub-title">Mapping ke Sub-CPMK 263.1</h3>
+          <table class="data-table">
+            <tr><th>Lab</th><th>Indikator</th></tr>
+            <tr><td>Lab 1 — Validasi & Query</td><td>Indikator A + B (validasi input, parameterized statements)</td></tr>
+            <tr><td>Lab 2 — Sesi Pengguna</td><td>Indikator C (keamanan sesi)</td></tr>
+            <tr><td>Lab 3 — Rate Limiting</td><td>Indikator D (proteksi DDoS)</td></tr>
+            <tr><td>Lab 4 — Integrasi</td><td>Indikator A-D (proyek Secure SDLC utuh)</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .container -->
+
+<div class="page-footer">
+  RKS222 Keamanan Perangkat Lunak — Praktikum Pertemuan 13 | Sub-CPMK 263.1 | Program Studi D4 Rekayasa Keamanan Siber — Politeknik SSN | Semester Genap 2025/2026
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RKS222 – Keamanan Perangkat Lunak | PSSN</title>
+<style>
+/* ═══════════════════════════════════════════════════
+   RESET & DESIGN TOKENS
+═══════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy:      #081a45;
+  --blue:      #0d2b6b;
+  --blue-mid:  #1a3a8f;
+  --blue-lt:   #2d5be3;
+  --gold:      #e8a020;
+  --gold-lt:   #ffd166;
+  --gold-pale: #fff8e7;
+  --red:       #c0392b;
+  --green:     #27ae60;
+  --teal:      #16a085;
+  --purple:    #8e44ad;
+  --orange:    #e67e22;
+  --bg:        #f0f4f8;
+  --white:     #ffffff;
+  --text:      #1a1a2e;
+  --muted:     #5a6a7a;
+  --border:    #dde4f0;
+  --sh-sm:     0 2px 8px rgba(0,0,0,.08);
+  --sh:        0 4px 20px rgba(0,0,0,.12);
+  --sh-lg:     0 8px 40px rgba(0,0,0,.18);
+  --r:         12px;
+  --r-lg:      20px;
+  --tr:        .22s cubic-bezier(.4,0,.2,1);
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* ═══ PROGRESS BAR ═══ */
+#prog { position: fixed; top: 64px; left: 0; right: 0; z-index: 999; height: 3px; }
+#prog-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold), var(--gold-lt)); transition: width .1s linear; }
+
+/* ═══ TOPNAV ═══ */
+#nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(8,26,69,.97); backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(232,160,32,.2);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 64px;
+  box-shadow: 0 2px 20px rgba(0,0,0,.35);
+}
+.nb-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.nb-logo { width: 36px; height: 36px; background: var(--gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: var(--navy); flex-shrink: 0; }
+.nb-txt { display: flex; flex-direction: column; }
+.nb-txt b { font-size: 14px; font-weight: 800; color: var(--white); }
+.nb-txt small { font-size: 11px; color: rgba(255,255,255,.5); }
+.nb-links { display: flex; align-items: center; gap: 2px; list-style: none; }
+.nb-links a { color: rgba(255,255,255,.72); text-decoration: none; font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 8px; transition: var(--tr); white-space: nowrap; }
+.nb-links a:hover { color: var(--gold); background: rgba(232,160,32,.1); }
+.nb-links a.cta { background: var(--gold); color: var(--navy); font-weight: 700; }
+.nb-links a.cta:hover { background: var(--gold-lt); color: var(--navy); }
+.nb-toggle { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; }
+.nb-toggle span { display: block; width: 24px; height: 2px; background: var(--white); border-radius: 2px; transition: var(--tr); }
+
+/* ═══ HERO ═══ */
+#hero {
+  min-height: 100vh;
+  background: linear-gradient(140deg, var(--navy) 0%, #122060 45%, #3b0d74 100%);
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  padding: 100px 32px 80px; text-align: center;
+}
+#hero::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size: 64px 64px;
+  animation: gridDrift 25s linear infinite;
+}
+#hero::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 15% 60%, rgba(232,160,32,.1) 0%, transparent 55%),
+              radial-gradient(ellipse at 85% 25%, rgba(142,68,173,.14) 0%, transparent 55%),
+              radial-gradient(ellipse at 55% 85%, rgba(22,160,133,.08) 0%, transparent 45%);
+}
+@keyframes gridDrift { 0%{transform:translateY(0)} 100%{transform:translateY(64px)} }
+
+.hero-inner { position: relative; z-index: 1; max-width: 860px; }
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(232,160,32,.13); border: 1px solid rgba(232,160,32,.35);
+  color: var(--gold-lt); border-radius: 50px; padding: 6px 20px;
+  font-size: 13px; font-weight: 600; letter-spacing: .5px; margin-bottom: 24px;
+  animation: upFade .7s ease both;
+}
+.h-code { background: var(--gold); color: var(--navy); font-size: 12px; font-weight: 800; letter-spacing: 2px; padding: 2px 10px; border-radius: 4px; }
+
+.hero-title {
+  font-size: clamp(2rem, 5.5vw, 3.8rem); font-weight: 900; color: var(--white);
+  line-height: 1.15; margin-bottom: 18px;
+  animation: upFade .7s .1s ease both;
+}
+.hero-title span { color: var(--gold-lt); }
+
+.hero-sub {
+  font-size: clamp(.95rem, 2vw, 1.2rem); color: rgba(255,255,255,.68);
+  max-width: 620px; margin: 0 auto 36px;
+  animation: upFade .7s .2s ease both;
+}
+
+.hero-pills {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 44px; animation: upFade .7s .3s ease both;
+}
+.pill {
+  background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.18);
+  color: var(--white); border-radius: 8px; padding: 8px 16px; font-size: 13px;
+}
+.pill strong { color: var(--gold); }
+
+.hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; animation: upFade .7s .4s ease both; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px;
+  border: none; cursor: pointer; padding: 13px 28px; border-radius: 10px;
+  text-decoration: none; transition: var(--tr);
+}
+.btn-gold  { background: var(--gold); color: var(--navy); box-shadow: 0 4px 20px rgba(232,160,32,.4); }
+.btn-gold:hover  { background: var(--gold-lt); transform: translateY(-2px); box-shadow: 0 6px 28px rgba(232,160,32,.5); }
+.btn-ghost { background: transparent; color: var(--white); border: 2px solid rgba(255,255,255,.28); }
+.btn-ghost:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.55); transform: translateY(-2px); }
+
+.scroll-hint {
+  position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  color: rgba(255,255,255,.35); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  animation: bounce 2.2s infinite;
+}
+.scroll-hint::after { content: '↓'; font-size: 18px; color: var(--gold); }
+@keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 55%{transform:translateX(-50%) translateY(8px)} }
+@keyframes upFade { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+
+/* ═══ STATS STRIP ═══ */
+#stats {
+  background: linear-gradient(135deg, var(--navy), var(--blue-mid));
+  padding: 50px 32px;
+}
+.stats-row { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 0; }
+.stat { text-align: center; padding: 16px; position: relative; }
+.stat + .stat::before { content: ''; position: absolute; left: 0; top: 20%; height: 60%; width: 1px; background: rgba(255,255,255,.12); }
+.stat-n { font-size: 2.4rem; font-weight: 900; color: var(--gold); line-height: 1; margin-bottom: 6px; }
+.stat-l { font-size: 12.5px; color: rgba(255,255,255,.65); font-weight: 500; }
+
+/* ═══ SECTION COMMON ═══ */
+section { padding: 80px 32px; }
+.container { max-width: 1100px; margin: 0 auto; }
+.s-tag { display: inline-block; background: var(--gold); color: var(--navy); font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; padding: 4px 14px; border-radius: 50px; margin-bottom: 12px; }
+.s-title { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 800; color: var(--blue); margin-bottom: 10px; }
+.s-desc { font-size: 15px; color: var(--muted); max-width: 640px; margin-bottom: 44px; line-height: 1.7; }
+
+/* reveal */
+.rev { opacity: 0; transform: translateY(28px); transition: opacity .55s ease, transform .55s ease; }
+.rev.on { opacity: 1; transform: translateY(0); }
+
+/* ═══ DESKRIPSI ═══ */
+#deskripsi { background: var(--white); }
+.desc-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: start; }
+.desc-text p { font-size: 15px; color: var(--muted); line-height: 1.8; margin-bottom: 16px; }
+.desc-text strong { color: var(--blue); }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.icard {
+  background: var(--bg); border-radius: var(--r); padding: 16px 18px;
+  border-left: 4px solid var(--gold); transition: var(--tr);
+}
+.icard:hover { transform: translateY(-2px); box-shadow: var(--sh); }
+.icard .ic-ico { font-size: 22px; margin-bottom: 6px; }
+.icard .ic-lbl { font-size: 10.5px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+.icard .ic-val { font-size: 14px; font-weight: 700; color: var(--blue); line-height: 1.35; }
+
+/* ═══ CAPAIAN ═══ */
+#capaian { background: var(--bg); }
+
+/* CPL */
+.cpl-grid { display: grid; grid-template-columns: 1fr; gap: 0; margin-bottom: 40px; }
+.cpl-card {
+  background: var(--white); border-radius: var(--r);
+  padding: 24px 28px; box-shadow: var(--sh-sm);
+  border-left: 5px solid var(--blue);
+  display: flex; gap: 20px; align-items: flex-start;
+}
+.cpl-badge {
+  background: var(--blue); color: var(--white); border-radius: 8px;
+  font-size: 12px; font-weight: 800; letter-spacing: 1px;
+  padding: 6px 14px; white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+}
+.cpl-card p { font-size: 14px; color: #444; line-height: 1.7; }
+.cpl-card p strong { color: var(--blue); }
+
+/* CPMK */
+.hier-arrow { text-align: center; font-size: 22px; color: var(--gold); opacity: .65; margin: 10px 0; }
+.sub-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--blue); margin-bottom: 16px; padding-bottom: 7px; border-bottom: 2px solid var(--gold); }
+
+.cpmk-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 40px; }
+.cpmk-card { background: var(--white); border-radius: var(--r); box-shadow: var(--sh-sm); overflow: hidden; transition: var(--tr); }
+.cpmk-card:hover { transform: translateY(-3px); box-shadow: var(--sh); }
+.cpmk-head { padding: 14px 18px; color: var(--white); display: flex; align-items: center; gap: 10px; }
+.cpmk-card:nth-child(1) .cpmk-head { background: linear-gradient(135deg,#0d2b6b,#1a56c4); }
+.cpmk-card:nth-child(2) .cpmk-head { background: linear-gradient(135deg,#6a1b9a,#ab47bc); }
+.cpmk-card:nth-child(3) .cpmk-head { background: linear-gradient(135deg,#00695c,#26a69a); }
+.cpmk-ico { font-size: 26px; }
+.cpmk-head-txt h3 { font-size: 12.5px; font-weight: 800; margin-bottom: 2px; }
+.cpmk-head-txt small { font-size: 11px; opacity: .8; }
+.cpmk-body { padding: 14px 18px; }
+.cpmk-body p { font-size: 13px; color: #444; line-height: 1.65; margin-bottom: 10px; }
+.bobot-chip { display: inline-flex; align-items: center; gap: 5px; background: var(--gold-pale); color: var(--navy); font-size: 11.5px; font-weight: 700; padding: 3px 12px; border-radius: 20px; }
+
+/* Sub-CPMK */
+.subcpmk-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.sc-card { background: var(--white); border-radius: var(--r); padding: 18px; box-shadow: var(--sh-sm); border-top: 3px solid; transition: var(--tr); }
+.sc-card:hover { transform: translateY(-3px); box-shadow: var(--sh); }
+.sc261-1 { border-color: var(--blue); }
+.sc261-2 { border-color: var(--orange); }
+.sc262-1 { border-color: var(--purple); }
+.sc262-2 { border-color: var(--red); }
+.sc263-1 { border-color: var(--teal); }
+.sc263-2 { border-color: var(--green); }
+.sc-code { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; padding: 2px 9px; border-radius: 10px; margin-bottom: 8px; }
+.sc261-1 .sc-code { background:#e8f0fe;color:var(--blue); }
+.sc261-2 .sc-code { background:#fff3e0;color:var(--orange); }
+.sc262-1 .sc-code { background:#f3e5f5;color:var(--purple); }
+.sc262-2 .sc-code { background:#fde8e8;color:var(--red); }
+.sc263-1 .sc-code { background:#e0f2f1;color:var(--teal); }
+.sc263-2 .sc-code { background:#e8f5e9;color:var(--green); }
+.sc-card h4 { font-size: 13.5px; font-weight: 700; color: var(--text); margin-bottom: 7px; line-height: 1.4; }
+.sc-card p { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+
+/* ═══ MATRIKS ═══ */
+#matriks { background: var(--white); }
+.mat-wrap { overflow-x: auto; border-radius: var(--r); box-shadow: var(--sh-sm); }
+.mat { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 780px; }
+.mat th,.mat td { padding: 11px 14px; border: 1px solid var(--border); text-align: center; vertical-align: middle; }
+.mat thead th { background: var(--blue); color: var(--white); font-size: 11.5px; font-weight: 700; letter-spacing: .4px; }
+.mat thead th.hd-left { background: var(--navy); text-align: left; min-width: 220px; }
+.mat thead tr:nth-child(2) th { background: #1a3a8f; font-size: 11px; }
+.mat tbody tr:nth-child(even) td { background: #f8f9fc; }
+.mat tbody td.td-lft { text-align: left; font-weight: 600; color: var(--blue); background: #f5f7ff; font-size: 12px; }
+.mat td.td-cpmk { background: var(--gold-pale); font-weight: 700; color: var(--navy); }
+.ck  { color: var(--green); font-size: 17px; font-weight: 800; }
+.ck2 { color: var(--blue);  font-size: 15px; }
+.ds  { color: #ccc; }
+.mat tfoot td { background: var(--navy); color: var(--gold-lt); font-weight: 800; font-size: 13px; padding: 13px 14px; }
+.mat tfoot td.tot { background: var(--gold); color: var(--navy); font-size: 15px; font-weight: 900; }
+.mat-legend { display: flex; gap: 22px; margin-top: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.mat-legend span { display: flex; align-items: center; gap: 6px; }
+
+/* ═══ PERTEMUAN (MATERI) ═══ */
+#materi { background: var(--bg); }
+
+/* Timeline header */
+.mg-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+}
+.mg-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; }
+.leg { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.leg-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.leg-dot.avail  { background: var(--blue); }
+.leg-dot.locked { background: #b0bec5; }
+.leg-dot.uts    { background: var(--orange); }
+.leg-dot.uas    { background: var(--red); }
+
+/* Grid: 4 per row on desktop */
+.mg-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* Base button */
+.mg-btn {
+  position: relative;
+  display: flex; flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px 16px 14px;
+  border-radius: var(--r);
+  text-decoration: none;
+  border: none; cursor: pointer;
+  transition: var(--tr);
+  min-height: 110px;
+  overflow: hidden;
+  box-shadow: var(--sh-sm);
+}
+.mg-btn::before {
+  content: attr(data-week);
+  position: absolute; bottom: -8px; right: 10px;
+  font-size: 48px; font-weight: 900; opacity: .07; line-height: 1;
+  color: inherit;
+}
+
+/* Week number badge */
+.mg-week {
+  font-size: 10px; font-weight: 800; letter-spacing: 1.5px;
+  text-transform: uppercase; opacity: .75;
+}
+/* Icon */
+.mg-ico { font-size: 22px; line-height: 1; }
+/* Title */
+.mg-title { font-size: 12.5px; font-weight: 700; line-height: 1.4; }
+/* Sub-label */
+.mg-sub { font-size: 10.5px; opacity: .75; font-weight: 500; margin-top: auto; }
+
+/* Bobot tag */
+.mg-bobot {
+  position: absolute; top: 10px; right: 10px;
+  font-size: 10px; font-weight: 800;
+  padding: 2px 7px; border-radius: 10px;
+  background: rgba(255,255,255,.2); color: inherit;
+  letter-spacing: .5px;
+}
+
+/* Available (has file) */
+.mg-available {
+  background: linear-gradient(140deg, var(--blue), var(--blue-mid));
+  color: var(--white);
+}
+.mg-available:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(13,43,107,.35); filter: brightness(1.1); }
+.mg-available .mg-bobot { background: rgba(255,255,255,.2); }
+
+/* Locked (coming soon) */
+.mg-locked {
+  background: var(--white); color: #78909c;
+  border: 2px dashed #b0bec5; cursor: not-allowed;
+  box-shadow: none;
+}
+.mg-locked .mg-bobot { background: #eceff1; color: #90a4ae; }
+
+/* UTS */
+.mg-uts {
+  background: linear-gradient(140deg, #bf360c, var(--orange));
+  color: var(--white); cursor: default;
+}
+/* UAS */
+.mg-uas {
+  background: linear-gradient(140deg, #880e4f, var(--red));
+  color: var(--white); cursor: default;
+}
+/* Center UTS/UAS text */
+.mg-uts, .mg-uas {
+  align-items: center; justify-content: center; text-align: center;
+}
+.mg-uts .mg-title, .mg-uas .mg-title { font-size: 14px; }
+.mg-uts .mg-sub, .mg-uas .mg-sub { font-size: 11px; opacity: .85; }
+
+/* Lock icon for locked */
+.mg-locked::after {
+  content: '🔒';
+  position: absolute; top: 10px; right: 10px;
+  font-size: 14px; opacity: .45;
+}
+
+/* "Tersedia" badge */
+.mg-avail-badge {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(255,255,255,.25); color: var(--white);
+  font-size: 9.5px; font-weight: 800; letter-spacing: .5px;
+  padding: 2px 8px; border-radius: 10px; text-transform: uppercase;
+}
+
+/* ═══ PUSTAKA ═══ */
+#pustaka { background: var(--white); }
+.pustaka-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.pust-card { background: var(--bg); border-radius: var(--r); padding: 16px 18px; border-left: 4px solid; transition: var(--tr); }
+.pust-card:hover { transform: translateY(-2px); box-shadow: var(--sh); }
+.pust-card:nth-child(1){border-color:var(--blue)}
+.pust-card:nth-child(2){border-color:var(--purple)}
+.pust-card:nth-child(3){border-color:var(--green)}
+.pust-card:nth-child(4){border-color:var(--red)}
+.pust-card:nth-child(5){border-color:var(--teal)}
+.pust-card:nth-child(6){border-color:var(--orange)}
+.pust-card:nth-child(7){border-color:var(--green)}
+.pust-card:nth-child(8){border-color:var(--blue-mid)}
+.pust-card:nth-child(9){border-color:var(--purple)}
+.pust-no { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+.pust-card p { font-size: 13px; color: var(--text); line-height: 1.6; }
+.pust-year { display: inline-block; background: var(--gold); color: var(--navy); font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 4px; margin-left: 5px; }
+
+/* ═══ FOOTER ═══ */
+footer { background: var(--navy); padding: 52px 32px 28px; color: rgba(255,255,255,.65); }
+.footer-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 44px; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: 24px; }
+.fl-logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.fl-logo { width: 40px; height: 40px; background: var(--gold); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: var(--navy); }
+.fl-name { font-size: 15px; font-weight: 800; color: var(--white); }
+footer p { font-size: 13px; line-height: 1.7; }
+footer h4 { font-size: 12.5px; font-weight: 800; color: var(--white); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .8px; }
+footer ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+footer ul li a { font-size: 13px; color: rgba(255,255,255,.6); text-decoration: none; transition: var(--tr); }
+footer ul li a:hover { color: var(--gold); padding-left: 4px; }
+.footer-bot { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 12px; color: rgba(255,255,255,.35); }
+.footer-bot span { color: var(--gold); }
+
+/* ═══ BACK TOP ═══ */
+#btt { position: fixed; bottom: 28px; right: 28px; width: 44px; height: 44px; border-radius: 50%; background: var(--gold); color: var(--navy); border: none; cursor: pointer; font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(232,160,32,.4); opacity: 0; pointer-events: none; transition: var(--tr); z-index: 900; }
+#btt.show { opacity: 1; pointer-events: all; }
+#btt:hover { transform: translateY(-3px); background: var(--gold-lt); }
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 1024px) {
+  .cpmk-grid { grid-template-columns: 1fr 1fr; }
+  .subcpmk-grid { grid-template-columns: 1fr 1fr 1fr; }
+  .mg-grid { grid-template-columns: repeat(4,1fr); }
+  .footer-inner { grid-template-columns: 1fr 1fr; }
+  .stats-row { grid-template-columns: repeat(4,1fr); }
+}
+@media (max-width: 820px) {
+  #nav { padding: 0 20px; }
+  .nb-links { display: none; flex-direction: column; position: fixed; top: 64px; left: 0; right: 0; background: var(--navy); padding: 12px; gap: 2px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .nb-links.open { display: flex; }
+  .nb-toggle { display: flex; }
+  section { padding: 60px 20px; }
+  .desc-grid { grid-template-columns: 1fr; }
+  .cpmk-grid { grid-template-columns: 1fr; }
+  .subcpmk-grid { grid-template-columns: 1fr 1fr; }
+  .mg-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-row { grid-template-columns: repeat(2,1fr); }
+  .footer-inner { grid-template-columns: 1fr; gap: 28px; }
+  .footer-bot { flex-direction: column; text-align: center; }
+  .pustaka-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .hero-btns { flex-direction: column; align-items: center; }
+  .btn { width: 100%; justify-content: center; }
+  .mg-grid { grid-template-columns: repeat(2,1fr); }
+  .subcpmk-grid { grid-template-columns: 1fr; }
+  .info-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- progress -->
+<div id="prog"><div id="prog-fill"></div></div>
+
+<!-- ═══ NAVBAR ═══ -->
+<nav id="nav" aria-label="Navigasi utama">
+  <a href="#hero" class="nb-brand">
+    <div class="nb-logo">🔐</div>
+    <div class="nb-txt">
+      <b>RKS222 · Keamanan Perangkat Lunak</b>
+      <small>Politeknik Siber dan Sandi Negara</small>
+    </div>
+  </a>
+  <ul class="nb-links" id="nbLinks">
+    <li><a href="#deskripsi">Deskripsi MK</a></li>
+    <li><a href="#capaian">Capaian Pembelajaran</a></li>
+    <li><a href="#matriks">Matriks CPL-CPMK</a></li>
+    <li><a href="#pustaka">Pustaka</a></li>
+    <li><a href="#materi" class="cta">📚 Bahan Ajar</a></li>
+  </ul>
+  <button class="nb-toggle" id="nbToggle" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <span class="h-code">RKS222</span>
+      Program Studi Rekayasa Keamanan Siber · PSSN
+    </div>
+    <h1 class="hero-title">Keamanan<br><span>Perangkat Lunak</span></h1>
+    <p class="hero-sub">Mempelajari prinsip, teknik, dan alat untuk menjaga keamanan perangkat lunak — dari identifikasi kerawanan, mitigasi, pengujian, hingga implementasi pengamanan berbasis standar industri global.</p>
+    <div class="hero-pills">
+      <div class="pill">📋 Teori <strong>1 SKS</strong> + Praktik <strong>2 SKS</strong></div>
+      <div class="pill">📅 Semester <strong>IV · Genap 2025/2026</strong></div>
+      <div class="pill">🏛️ Rekayasa Keamanan Siber · <strong>PSSN</strong></div>
+      <div class="pill">🎯 <strong>CPL02</strong> · CPMK261 · CPMK262 · CPMK263</div>
+    </div>
+    <div class="hero-btns">
+      <a href="#materi" class="btn btn-gold">📚 Bahan Ajar Pertemuan</a>
+      <a href="#capaian" class="btn btn-ghost">🎯 Capaian Pembelajaran</a>
+    </div>
+  </div>
+  <div class="scroll-hint">Gulir ke bawah</div>
+</section>
+
+<!-- ═══ STATS ═══ -->
+<div id="stats">
+  <div class="stats-row">
+    <div class="stat rev">
+      <div class="stat-n">16</div>
+      <div class="stat-l">Minggu Pertemuan</div>
+    </div>
+    <div class="stat rev">
+      <div class="stat-n">3 SKS</div>
+      <div class="stat-l">1 Teori · 2 Praktik</div>
+    </div>
+    <div class="stat rev">
+      <div class="stat-n">6</div>
+      <div class="stat-l">Sub-CPMK</div>
+    </div>
+    <div class="stat rev">
+      <div class="stat-n">3</div>
+      <div class="stat-l">CPMK (261 · 262 · 263)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DESKRIPSI ═══ -->
+<section id="deskripsi">
+  <div class="container">
+    <div class="s-tag">Tentang Matakuliah</div>
+    <h2 class="s-title">Deskripsi Matakuliah</h2>
+    <div class="desc-grid">
+      <div class="desc-text rev">
+        <p>
+          <strong>Keamanan Perangkat Lunak (RKS222)</strong> adalah matakuliah wajib Program Studi Rekayasa Keamanan Siber PSSN yang membahas prinsip, teknik, dan alat yang digunakan dalam menjaga keamanan perangkat lunak dari sisi kerentanan dan ancaman yang umum terjadi.
+        </p>
+        <p>
+          Mahasiswa akan dikenalkan dengan <strong>jenis-jenis perangkat lunak</strong>, melakukan <strong>uji kerawanan umum</strong>, cara mitigasi, <strong>teknik pengamanan kode</strong>, pengujian kerentanan, serta penerapan <strong>kontrol akses dan monitoring</strong>.
+        </p>
+        <p>
+          Matakuliah ini mendukung pencapaian kompetensi dalam memahami dan mengaplikasikan prinsip keamanan informasi dalam konteks keamanan perangkat lunak sebagai bagian dari sistem keamanan siber dan sandi.
+        </p>
+        <p>
+          Prasyarat: <strong>Pemrograman Lanjutan</strong> dan <strong>Sistem Operasi dan Virtualisasi</strong>. Disusun oleh Tim Kurikulum PSSN pada 01 September 2023.
+        </p>
+      </div>
+      <div class="info-grid rev">
+        <div class="icard">
+          <div class="ic-ico">📋</div>
+          <div class="ic-lbl">Kode MK</div>
+          <div class="ic-val">RKS222</div>
+        </div>
+        <div class="icard">
+          <div class="ic-ico">⚖️</div>
+          <div class="ic-lbl">Bobot SKS</div>
+          <div class="ic-val">3 SKS (T:1 + P:2)</div>
+        </div>
+        <div class="icard">
+          <div class="ic-ico">📅</div>
+          <div class="ic-lbl">Semester</div>
+          <div class="ic-val">IV · Genap 2025/2026</div>
+        </div>
+        <div class="icard">
+          <div class="ic-ico">🏛️</div>
+          <div class="ic-lbl">Program Studi</div>
+          <div class="ic-val">Rekayasa Keamanan Siber</div>
+        </div>
+        <div class="icard">
+          <div class="ic-ico">🎓</div>
+          <div class="ic-lbl">Rumpun MK</div>
+          <div class="ic-val">Terapan</div>
+        </div>
+        <div class="icard">
+          <div class="ic-ico">🎯</div>
+          <div class="ic-lbl">CPL</div>
+          <div class="ic-val">CPL02</div>
+        </div>
+        <div class="icard">
+          <div class="ic-ico">📝</div>
+          <div class="ic-lbl">Metode</div>
+          <div class="ic-val">Ceramah, Diskusi, Praktikum, Proyek</div>
+        </div>
+       
+        
+        <div class="icard">
+          <div class="ic-ico">✅</div>
+          <div class="ic-lbl">Matakuliah Syarat</div>
+          <div class="ic-val">Pemrograman Lanjutan · Sistem Operasi & Virtualisasi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CAPAIAN PEMBELAJARAN ═══ -->
+<section id="capaian">
+  <div class="container">
+    <div class="s-tag">Capaian Pembelajaran</div>
+    <h2 class="s-title">CPL → CPMK → Sub-CPMK</h2>
+    <p class="s-desc">Hierarki capaian pembelajaran sesuai kurikulum OBE PSSN — dari CPL-Prodi diturunkan ke CPMK dan Sub-CPMK yang terukur dengan instrumen penilaian.</p>
+
+    <!-- CPL -->
+    <div class="sub-label rev">Capaian Pembelajaran Lulusan (CPL-Prodi)</div>
+    <div class="cpl-grid rev" style="margin-bottom:40px">
+      <div class="cpl-card">
+        <div class="cpl-badge">CPL02</div>
+        <p>Mampu <strong>memahami konsep pemrograman, teknologi informasi dan komunikasi, jaringan komputer, keamanan informasi</strong> dan mengaplikasikannya dalam bidang keamanan siber dan sandi.</p>
+      </div>
+    </div>
+
+    <div class="hier-arrow rev">↓</div>
+
+    <!-- CPMK -->
+    <div class="sub-label rev">Capaian Pembelajaran Matakuliah (CPMK)</div>
+    <div class="cpmk-grid rev">
+      <div class="cpmk-card">
+        <div class="cpmk-head">
+          <div class="cpmk-ico">🔍</div>
+          <div class="cpmk-head-txt">
+            <h3>CPMK261</h3>
+            <small>Minggu 1 – 3</small>
+          </div>
+        </div>
+        <div class="cpmk-body">
+          <p>Mampu <strong>menjelaskan kerawanan pada perangkat lunak</strong>, jenis-jenis ancaman pada keamanan perangkat lunak dan cara mitigasinya.</p>
+          <div class="bobot-chip">📊 Sub-CPMK 261.1 & 261.2</div>
+        </div>
+      </div>
+      <div class="cpmk-card">
+        <div class="cpmk-head">
+          <div class="cpmk-ico">🛠️</div>
+          <div class="cpmk-head-txt">
+            <h3>CPMK262</h3>
+            <small>Minggu 4 – 10 (+ UTS Mg 8)</small>
+          </div>
+        </div>
+        <div class="cpmk-body">
+          <p>Mampu <strong>menggunakan perangkat uji kerawanan perangkat lunak</strong> dan menganalisis hasil uji untuk menyusun laporan temuan dan rekomendasi mitigasi.</p>
+          <div class="bobot-chip">📊 Sub-CPMK 262.1 & 262.2</div>
+        </div>
+      </div>
+      <div class="cpmk-card">
+        <div class="cpmk-head">
+          <div class="cpmk-ico">🔐</div>
+          <div class="cpmk-head-txt">
+            <h3>CPMK263</h3>
+            <small>Minggu 11 – 16 (+ UAS Mg 16)</small>
+          </div>
+        </div>
+        <div class="cpmk-body">
+          <p>Mampu <strong>melakukan upaya peningkatan keamanan pada perangkat lunak</strong> — implementasi teknik pengamanan dan pengaturan kontrol akses serta autentikasi.</p>
+          <div class="bobot-chip">📊 Sub-CPMK 263.1 & 263.2</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hier-arrow rev">↓</div>
+
+    <!-- Sub-CPMK -->
+    <div class="sub-label rev">Sub-Capaian Pembelajaran Matakuliah (Sub-CPMK)</div>
+    <div class="subcpmk-grid rev">
+      <div class="sc-card sc261-1">
+        <div class="sc-code">Sub-CPMK 261.1</div>
+        <h4>Jenis PL, Ancaman & Kerawanan</h4>
+        <p>Mahasiswa mampu menjelaskan jenis perangkat lunak, ancaman dan kerawanan pada berbagai jenis perangkat lunak. <em>(Mg 1 & 2)</em></p>
+      </div>
+      <div class="sc-card sc261-2">
+        <div class="sc-code">Sub-CPMK 261.2</div>
+        <h4>Mitigasi Keamanan Perangkat Lunak</h4>
+        <p>Mahasiswa mampu menjelaskan upaya mitigasi yang bisa dilakukan untuk meningkatkan keamanan perangkat lunak. <em>(Mg 3)</em></p>
+      </div>
+      <div class="sc-card sc262-1">
+        <div class="sc-code">Sub-CPMK 262.1</div>
+        <h4>Konfigurasi & Perangkat Uji Kerawanan</h4>
+        <p>Mahasiswa mampu mengonfigurasi dan menjalankan perangkat uji kerawanan pada perangkat lunak. <em>(Mg 4–10)</em></p>
+      </div>
+      <div class="sc-card sc262-2">
+        <div class="sc-code">Sub-CPMK 262.2</div>
+        <h4>Analisis Hasil Uji & Laporan Temuan</h4>
+        <p>Mahasiswa mampu menganalisis hasil uji kerawanan dan menyusun laporan temuan serta rekomendasi mitigasi. <em>(Mg 6–10)</em></p>
+      </div>
+      <div class="sc-card sc263-1">
+        <div class="sc-code">Sub-CPMK 263.1</div>
+        <h4>Implementasi Teknik Pengamanan PL</h4>
+        <p>Mahasiswa mampu mengimplementasikan teknik pengamanan berbagai jenis perangkat lunak dalam Secure SDLC. <em>(Mg 11–15)</em></p>
+      </div>
+      <div class="sc-card sc263-2">
+        <div class="sc-code">Sub-CPMK 263.2</div>
+        <h4>Kontrol Akses & Autentikasi</h4>
+        <p>Mahasiswa mampu melakukan pengaturan kontrol akses dan autentikasi pada perangkat, termasuk keamanan API. <em>(Mg 15)</em></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ MATRIKS CPL-CPMK ═══ -->
+<section id="matriks">
+  <div class="container">
+    <div class="s-tag">Pemetaan Pembelajaran</div>
+    <h2 class="s-title">Matriks CPL – CPMK – Sub-CPMK</h2>
+    <p class="s-desc">Pemetaan hubungan antara Capaian Pembelajaran Lulusan, CPMK, dan Sub-CPMK sesuai RPS RKS222.</p>
+
+    <!-- Matrix CPL-CPMK -->
+    <div class="sub-label rev" style="margin-bottom:14px">Matriks CPL – CPMK</div>
+    <div class="mat-wrap rev" style="margin-bottom:36px">
+      <table class="mat">
+        <thead>
+          <tr>
+            <th class="hd-left" rowspan="2">CPMK</th>
+            <th colspan="11">Capaian Pembelajaran Lulusan (CPL-Prodi)</th>
+          </tr>
+          <tr>
+            <th>CPL01</th><th>CPL02</th><th>CPL03</th><th>CPL04</th>
+            <th>CPL05</th><th>CPL06</th><th>CPL07</th><th>CPL08</th>
+            <th>CPL09</th><th>CPL10</th><th>CPL11</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-lft">CPMK261 — Kerawanan & Mitigasi</td>
+            <td><span class="ds">–</span></td><td><span class="ck">✓</span></td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td><span class="ds">–</span></td>
+          </tr>
+          <tr>
+            <td class="td-lft">CPMK262 — Perangkat Uji Kerawanan</td>
+            <td><span class="ds">–</span></td><td><span class="ck">✓</span></td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td><span class="ds">–</span></td>
+          </tr>
+          <tr>
+            <td class="td-lft">CPMK263 — Peningkatan Keamanan PL</td>
+            <td><span class="ds">–</span></td><td><span class="ck">✓</span></td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td><span class="ds">–</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Matrix CPMK-SubCPMK -->
+    <div class="sub-label rev" style="margin-bottom:14px">Matriks CPMK – Sub-CPMK</div>
+    <div class="mat-wrap rev">
+      <table class="mat">
+        <thead>
+          <tr>
+            <th class="hd-left">Sub-CPMK</th>
+            <th>CPMK261</th>
+            <th>CPMK262</th>
+            <th>CPMK263</th>
+            <th>Mg Ke-</th>
+            <th>Bobot (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-lft">Sub-CPMK 261.1 — Jenis PL, Ancaman & Kerawanan</td>
+            <td><span class="ck">✓</span></td><td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td>1 – 2</td><td class="td-cpmk">6%</td>
+          </tr>
+          <tr>
+            <td class="td-lft">Sub-CPMK 261.2 — Mitigasi Keamanan PL</td>
+            <td><span class="ck">✓</span></td><td><span class="ds">–</span></td><td><span class="ds">–</span></td>
+            <td>3</td><td class="td-cpmk">4%</td>
+          </tr>
+          <tr>
+            <td class="td-lft">Sub-CPMK 262.1 — Konfigurasi & Perangkat Uji</td>
+            <td><span class="ds">–</span></td><td><span class="ck">✓</span></td><td><span class="ds">–</span></td>
+            <td>4 – 10</td><td class="td-cpmk">35%</td>
+          </tr>
+          <tr>
+            <td class="td-lft">Sub-CPMK 262.2 — Analisis Hasil Uji & Laporan</td>
+            <td><span class="ds">–</span></td><td><span class="ck">✓</span></td><td><span class="ds">–</span></td>
+            <td>6 – 10</td><td class="td-cpmk">—</td>
+          </tr>
+          <tr>
+            <td class="td-lft">Sub-CPMK 263.1 — Implementasi Teknik Pengamanan PL</td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td><td><span class="ck">✓</span></td>
+            <td>11 – 15</td><td class="td-cpmk">45%</td>
+          </tr>
+          <tr>
+            <td class="td-lft">Sub-CPMK 263.2 — Kontrol Akses & Autentikasi</td>
+            <td><span class="ds">–</span></td><td><span class="ds">–</span></td><td><span class="ck">✓</span></td>
+            <td>15</td><td class="td-cpmk">—</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" style="text-align:left">Total Bobot Penilaian (Kuis + Tugas + Proyek)</td>
+            <td>UTS Mg 8 · UAS Mg 16</td>
+            <td class="tot">100%</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="mat-legend rev">
+      <span><span class="ck">✓</span> Sub-CPMK berkontribusi pada CPMK</span>
+      <span><span class="ds">–</span> Tidak ada kontribusi langsung</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BAHAN AJAR PERTEMUAN ═══ -->
+<section id="materi">
+  <div class="container">
+    <div class="s-tag">Bahan Ajar</div>
+    <h2 class="s-title">Materi Pertemuan 1 – 16</h2>
+
+    <div class="mg-header">
+      <p class="s-desc" style="margin-bottom:0;max-width:560px">Klik tombol pertemuan untuk membuka slide materi. Materi yang belum tersedia ditandai dengan ikon gembok.</p>
+      <div class="mg-legend">
+        <div class="leg"><div class="leg-dot avail"></div>Tersedia</div>
+        <div class="leg"><div class="leg-dot locked"></div>Segera Hadir</div>
+        <div class="leg"><div class="leg-dot uts"></div>UTS</div>
+        <div class="leg"><div class="leg-dot uas"></div>UAS</div>
+      </div>
+    </div>
+
+    <div class="mg-grid rev">
+
+      <!-- Mg 1 -->
+      <a href="week_1.html" class="mg-btn mg-available" target="_blank" rel="noopener" data-week="1">
+        <div class="mg-week">Minggu 1</div>
+        <div class="mg-ico">🏗️</div>
+        <div class="mg-title">Pengantar Keamanan Perangkat Lunak</div>
+        <div class="mg-sub">Definisi PL · CIA Triad · Regulasi · Framework · Secure SDLC</div>
+        <div class="mg-avail-badge">Tersedia</div>
+        <span class="mg-bobot">3%</span>
+      </a>
+
+      <!-- Mg 2 -->
+      <a href="week_2.html" class="mg-btn mg-available" target="_blank" rel="noopener" data-week="2">
+        <div class="mg-week">Minggu 2</div>
+        <div class="mg-ico">⚠️</div>
+        <div class="mg-title">Kerawanan & Model Ancaman</div>
+        <div class="mg-sub">Klasifikasi Kerawanan · STRIDE · DREAD · DFD</div>
+        <div class="mg-avail-badge">Tersedia</div>
+        <span class="mg-bobot">3%</span>
+      </a>
+
+      <!-- Mg 3 -->
+      <a href="week_3.html" class="mg-btn mg-available" target="_blank" rel="noopener" data-week="3">
+        <div class="mg-week">Minggu 3</div>
+        <div class="mg-ico">🛡️</div>
+        <div class="mg-title">Mitigasi Keamanan Perangkat Lunak</div>
+        <div class="mg-sub">Secure Code · Secret · Source · Delivery · MFA</div>
+        <div class="mg-avail-badge">Tersedia</div>
+        <span class="mg-bobot">4%</span>
+      </a>
+
+      <!-- Mg 4 -->
+      <a href="week_4.html" class="mg-btn mg-available" target="_blank" rel="noopener" data-week="4">
+        <div class="mg-week">Minggu 4</div>
+        <div class="mg-ico">🔬</div>
+        <div class="mg-title">Pengujian Kerawanan Perangkat Lunak</div>
+        <div class="mg-sub">SAST · DAST · OWASP ZAP · Burp Suite</div>
+        <div class="mg-avail-badge">Tersedia</div>
+        <span class="mg-bobot">10%</span>
+      </a>
+
+      <!-- Mg 5 -->
+      <a href="week_5.html" class="mg-btn mg-available" target="_blank" rel="noopener" data-week="5">
+        <div class="mg-week">Minggu 5</div>
+        <div class="mg-ico">📊</div>
+        <div class="mg-title">OWASP Risk Rating & Metodologi Pengujian</div>
+        <div class="mg-sub">Risk Rating · Security Testing · OWASP WSTG</div>
+        <div class="mg-avail-badge">Tersedia</div>
+        <span class="mg-bobot">10%</span>
+      </a>
+
+      <!-- Mg 6 -->
+      <a href="week_6.html" class="mg-btn mg-available" target="_blank" rel="noopener" data-week="6">
+        <div class="mg-week">Minggu 6</div>
+        <div class="mg-ico">💉</div>
+        <div class="mg-title">Pengujian Injeksi & Autentikasi Mobile</div>
+        <div class="mg-sub">SQLi · Intent Injection · Broken Auth · Insecure Storage</div>
+        <div class="mg-avail-badge">Tersedia</div>
+        <span class="mg-bobot">15%</span>
+      </a>
+
+      <!-- Mg 7 -->
+      <a href="week_7.html" class="mg-btn mg-available" target="_blank" rel="noopener" data-week="7">
+        <div class="mg-week">Minggu 7</div>
+        <div class="mg-ico">🔑</div>
+        <div class="mg-title">Kriptografi & Otorisasi Mobile</div>
+        <div class="mg-sub">Insufficient Crypto · IDOR · Authorization · Laporan</div>
+        <div class="mg-avail-badge">Tersedia</div>
+        <span class="mg-bobot">15%</span>
+      </a>
+
+      <!-- Mg 8 – UTS -->
+      <div class="mg-btn mg-uts" data-week="8">
+        <div class="mg-ico">📝</div>
+        <div class="mg-title">Ujian Tengah Semester</div>
+        <div class="mg-sub">Sub-CPMK 262.1 & 262.2<br>Praktikum · Studi Kasus · Proyek</div>
+      </div>
+
+      <!-- Mg 9 -->
+      <div class="mg-btn mg-locked" data-week="9">
+        <div class="mg-week">Minggu 9</div>
+        <div class="mg-ico">⚙️</div>
+        <div class="mg-title">Security Misconfiguration & Komunikasi</div>
+        <div class="mg-sub">Misconfiguration · Insecure Communication · Code Quality</div>
+        <span class="mg-bobot">15%</span>
+      </div>
+
+      <!-- Mg 10 -->
+      <div class="mg-btn mg-locked" data-week="10">
+        <div class="mg-week">Minggu 10</div>
+        <div class="mg-ico">📦</div>
+        <div class="mg-title">Komponen Rentan & Logging</div>
+        <div class="mg-sub">Known Vulnerabilities · Insufficient Logging & Monitoring</div>
+        <span class="mg-bobot">15%</span>
+      </div>
+
+      <!-- Mg 11 -->
+      <div class="mg-btn mg-locked" data-week="11">
+        <div class="mg-week">Minggu 11</div>
+        <div class="mg-ico">🔎</div>
+        <div class="mg-title">Code Review — SAST & DAST</div>
+        <div class="mg-sub">Analisis Statis & Dinamis · Secure Coding Remediation</div>
+        <span class="mg-bobot">15%</span>
+      </div>
+
+      <!-- Mg 12 -->
+      <div class="mg-btn mg-locked" data-week="12">
+        <div class="mg-week">Minggu 12</div>
+        <div class="mg-ico">🧪</div>
+        <div class="mg-title">Implementasi Secure Coding (Lanjutan)</div>
+        <div class="mg-sub">Praktikum SAST/DAST · Perbaikan Temuan Kerawanan</div>
+        <span class="mg-bobot">15%</span>
+      </div>
+
+      <!-- Mg 13 -->
+      <div class="mg-btn mg-locked" data-week="13">
+        <div class="mg-week">Minggu 13</div>
+        <div class="mg-ico">🏗️</div>
+        <div class="mg-title">Implementasi Secure SDLC — Bagian 1</div>
+        <div class="mg-sub">Validasi Input · Parameterized Query · Session Security · DDoS</div>
+        <span class="mg-bobot">15%</span>
+      </div>
+
+      <!-- Mg 14 -->
+      <div class="mg-btn mg-locked" data-week="14">
+        <div class="mg-week">Minggu 14</div>
+        <div class="mg-ico">🔒</div>
+        <div class="mg-title">Implementasi Secure SDLC — Bagian 2</div>
+        <div class="mg-sub">Enkripsi Data · Keamanan Penyimpanan · Proteksi Data Pengguna</div>
+        <span class="mg-bobot">15%</span>
+      </div>
+
+      <!-- Mg 15 -->
+      <div class="mg-btn mg-locked" data-week="15">
+        <div class="mg-week">Minggu 15</div>
+        <div class="mg-ico">🌐</div>
+        <div class="mg-title">Keamanan API & Kontrol Akses</div>
+        <div class="mg-sub">Autentikasi & Otorisasi API · Token API · Pengujian Keamanan API</div>
+        <span class="mg-bobot">10%</span>
+      </div>
+
+      <!-- Mg 16 – UAS -->
+      <div class="mg-btn mg-uas" data-week="16">
+        <div class="mg-ico">🎓</div>
+        <div class="mg-title">Ujian Akhir Semester</div>
+        <div class="mg-sub">Sub-CPMK 263.1 & 263.2<br>Praktikum · Studi Kasus · Proyek</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PUSTAKA ═══ -->
+<section id="pustaka">
+  <div class="container">
+    <div class="s-tag">Referensi</div>
+    <h2 class="s-title">Pustaka & Referensi</h2>
+    <p class="s-desc">Sumber belajar utama dan pendukung yang digunakan dalam matakuliah RKS222.</p>
+    <div class="sub-label rev" style="margin-bottom:16px">Pustaka Utama</div>
+    <div class="pustaka-grid rev">
+      <div class="pust-card">
+        <div class="pust-no">Pustaka 1</div>
+        <p>Bulmash, Greg & Segura, Thomas. <em>Crafting Secure Software.</em> Packt Publishing. <span class="pust-year">2024</span></p>
+      </div>
+      <div class="pust-card">
+        <div class="pust-no">Pustaka 2</div>
+        <p>Khan, Suhet Ahmad, et al. <em>Software Security Concept and Practice.</em> NW: CRC Press. <span class="pust-year">2003</span></p>
+      </div>
+      <div class="pust-card">
+        <div class="pust-no">Pustaka 3</div>
+        <p>Mahfuz, Abu Sayed. <em>Software Quality Assurance – Integrating Testing, Security, and Audit.</em> NW: CRC Press. <span class="pust-year">2016</span></p>
+      </div>
+      <div class="pust-card">
+        <div class="pust-no">Pustaka 4</div>
+        <p>Howard, M., & LeBlanc, D. <em>Writing Secure Code.</em> Microsoft Press. <span class="pust-year">2020</span></p>
+      </div>
+      <div class="pust-card">
+        <div class="pust-no">Pustaka 5</div>
+        <p>OWASP Foundation. <em>OWASP Desktop App Security Top 10.</em> <span class="pust-year">2021</span> · OWASP Top 10 Web Application Security Risks. <span class="pust-year">2025</span></p>
+      </div>
+      <div class="pust-card">
+        <div class="pust-no">Pustaka 6</div>
+        <p>NIST. <em>SP 800-218: Secure Software Development Framework (SSDF).</em> National Institute of Standards and Technology. <span class="pust-year">2021</span></p>
+      </div>
+      <div class="pust-card">
+        <div class="pust-no">Pustaka 7</div>
+        <p>OWASP Foundation. <em>OWASP Mobile Top 10.</em> OWASP Foundation. <span class="pust-year">2024</span></p>
+      </div>
+      <div class="pust-card">
+        <div class="pust-no">Pustaka 8</div>
+        <p>OWASP Foundation. <em>Application Security Verification Standard (ASVS) v4.0.3.</em> OWASP Foundation. <span class="pust-year">2021</span></p>
+      </div>
+      <div class="pust-card">
+        <div class="pust-no">Pustaka 9</div>
+        <p>OWASP Foundation. <em>Mobile Application Security Verification Standard (MASVS) v2.1.0.</em> OWASP Foundation. <span class="pust-year">2024</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="fl-logo-row">
+        <div class="fl-logo">🔐</div>
+        <div class="fl-name">RKS222 · Keamanan Perangkat Lunak</div>
+      </div>
+      <p>Matakuliah wajib Program Studi Rekayasa Keamanan Siber, Politeknik Siber dan Sandi Negara. Semester IV Genap 2025/2026.</p>
+      <p style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.35)">RPS disusun: 01 September 2023 · Rumpun MK: Terapan · 3 SKS (T:1 P:2)</p>
+    </div>
+    <div>
+      <h4>Bahan Ajar</h4>
+      <ul>
+        <li><a href="week_1.html" target="_blank">Mg 1 — Pengantar Keamanan PL</a></li>
+        <li><a href="week_2.html" target="_blank">Mg 2 — Kerawanan & Model Ancaman</a></li>
+        <li><a href="week_3.html" target="_blank">Mg 3 — Mitigasi Keamanan PL</a></li>
+        <li><a href="week_4.html" target="_blank">Mg 4 — Pengujian Kerawanan PL</a></li>
+        <li><a href="week_5.html" target="_blank">Mg 5 — OWASP Risk Rating & Metodologi</a></li>
+        <li><a href="week_6.html" target="_blank">Mg 6 — Pengujian Injeksi & Autentikasi Mobile</a></li>
+        <li><a href="week_7.html" target="_blank">Mg 7 — Kriptografi & Otorisasi Mobile</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Navigasi</h4>
+      <ul>
+        <li><a href="#deskripsi">Deskripsi Matakuliah</a></li>
+        <li><a href="#capaian">Capaian Pembelajaran</a></li>
+        <li><a href="#matriks">Matriks CPL-CPMK</a></li>
+        <li><a href="#pustaka">Pustaka & Referensi</a></li>
+        <li><a href="#materi">Bahan Ajar Pertemuan</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bot">
+    <span>© 2025/2026 — <span>Politeknik Siber dan Sandi Negara</span> · RKS222 Keamanan Perangkat Lunak</span>
+    <span>Program Studi Rekayasa Keamanan Siber</span>
+  </div>
+</footer>
+
+<button id="btt" onclick="scrollTo({top:0,behavior:'smooth'})" aria-label="Kembali ke atas">↑</button>
+
+<script>
+/* nav toggle */
+const nbT = document.getElementById('nbToggle');
+const nbL = document.getElementById('nbLinks');
+nbT.addEventListener('click', () => nbL.classList.toggle('open'));
+nbL.querySelectorAll('a').forEach(a => a.addEventListener('click', () => nbL.classList.remove('open')));
+
+/* scroll handlers */
+const pFill = document.getElementById('prog-fill');
+const btt   = document.getElementById('btt');
+window.addEventListener('scroll', () => {
+  const pct = scrollY / (document.body.scrollHeight - innerHeight) * 100;
+  pFill.style.width = pct + '%';
+  btt.classList.toggle('show', scrollY > 400);
+}, { passive: true });
+
+/* reveal */
+const ro = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const siblings = [...e.target.parentElement.children];
+    const delay = siblings.indexOf(e.target) * 0.07;
+    e.target.style.transitionDelay = delay + 's';
+    e.target.classList.add('on');
+    ro.unobserve(e.target);
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+document.querySelectorAll('.rev').forEach(el => ro.observe(el));
+</script>
+</body>
+</html>

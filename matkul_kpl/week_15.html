@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pertemuan 15 – Keamanan API: Autentikasi, Otorisasi & Token API | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-purple: #8e44ad;
+    --accent-red: #e74c3c;
+    --accent-teal: #16a085;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-light); color: var(--text-dark); overflow: hidden; height: 100vh; width: 100vw; }
+  #slideshow { width: 100%; height: 100vh; position: relative; }
+  .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.45s ease; overflow-y: auto; }
+  .slide.active { opacity: 1; pointer-events: all; }
+  #navbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 999; background: var(--pssn-darkblue); display: flex; align-items: center; justify-content: space-between; padding: 10px 24px; gap: 12px; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); }
+  .nav-btn { background: var(--pssn-gold); color: var(--pssn-darkblue); border: none; border-radius: 8px; padding: 8px 22px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .nav-btn:hover { background: var(--pssn-lightgold); transform: translateY(-1px); }
+  .nav-btn:disabled { background: #555; color: #aaa; cursor: not-allowed; transform: none; }
+  #slide-counter { color: #aaa; font-size: 13px; min-width: 90px; text-align: center; }
+  #progress-bar { flex: 1; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+  #progress-fill { height: 100%; background: var(--pssn-gold); border-radius: 3px; transition: width 0.4s ease; }
+  #slide-title-bar { color: #ccc; font-size: 12px; flex: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .section-label { display: inline-block; background: var(--pssn-gold); color: var(--pssn-darkblue); font-weight: 800; font-size: 11px; letter-spacing: 1.5px; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; margin-bottom: 12px; }
+  .slide-header { background: var(--pssn-blue); padding: 28px 48px 22px; color: white; flex-shrink: 0; }
+  .slide-header h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .slide-header p { font-size: 14px; color: rgba(255,255,255,0.7); }
+  .slide-body { padding: 28px 48px 100px; flex: 1; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .four-col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+  .mt8{margin-top:8px;} .mt12{margin-top:12px;} .mt16{margin-top:16px;} .mt20{margin-top:20px;}
+
+  .card { background: #fff; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+  .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .card p, .card li { font-size: 13.5px; line-height: 1.7; color: #444; }
+  .card ul { padding-left: 18px; } .card ul li { margin-bottom: 4px; }
+
+  .cp-box { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid var(--pssn-blue); }
+  .cp-box h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 5px; }
+  .cp-box p { font-size: 14px; font-weight: 600; color: var(--pssn-blue); line-height: 1.5; }
+
+  .indikator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .indikator-card { background: #fff; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start; border-top: 3px solid; }
+  .ind-letter { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; color: white; }
+  .ind-text { font-size: 13px; color: #333; line-height: 1.5; font-weight: 500; }
+  .ind-bloom { font-size: 11px; color: #888; margin-top: 3px; }
+
+  #s0 { background: linear-gradient(135deg, #0d2b6b 0%, #e8a020 55%, #081a45 100%); justify-content: center; align-items: center; text-align: center; position: relative; padding: 40px; }
+  #s0::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E"); }
+  .cover-badge { background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold); color: var(--pssn-gold); border-radius: 20px; padding: 6px 18px; font-size: 13px; font-weight: 600; letter-spacing: 1px; margin-bottom: 24px; display: inline-block; }
+  .cover-title { color: white; font-size: 36px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .cover-subtitle { color: var(--pssn-lightgold); font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .cover-meta { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 36px; }
+  .cover-divider { width: 80px; height: 3px; background: var(--pssn-gold); border-radius: 2px; margin: 24px auto; }
+  .cover-pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .cover-pill { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; }
+  .cover-pill strong { color: var(--pssn-gold); }
+  .cover-inst { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 32px; }
+
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.6; margin: 10px 0; overflow-x: auto; }
+  .code-block .cmd { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .str { color: #fab387; }
+  .code-block .out { color: #89dceb; }
+  .code-block .warn { color: #f38ba8; }
+  .code-block .ok { color: #a6e3a1; }
+  .code-block .num { color: #f9e2af; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid var(--pssn-blue); border-radius: 8px; padding: 12px 16px; }
+  .info-box p, .info-box li { font-size: 12.5px; color: #333; line-height: 1.6; }
+  .tip-box { background: linear-gradient(135deg,#fff8e1,#fffde7); border-left: 4px solid var(--pssn-gold); border-radius: 8px; padding: 12px 16px; }
+  .tip-box .tip-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-orange); margin-bottom: 4px; }
+  .tip-box p, .tip-box li { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .warn-box { background: #ffebee; border-left: 4px solid var(--accent-red); border-radius: 8px; padding: 12px 16px; }
+  .warn-box .warn-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-red); margin-bottom: 4px; }
+  .warn-box p { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .ok-box { background: #e8f5e9; border-left: 4px solid var(--accent-green); border-radius: 8px; padding: 12px 16px; }
+  .ok-box p, .ok-box li { font-size: 12.5px; color: #333; line-height: 1.6; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag { background: #e8eaf6; color: #3949ab; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 4px 10px; }
+  .tag.green { background: #e8f5e9; color: #2e7d32; }
+  .tag.red { background: #ffebee; color: #c62828; }
+  .tag.gold { background: #fff8e1; color: #e65100; }
+  .tag.teal { background: #e0f7fa; color: #00695c; }
+  .tag.purple { background: #f3e5f5; color: #6a1b9a; }
+  .tag-red    { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fdedec; color: #c0392b; }
+  .tag-orange { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fef9e7; color: #d35400; }
+  .tag-blue   { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #e8f4fd; color: #1a4a6b; }
+  .tag-green  { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #eafaf1; color: #145a32; }
+  .tag-purple { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #f5eef8; color: #7d3c98; }
+
+  h3.section-h { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 18px; }
+  h3.section-h:first-child { margin-top: 0; }
+
+  .case-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .case-vuln { background: #fff5f5; border: 2px solid #e74c3c; border-radius: 8px; padding: 14px 16px; }
+  .case-vuln h5 { color: #e74c3c; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+  .case-fix { background: #f0fff4; border: 2px solid #27ae60; border-radius: 8px; padding: 14px 16px; }
+  .case-fix h5 { color: #27ae60; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+
+  .tool-card { background: #fff; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border-top: 4px solid; }
+  .tool-card h4 { font-size: 14px; font-weight: 800; margin-bottom: 8px; }
+  .tool-card li { font-size: 12.5px; color: #444; line-height: 1.8; }
+  .tool-card ul { padding-left: 16px; }
+  .tool-badge { font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 8px; display: inline-block; margin-bottom: 8px; }
+
+  .flow-row { display: flex; gap: 0; align-items: stretch; margin: 14px 0; }
+  .flow-item { flex: 1; background: #fff; border-radius: 8px; padding: 16px 10px; text-align: center; box-shadow: var(--shadow); position: relative; }
+  .flow-item:not(:last-child)::after { content: '→'; position: absolute; right: -16px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--pssn-gold); font-weight: 900; z-index: 1; }
+  .flow-item + .flow-item { margin-left: 22px; }
+  .flow-num { width: 32px; height: 32px; border-radius: 50%; background: var(--pssn-blue); color: white; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+  .flow-item h5 { font-size: 12px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 4px; }
+  .flow-item p { font-size: 10.5px; color: #666; line-height: 1.4; }
+
+  .checklist-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; background: #fff; border-radius: 8px; margin-bottom: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .check-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+  .check-icon.crit { background: #fdedec; color: #c0392b; }
+  .check-icon.high { background: #fef9e7; color: #d35400; }
+  .check-icon.med { background: #eafaf1; color: #145a32; }
+  .checklist-item p { font-size: 13px; color: #333; line-height: 1.5; }
+  .checklist-item span { font-size: 11px; color: #888; }
+
+  .rubrik-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  .rubrik-table th { background: var(--pssn-blue); color: white; padding: 8px 12px; text-align: left; font-size: 12px; }
+  .rubrik-table td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; color: #444; line-height: 1.5; }
+  .rubrik-table tr:nth-child(even) { background: #f8f9ff; }
+  .rubrik-table td:first-child { font-weight: 700; color: var(--pssn-blue); }
+
+  .roadmap-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-top: 12px; }
+  .road-box { background: #fff; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); border-top: 4px solid; text-align: center; }
+  .road-box .week-num { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .road-box h4 { font-size: 13px; font-weight: 700; color: var(--pssn-blue); line-height: 1.4; margin-bottom: 4px; }
+  .road-box p { font-size: 11.5px; color: #888; }
+  .road-box.active { background: linear-gradient(135deg,#e8f0fe,#dce8ff); border-color: var(--pssn-blue); }
+  .road-box.active h4 { color: var(--pssn-blue); }
+
+  .jwt-part { border-radius: 8px; padding: 12px 14px; font-family: 'Courier New', monospace; font-size: 12px; word-break: break-all; color: white; }
+  .jwt-header { background: #e74c3c; }
+  .jwt-payload { background: #8e44ad; }
+  .jwt-signature { background: #2980b9; }
+
+  .quiz-container { max-width: 720px; margin: 0 auto; }
+  .q-num { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--pssn-gold); margin-bottom: 6px; }
+  .q-text { font-size: 15px; font-weight: 600; color: var(--pssn-blue); margin-bottom: 14px; line-height: 1.5; }
+  .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  .q-option { background: #fff; border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; cursor: pointer; transition: all 0.2s; font-size: 13.5px; color: #333; font-weight: 500; text-align: left; }
+  .q-option:hover { border-color: var(--pssn-blue); background: #f0f4ff; }
+  .q-option.correct { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; font-weight: 700; }
+  .q-option.wrong { border-color: #ef5350; background: #ffebee; color: #c62828; }
+  .q-feedback { font-size: 13px; padding: 10px 14px; border-radius: 8px; margin-top: 8px; display: none; line-height: 1.6; }
+  .q-feedback.show { display: block; }
+  .q-feedback.ok { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
+  .q-feedback.ko { background: #ffebee; color: #c62828; border-left: 3px solid #ef5350; }
+  .quiz-score { text-align: center; background: var(--pssn-blue); color: white; border-radius: var(--radius); padding: 16px; margin-top: 16px; display: none; }
+  .quiz-score h3 { font-size: 22px; font-weight: 900; color: var(--pssn-gold); }
+  .quiz-score p { font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+  .quiz-nav { display: flex; gap: 10px; margin-top: 12px; justify-content: center; }
+  .quiz-btn { background: var(--pssn-blue); color: white; border: none; border-radius: 8px; padding: 10px 24px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+  .quiz-btn:hover { background: #1a3a8f; }
+</style>
+</head>
+<body>
+<div id="slideshow">
+
+<!-- SLIDE 0: COVER -->
+<div class="slide active" id="s0" data-title="Cover">
+  <div style="position:relative;z-index:1;text-align:center;max-width:820px;margin:auto;">
+    <div class="cover-badge">RKS222 • Keamanan Perangkat Lunak • Semester 4</div>
+    <div class="cover-title">Keamanan API<br>Autentikasi, Otorisasi & Token API</div>
+    <div class="cover-subtitle">JWT · OWASP API Security Top 10 · Pengujian Keamanan API</div>
+    <div class="cover-meta">Sub-CPMK 263.1 & 263.2 &nbsp;|&nbsp; Pertemuan 15 &nbsp;|&nbsp; Bobot 10%</div>
+    <div class="cover-divider"></div>
+    <div class="cover-pills">
+      <div class="cover-pill"><strong>Topik:</strong> Autentikasi & Otorisasi API</div>
+      <div class="cover-pill"><strong>Topik:</strong> Token API (JWT)</div>
+      <div class="cover-pill"><strong>Topik:</strong> Pengujian Keamanan API</div>
+      <div class="cover-pill"><strong>Tools:</strong> PyJWT · Postman · OWASP ZAP</div>
+    </div>
+    <div class="cover-inst">Program Studi Rekayasa Keamanan Siber — Politeknik SSN</div>
+  </div>
+</div>
+
+<!-- SLIDE 1: CAPAIAN PEMBELAJARAN -->
+<div class="slide" id="s1" data-title="Capaian Pembelajaran">
+  <div class="slide-header">
+    <div class="section-label">Capaian Pembelajaran</div>
+    <h2>Capaian Pembelajaran Pertemuan 15</h2>
+    <p>Sub-CPMK 263.1 & Sub-CPMK 263.2 — Keamanan API & Kontrol Akses</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div class="cp-box">
+        <h3>Sub-CPMK 263.1</h3>
+        <p>Mahasiswa mampu mengimplementasikan model Secure SDLC dalam proyek pengembangan perangkat lunak sederhana dengan menerapkan upaya keamanan API</p>
+      </div>
+      <div class="cp-box">
+        <h3>Sub-CPMK 263.2</h3>
+        <p>Mahasiswa mampu melakukan pengaturan kontrol akses dan otentikasi pada perangkat</p>
+      </div>
+    </div>
+    <div class="indikator-grid mt12">
+      <div class="indikator-card" style="border-color:#e74c3c;">
+        <div class="ind-letter" style="background:#e74c3c;">A</div>
+        <div>
+          <div class="ind-text">Menerapkan <strong>autentikasi dan otorisasi</strong> yang tepat pada endpoint API — membedakan "siapa Anda" dari "apa yang boleh Anda akses"</div>
+          <div class="ind-bloom">Bloom C3 — Menerapkan</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-color:#8e44ad;">
+        <div class="ind-letter" style="background:#8e44ad;">B</div>
+        <div>
+          <div class="ind-text">Menggunakan <strong>token API (JWT)</strong> secara aman — struktur, signing, expiration, dan penyimpanan token</div>
+          <div class="ind-bloom">Bloom C3 — Menerapkan</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-color:#2980b9;">
+        <div class="ind-letter" style="background:#2980b9;">C</div>
+        <div>
+          <div class="ind-text">Melakukan <strong>pengujian keamanan API</strong> menggunakan metode dan perangkat yang tepat merujuk OWASP API Security Top 10</div>
+          <div class="ind-bloom">Bloom C4 — Menganalisis</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-color:#27ae60;">
+        <div class="ind-letter" style="background:#27ae60;">D</div>
+        <div>
+          <div class="ind-text">Mengevaluasi hasil pengujian dan merumuskan rekomendasi mitigasi kontrol akses pada API</div>
+          <div class="ind-bloom">Bloom C5 — Mengevaluasi</div>
+        </div>
+      </div>
+    </div>
+    <div class="mt16 tip-box">
+      <div class="tip-label">Konteks Pertemuan</div>
+      <p>P13-14 mengamankan aplikasi web sederhana end-to-end (7 mitigasi Secure SDLC). P15 memperluas cakupan ke <strong>keamanan API</strong> — lapisan yang menjadi gerbang komunikasi antar sistem, mobile app, dan pihak ketiga. Ini pertemuan terakhir sebelum UAS (P16).</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: ROADMAP & REVIEW -->
+<div class="slide" id="s2" data-title="Roadmap & Review P14">
+  <div class="slide-header">
+    <div class="section-label">Konteks & Roadmap</div>
+    <h2>Di Mana Kita Sekarang?</h2>
+    <p>Langkah terakhir sebelum UAS — dari aplikasi web ke keamanan API</p>
+  </div>
+  <div class="slide-body">
+    <div class="roadmap-row">
+      <div class="road-box" style="border-color:#27ae60;">
+        <div class="week-num" style="color:#27ae60;">P13-14 ✓</div>
+        <h4>Secure SDLC — 7 Mitigasi</h4>
+        <p>Validasi input hingga proteksi data pengguna, proyek web sederhana lengkap</p>
+      </div>
+      <div class="road-box active" style="border-color:#0d2b6b;">
+        <div class="week-num" style="color:#0d2b6b;">P15 ★ NOW</div>
+        <h4>Keamanan API & Kontrol Akses</h4>
+        <p>Autentikasi/otorisasi, token JWT, pengujian keamanan API</p>
+      </div>
+      <div class="road-box" style="border-color:#e74c3c;">
+        <div class="week-num" style="color:#e74c3c;">P16</div>
+        <h4>UAS</h4>
+        <p>Praktikum/studi kasus/projek — ketercapaian Sub-CPMK 263.1 & 263.2</p>
+      </div>
+      <div class="road-box" style="border-color:#8e44ad;">
+        <div class="week-num" style="color:#8e44ad;">Portofolio</div>
+        <h4>Akumulasi Semester</h4>
+        <p>P1-15 menjadi satu kesatuan pemahaman keamanan perangkat lunak</p>
+      </div>
+    </div>
+    <div class="two-col mt20">
+      <div>
+        <h3 class="section-h">Review Pertemuan 13-14</h3>
+        <div style="background:#e3f2fd;border-left:4px solid #2980b9;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Secure SDLC:</strong> Validasi input, parameterized query, sesi aman, proteksi DDoS
+        </div>
+        <div style="background:#f3e5f5;border-left:4px solid #8e44ad;border-radius:8px;padding:12px 16px;">
+          <strong>Perlindungan Data:</strong> Enkripsi data, hashing password, masking data pengguna
+        </div>
+        <div class="mt8" style="background:#fff8e1;border-left:4px solid #e8a020;border-radius:8px;padding:12px 16px;">
+          <strong>Ingat kembali (P9-10):</strong> OWASP API Top 10 2023 sudah diperkenalkan — BOLA, Mass Assignment, BFLA, Unrestricted Resource Consumption
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Agenda Pertemuan 15</h3>
+        <div style="background:#fdedec;border-left:4px solid #e74c3c;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 1:</strong> Autentikasi vs Otorisasi pada API
+        </div>
+        <div style="background:#f3e5f5;border-left:4px solid #8e44ad;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 2:</strong> JWT Deep Dive & Praktik Token API Aman
+        </div>
+        <div style="background:#e3f2fd;border-left:4px solid #2980b9;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 3:</strong> OWASP API Security Top 10 & Metodologi Pengujian
+        </div>
+        <div style="background:#e8f5e9;border-left:4px solid #27ae60;border-radius:8px;padding:12px 16px;">
+          <strong>Blok 4:</strong> Studi Kasus Terintegrasi & Praktikum REST API
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: AUTENTIKASI VS OTORISASI -->
+<div class="slide" id="s3" data-title="a. Autentikasi vs Otorisasi API">
+  <div class="slide-header">
+    <div class="section-label">Mitigasi A</div>
+    <h2>Autentikasi vs Otorisasi pada API</h2>
+    <p>"Siapa Anda?" vs "Apa yang boleh Anda akses?"</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <div class="card" style="border-top:4px solid #2980b9;">
+          <h3 style="color:#2980b9;">Autentikasi (Authentication)</h3>
+          <p>Proses <strong>memverifikasi identitas</strong> — memastikan klien benar-benar siapa yang diklaim.</p>
+          <ul class="mt8">
+            <li>API Key — token statis sederhana per klien/aplikasi</li>
+            <li>Basic Auth — username:password di-Base64 (harus selalu via HTTPS)</li>
+            <li>Token-based (JWT/OAuth2) — token dinamis dengan masa berlaku</li>
+            <li>Mutual TLS — sertifikat klien untuk API antar-sistem sensitif</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="border-top:4px solid #27ae60;">
+          <h3 style="color:#27ae60;">Otorisasi (Authorization)</h3>
+          <p>Proses <strong>menentukan hak akses</strong> — setelah identitas terverifikasi, apa yang boleh dilakukan?</p>
+          <ul class="mt8">
+            <li>Role-Based Access Control (RBAC) — akses berdasarkan peran (admin, user, guest)</li>
+            <li>Attribute-Based Access Control (ABAC) — akses berdasarkan atribut (kepemilikan, departemen)</li>
+            <li>Scope-based (OAuth2 scopes) — token membawa cakupan akses tertentu</li>
+            <li>Object-level check — verifikasi kepemilikan resource (cegah BOLA)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="mt16 warn-box">
+      <div class="warn-label">Kesalahan Paling Umum</div>
+      <p>Banyak API hanya menerapkan autentikasi (memastikan token valid) tetapi <strong>lupa otorisasi</strong> (memverifikasi apakah pemilik token berhak atas resource yang diminta). Ini adalah akar dari BOLA — API1:2023 OWASP API Security Top 10.</p>
+    </div>
+    <h3 class="section-h mt16">Perbandingan Mekanisme Autentikasi API</h3>
+    <table class="rubrik-table">
+      <tr><th>Mekanisme</th><th>Cocok untuk</th><th>Kelemahan</th></tr>
+      <tr><td>API Key</td><td>Server-to-server, akses publik terbatas (rate limit per key)</td><td>Statis, sulit direvokasi granular, tidak membawa identitas user</td></tr>
+      <tr><td>Basic Auth</td><td>Internal API sederhana di jaringan terpercaya + HTTPS</td><td>Kredensial dikirim tiap request, rawan replay tanpa TLS</td></tr>
+      <tr><td>JWT (Bearer Token)</td><td>SPA, mobile app, microservices — stateless</td><td>Sulit direvokasi sebelum expired, harus dikelola dengan hati-hati</td></tr>
+      <tr><td>OAuth2 / OpenID Connect</td><td>Integrasi pihak ketiga, single sign-on</td><td>Kompleksitas implementasi lebih tinggi</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- SLIDE 4: JWT DEEP DIVE -->
+<div class="slide" id="s4" data-title="b. JWT Deep Dive">
+  <div class="slide-header">
+    <div class="section-label">Mitigasi B</div>
+    <h2>Token API — JWT (JSON Web Token) Deep Dive</h2>
+    <p>jwt.io · RFC 7519 · Struktur, Signing, dan Verifikasi</p>
+  </div>
+  <div class="slide-body">
+    <h3 class="section-h">Anatomi JWT — Tiga Bagian Dipisah Titik</h3>
+    <div class="three-col">
+      <div class="jwt-part jwt-header">
+        <strong>HEADER</strong><br>
+        {"alg":"HS256","typ":"JWT"}<br><br>
+        <span style="opacity:0.8;">Algoritma signing & tipe token</span>
+      </div>
+      <div class="jwt-part jwt-payload">
+        <strong>PAYLOAD (Claims)</strong><br>
+        {"sub":"user123","role":"user","exp":1735689600}<br><br>
+        <span style="opacity:0.8;">Data klaim — TIDAK terenkripsi, hanya di-encode Base64</span>
+      </div>
+      <div class="jwt-part jwt-signature">
+        <strong>SIGNATURE</strong><br>
+        HMACSHA256(header.payload, secret)<br><br>
+        <span style="opacity:0.8;">Bukti integritas — mencegah token dimodifikasi</span>
+      </div>
+    </div>
+    <div class="mt12 warn-box">
+      <div class="warn-label">Kesalahpahaman Umum</div>
+      <p>Payload JWT <strong>hanya di-encode Base64, bukan dienkripsi</strong> — siapa pun dapat membacanya (coba decode di jwt.io). Jangan pernah menaruh data sensitif (password, NIK mentah) di dalam payload JWT.</p>
+    </div>
+    <div class="two-col mt16">
+      <div>
+        <h3 class="section-h">Klaim Standar Penting</h3>
+        <table class="rubrik-table">
+          <tr><th>Klaim</th><th>Arti</th></tr>
+          <tr><td><code>sub</code></td><td>Subject — identitas pemilik token (user ID)</td></tr>
+          <tr><td><code>iat</code></td><td>Issued At — waktu token diterbitkan</td></tr>
+          <tr><td><code>exp</code></td><td>Expiration — waktu token kedaluwarsa (WAJIB diset)</td></tr>
+          <tr><td><code>aud</code></td><td>Audience — API/layanan yang dituju token ini</td></tr>
+          <tr><td><code>iss</code></td><td>Issuer — pihak yang menerbitkan token</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3 class="section-h">Implementasi — PyJWT</h3>
+        <div class="code-block">
+<span class="kw">import</span> jwt, datetime, os
+
+SECRET = os.environ[<span class="str">'JWT_SECRET'</span>]
+
+<span class="kw">def</span> generate_token(user_id, role):
+    payload = {
+        <span class="str">'sub'</span>: user_id,
+        <span class="str">'role'</span>: role,
+        <span class="str">'iat'</span>: datetime.datetime.utcnow(),
+        <span class="ok">'exp': datetime.datetime.utcnow()
+              + datetime.timedelta(minutes=15)</span>
+    }
+    <span class="kw">return</span> jwt.encode(payload, SECRET, algorithm=<span class="str">'HS256'</span>)
+
+<span class="kw">def</span> verify_token(token):
+    <span class="kw">try</span>:
+        <span class="ok">return jwt.decode(token, SECRET, algorithms=['HS256'])</span>
+    <span class="kw">except</span> jwt.ExpiredSignatureError:
+        <span class="kw">return None</span>  <span class="comment"># token kedaluwarsa</span>
+    <span class="kw">except</span> jwt.InvalidTokenError:
+        <span class="kw">return None</span>  <span class="comment"># tanda tangan tidak valid</span>
+        </div>
+      </div>
+    </div>
+    <div class="mt12 ok-box">
+      <p><strong>HS256 vs RS256:</strong> HS256 (simetris) — satu secret untuk sign & verify, cocok untuk sistem tunggal. RS256 (asimetris) — private key untuk sign, public key untuk verify, cocok saat banyak service perlu memverifikasi token tanpa memegang kunci penandatanganan.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: PRAKTIK TOKEN API AMAN -->
+<div class="slide" id="s5" data-title="Praktik Token API Aman">
+  <div class="slide-header">
+    <div class="section-label">Mitigasi B (lanjutan)</div>
+    <h2>Praktik Terbaik Pengelolaan Token API</h2>
+    <p>Access Token, Refresh Token, Revocation, dan Penyimpanan Aman</p>
+  </div>
+  <div class="slide-body">
+    <div class="flow-row">
+      <div class="flow-item">
+        <div class="flow-num">1</div>
+        <h5>Login</h5>
+        <p>Kredensial diverifikasi, server menerbitkan access token (short-lived) + refresh token (long-lived)</p>
+      </div>
+      <div class="flow-item">
+        <div class="flow-num">2</div>
+        <h5>Akses API</h5>
+        <p>Client kirim access token di header <code>Authorization: Bearer &lt;token&gt;</code></p>
+      </div>
+      <div class="flow-item">
+        <div class="flow-num">3</div>
+        <h5>Token Expired</h5>
+        <p>Access token kedaluwarsa (15 menit) — client gunakan refresh token untuk minta token baru</p>
+      </div>
+      <div class="flow-item">
+        <div class="flow-num">4</div>
+        <h5>Refresh</h5>
+        <p>Server verifikasi refresh token, terbitkan access token baru — rotasi refresh token (sekali pakai)</p>
+      </div>
+      <div class="flow-item">
+        <div class="flow-num">5</div>
+        <h5>Revoke</h5>
+        <p>Saat logout/kompromi, refresh token dihapus dari daftar valid di server</p>
+      </div>
+    </div>
+    <div class="two-col mt16">
+      <div>
+        <h3 class="section-h">Mengapa Dua Jenis Token?</h3>
+        <div class="info-box">
+          <p><strong>Access token</strong> berumur pendek (menit) untuk membatasi dampak jika bocor. <strong>Refresh token</strong> berumur panjang (hari/minggu) tetapi disimpan lebih ketat dan dapat direvokasi sewaktu-waktu di sisi server (JWT stateless tidak bisa direvokasi sebelum expired, kecuali disimpan sebagai server-side state seperti refresh token).</p>
+        </div>
+        <div class="checklist-item"><div class="check-icon crit">1</div><p>Access token: umur pendek (5-15 menit), stateless, tidak disimpan di server</p></div>
+        <div class="checklist-item"><div class="check-icon high">2</div><p>Refresh token: umur panjang, disimpan di database server (dapat direvokasi)</p></div>
+        <div class="checklist-item"><div class="check-icon high">3</div><p>Refresh token rotation: setiap dipakai, terbitkan refresh token baru & tandai yang lama tidak valid</p></div>
+      </div>
+      <div>
+        <h3 class="section-h">Penyimpanan Token di Sisi Klien</h3>
+        <div class="warn-box">
+          <div class="warn-label">Hindari localStorage untuk Web</div>
+          <p>Token di <code>localStorage</code> dapat dicuri melalui XSS (JavaScript dapat membacanya). Untuk aplikasi web, simpan access token di memori (JS variable) dan refresh token di cookie <code>HttpOnly + Secure + SameSite</code>.</p>
+        </div>
+        <div class="ok-box">
+          <p><strong>Mobile app:</strong> simpan token di secure storage khusus platform — Keychain (iOS) atau Keystore/EncryptedSharedPreferences (Android), bukan SharedPreferences biasa.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: OWASP API SECURITY TOP 10 -->
+<div class="slide" id="s6" data-title="OWASP API Security Top 10">
+  <div class="slide-header">
+    <div class="section-label">Kerangka Referensi</div>
+    <h2>OWASP API Security Top 10 (2023)</h2>
+    <p>Fokus pada 5 risiko paling relevan dengan autentikasi, otorisasi & token</p>
+  </div>
+  <div class="slide-body">
+    <div class="three-col">
+      <div class="tool-card" style="border-color:#e74c3c;">
+        <div class="tool-badge" style="background:#fdedec;color:#c0392b;">API1:2023</div>
+        <h4>Broken Object Level Authorization (BOLA)</h4>
+        <ul>
+          <li>Endpoint tidak memverifikasi kepemilikan objek</li>
+          <li><code>GET /orders/5</code> bisa diakses user lain</li>
+          <li>Mitigasi: cek <code>owner_id == current_user.id</code> di setiap akses objek</li>
+        </ul>
+      </div>
+      <div class="tool-card" style="border-color:#e67e22;">
+        <div class="tool-badge" style="background:#fef9e7;color:#d35400;">API2:2023</div>
+        <h4>Broken Authentication</h4>
+        <ul>
+          <li>Token lemah, tanpa expiration, algoritma "none"</li>
+          <li>Endpoint auth tanpa rate limiting (brute-force)</li>
+          <li>Mitigasi: JWT dengan exp singkat + refresh rotation + rate limit</li>
+        </ul>
+      </div>
+      <div class="tool-card" style="border-color:#8e44ad;">
+        <div class="tool-badge" style="background:#f5eef8;color:#7d3c98;">API3:2023</div>
+        <h4>Broken Object Property Level Authorization</h4>
+        <ul>
+          <li>Excessive Data Exposure — respons API berisi field sensitif tak perlu</li>
+          <li>Mass Assignment — client kirim field <code>role:"admin"</code> yang diterima mentah</li>
+          <li>Mitigasi: whitelist field response & field yang boleh diubah client</li>
+        </ul>
+      </div>
+    </div>
+    <div class="three-col mt16">
+      <div class="tool-card" style="border-color:#16a085;">
+        <div class="tool-badge" style="background:#e0f7fa;color:#00695c;">API4:2023</div>
+        <h4>Unrestricted Resource Consumption</h4>
+        <ul>
+          <li>Tanpa rate limiting → DoS lewat API (koneksi ke P13 D)</li>
+          <li>Query tanpa pagination → resource exhaustion</li>
+          <li>Mitigasi: rate limit per token/IP, batasi ukuran payload & page size</li>
+        </ul>
+      </div>
+      <div class="tool-card" style="border-color:#2980b9;">
+        <div class="tool-badge" style="background:#e8f4fd;color:#1a4a6b;">API5:2023</div>
+        <h4>Broken Function Level Authorization (BFLA)</h4>
+        <ul>
+          <li>User biasa dapat memanggil endpoint admin karena tidak dicek role</li>
+          <li>Contoh: <code>DELETE /admin/users/3</code> berhasil tanpa cek role</li>
+          <li>Mitigasi: middleware pengecekan role di setiap endpoint sensitif</li>
+        </ul>
+      </div>
+      <div class="tool-card" style="border-color:#27ae60;">
+        <div class="tool-badge" style="background:#eafaf1;color:#145a32;">Koneksi P9-10</div>
+        <h4>Sudah Dikenalkan Sebelumnya</h4>
+        <ul>
+          <li>P9-10 memperkenalkan konsep BOLA, Mass Assignment, BFLA</li>
+          <li>P15 melengkapi dengan <strong>implementasi mitigasi nyata</strong> via JWT + RBAC</li>
+          <li>P15 menambahkan sisi pengujian sistematis (Blok berikutnya)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: PENGUJIAN KEAMANAN API -->
+<div class="slide" id="s7" data-title="c. Pengujian Keamanan API">
+  <div class="slide-header">
+    <div class="section-label">Mitigasi C</div>
+    <h2>Metodologi Pengujian Keamanan API</h2>
+    <p>Postman · Burp Suite · OWASP ZAP API Scan</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Kategori Uji Wajib</h3>
+        <div class="checklist-item"><div class="check-icon crit">1</div><p><strong>Uji BOLA:</strong> login sebagai User A, coba akses resource milik User B via ID</p></div>
+        <div class="checklist-item"><div class="check-icon crit">2</div><p><strong>Uji Token Tampering:</strong> ubah payload JWT (mis. role user→admin) tanpa signature valid</p></div>
+        <div class="checklist-item"><div class="check-icon high">3</div><p><strong>Uji Expired Token:</strong> gunakan token kedaluwarsa, pastikan ditolak (401)</p></div>
+        <div class="checklist-item"><div class="check-icon high">4</div><p><strong>Uji BFLA:</strong> panggil endpoint admin menggunakan token role user biasa</p></div>
+        <div class="checklist-item"><div class="check-icon med">5</div><p><strong>Uji Rate Limiting:</strong> kirim request beruntun, pastikan muncul HTTP 429</p></div>
+        <div class="checklist-item"><div class="check-icon med">6</div><p><strong>Uji Excessive Data Exposure:</strong> periksa response JSON tidak membocorkan field internal (pass_hash, dsb)</p></div>
+      </div>
+      <div>
+        <h3 class="section-h">Contoh Uji Token Tampering (Manual)</h3>
+        <div class="code-block">
+<span class="comment"># Token asli (role: user)</span>
+<span class="out">eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMSIsInJvbGUiOiJ1c2VyIn0.XXXX</span>
+
+<span class="comment"># Decode payload, ubah "role":"user" → "role":"admin"</span>
+<span class="comment"># lalu re-encode Base64 TANPA menandatangani ulang (signature lama)</span>
+
+<span class="cmd">curl -H "Authorization: Bearer &lt;token_dimodifikasi&gt;" \
+  http://localhost:5000/api/admin/users</span>
+
+<span class="out">HTTP/1.1 401 Unauthorized
+{"error": "Invalid token signature"}</span>
+<span class="ok"># Hasil yang DIHARAPKAN: ditolak karena signature tidak cocok</span>
+        </div>
+        <div class="warn-box mt8">
+          <div class="warn-label">Jika Tidak Ditolak</div>
+          <p>Jika API menerima token yang dimodifikasi, kemungkinan verifikasi signature tidak dijalankan dengan benar, atau API menerima algoritma <code>"alg":"none"</code> — celah kritis yang harus segera diperbaiki.</p>
+        </div>
+      </div>
+    </div>
+    <h3 class="section-h mt16">Perangkat Bantu Pengujian</h3>
+    <table class="rubrik-table">
+      <tr><th>Tool</th><th>Kegunaan</th></tr>
+      <tr><td>Postman / Insomnia</td><td>Menyusun & menjalankan koleksi request API, mengelola environment token</td></tr>
+      <tr><td>Burp Suite (Repeater/Intruder)</td><td>Memodifikasi request API manual, fuzzing parameter ID untuk uji BOLA</td></tr>
+      <tr><td>OWASP ZAP (API Scan mode)</td><td>Scan otomatis terhadap definisi OpenAPI/Swagger</td></tr>
+      <tr><td>jwt.io / jwt_tool</td><td>Decode, inspeksi, dan uji manipulasi token JWT</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- SLIDE 8: STUDI KASUS TERINTEGRASI -->
+<div class="slide" id="s8" data-title="Studi Kasus Terintegrasi">
+  <div class="slide-header">
+    <div class="section-label">Studi Kasus</div>
+    <h2>Studi Kasus Terintegrasi — REST API "Orders" Sederhana</h2>
+    <p>Menerapkan JWT + otorisasi objek pada endpoint <code>/api/orders/&lt;id&gt;</code></p>
+  </div>
+  <div class="slide-body">
+    <div class="tag-row" style="margin-bottom:14px;">
+      <span class="tag red">Sebelum: BOLA — user lain bisa lihat order siapa saja</span>
+      <span class="tag green">Sesudah: JWT + cek kepemilikan + rate limit</span>
+    </div>
+    <div class="case-compare">
+      <div class="case-vuln">
+        <h5>SEBELUM — RENTAN (BOLA + Broken Auth)</h5>
+        <div class="code-block" style="font-size:11.5px;">
+<span class="kw">@app.route</span>(<span class="str">'/api/orders/&lt;int:order_id&gt;'</span>)
+<span class="kw">def</span> get_order(order_id):
+    <span class="comment"># Hanya cek header Authorization ada isinya, tidak diverifikasi!</span>
+    <span class="kw">if not</span> request.headers.get(<span class="str">'Authorization'</span>):
+        abort(<span class="num">401</span>)
+    order = db.execute(
+        <span class="str">"SELECT * FROM orders WHERE id=?"</span>, [order_id]
+    ).fetchone()
+    <span class="warn"># Tidak cek apakah order ini milik pemegang token!</span>
+    <span class="kw">return</span> jsonify(dict(order))
+<span class="warn"># /api/orders/1, /api/orders/2, ... bisa dilihat siapa saja</span>
+        </div>
+      </div>
+      <div class="case-fix">
+        <h5>SESUDAH — JWT + OTORISASI OBJEK</h5>
+        <div class="code-block" style="font-size:11.5px;">
+<span class="kw">def</span> require_auth(f):
+    <span class="kw">def</span> wrapper(*args, **kwargs):
+        token = request.headers.get(<span class="str">'Authorization'</span>, <span class="str">''</span>).replace(<span class="str">'Bearer '</span>,<span class="str">''</span>)
+        payload = verify_token(token)          <span class="comment"># (B) verifikasi JWT</span>
+        <span class="kw">if not</span> payload:
+            <span class="kw">return</span> jsonify(error=<span class="str">"Invalid token"</span>), <span class="num">401</span>
+        request.user = payload
+        <span class="kw">return</span> f(*args, **kwargs)
+    <span class="kw">return</span> wrapper
+
+<span class="kw">@app.route</span>(<span class="str">'/api/orders/&lt;int:order_id&gt;'</span>)
+<span class="ok">@require_auth</span>
+<span class="ok">@limiter.limit("60 per minute")</span>
+<span class="kw">def</span> get_order(order_id):
+    order = db.execute(
+        <span class="str">"SELECT * FROM orders WHERE id=? AND owner_id=?"</span>,
+        [order_id, request.user[<span class="str">'sub'</span>]]                <span class="comment"># (A) cek kepemilikan</span>
+    ).fetchone()
+    <span class="kw">if not</span> order:
+        <span class="ok">return jsonify(error="Not found"), 404  # bukan 403 (hindari leak)</span>
+    <span class="kw">return</span> jsonify(dict(order))
+        </div>
+      </div>
+    </div>
+    <div class="mt12 ok-box">
+      <p><strong>Detail penting:</strong> jika order tidak ditemukan ATAU bukan milik user, respons tetap <code>404 Not Found</code> yang sama — ini mencegah attacker membedakan "order tidak ada" dari "order ada tapi bukan milik saya" (mencegah enumerasi ID).</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: PORTOFOLIO & RUBRIK -->
+<div class="slide" id="s9" data-title="Portofolio & Rubrik Penilaian">
+  <div class="slide-header">
+    <div class="section-label">Assessment</div>
+    <h2>Portofolio Proyek API & Rubrik Penilaian</h2>
+    <p>Sub-CPMK 263.1 & 263.2 · Bobot 10% · Teknik: Praktikum/Simulasi + Projek + Observasi</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Deliverable Proyek P15</h3>
+        <div class="card">
+          <h3>Yang Harus Dikumpulkan</h3>
+          <ul>
+            <li><strong>1. Source Code REST API</strong> — versi rentan vs versi dengan JWT + otorisasi objek</li>
+            <li><strong>2. Bukti Uji BOLA</strong> — sebelum & sesudah fix, screenshot request/response</li>
+            <li><strong>3. Bukti Uji Token Tampering</strong> — token dimodifikasi ditolak API</li>
+            <li><strong>4. Koleksi Postman/curl</strong> — seluruh skenario uji pada Blok 3</li>
+            <li><strong>5. Laporan Mitigasi</strong> — kategori A (autentikasi/otorisasi), B (token), C (pengujian)</li>
+          </ul>
+        </div>
+        <div class="mt12 info-box">
+          <p><strong>Target minimum:</strong> API harus menerapkan autentikasi JWT, minimal satu kontrol otorisasi objek, dan terbukti lolos uji token tampering serta uji BOLA.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Rubrik Penilaian</h3>
+        <table class="rubrik-table">
+          <thead><tr><th>Aspek</th><th>Bobot</th><th>Kriteria A (≥85)</th></tr></thead>
+          <tbody>
+            <tr><td>Autentikasi & Otorisasi</td><td>30%</td><td>JWT valid, expiration diterapkan, kepemilikan objek diverifikasi</td></tr>
+            <tr><td>Token API</td><td>25%</td><td>Signing benar, refresh token dikelola aman, tidak ada data sensitif di payload</td></tr>
+            <tr><td>Pengujian Keamanan API</td><td>30%</td><td>Minimal 4 kategori uji dijalankan dengan bukti jelas</td></tr>
+            <tr><td>Dokumentasi</td><td>15%</td><td>Laporan lengkap, rekomendasi mitigasi relevan dengan OWASP API Top 10</td></tr>
+          </tbody>
+        </table>
+        <div class="mt12 tip-box">
+          <div class="tip-label">Tips Portofolio Terbaik</div>
+          <p>Kaitkan setiap temuan dengan kategori resmi OWASP API Security Top 10 (mis. "API1:2023 BOLA") — ini menunjukkan pemahaman kerangka kerja, bukan sekadar coding.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: RINGKASAN & KONEKSI KE UAS -->
+<div class="slide" id="s10" data-title="Ringkasan & Koneksi ke UAS">
+  <div class="slide-header">
+    <div class="section-label">Ringkasan</div>
+    <h2>Ringkasan Pertemuan 15</h2>
+    <p>Key takeaways & persiapan menuju Ujian Akhir Semester</p>
+  </div>
+  <div class="slide-body">
+    <div class="three-col">
+      <div class="card" style="border-top:4px solid #e74c3c;">
+        <h3 style="color:#e74c3c;">A. Autentikasi & Otorisasi</h3>
+        <ul>
+          <li>Autentikasi = verifikasi identitas</li>
+          <li>Otorisasi = verifikasi hak akses</li>
+          <li>Object-level check mencegah BOLA</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:4px solid #8e44ad;">
+        <h3 style="color:#8e44ad;">B. Token API (JWT)</h3>
+        <ul>
+          <li>Header.Payload.Signature — payload tidak terenkripsi</li>
+          <li>Access token pendek, refresh token dikelola server</li>
+          <li>Simpan aman: HttpOnly cookie / secure storage mobile</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:4px solid #2980b9;">
+        <h3 style="color:#2980b9;">C. Pengujian Keamanan API</h3>
+        <ul>
+          <li>Uji BOLA, token tampering, expired token, BFLA</li>
+          <li>Tools: Postman, Burp Suite, OWASP ZAP API scan</li>
+          <li>Rujuk OWASP API Security Top 10 2023</li>
+        </ul>
+      </div>
+    </div>
+    <div class="mt20 info-box">
+      <p><strong>Koneksi ke Pertemuan 16 (UAS):</strong> UAS menguji ketercapaian Sub-CPMK 263.1 dan 263.2 secara menyeluruh melalui praktikum, studi kasus, dan/atau projek — mengintegrasikan seluruh materi P9-P15: metodologi pengujian, remediasi kerentanan, Secure SDLC (7 mitigasi), dan keamanan API.</p>
+    </div>
+    <div class="mt16 two-col">
+      <div class="ok-box">
+        <p><strong>Yang Sudah Kita Kuasai (P15):</strong><br>
+        ✓ Membedakan & menerapkan autentikasi vs otorisasi pada API<br>
+        ✓ Menerbitkan dan memverifikasi token JWT secara aman<br>
+        ✓ Melakukan pengujian sistematis terhadap kerentanan API umum<br>
+        ✓ Merumuskan mitigasi berbasis OWASP API Security Top 10</p>
+      </div>
+      <div class="tip-box">
+        <div class="tip-label">Persiapan UAS</div>
+        <p>Review kembali portofolio proyek P11-P15 (DevSecOps, remediasi, Secure SDLC, keamanan API). Pastikan seluruh source code, laporan, dan bukti pengujian tersimpan rapi — akan menjadi bahan praktikum/studi kasus UAS.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: MINI QUIZ -->
+<div class="slide" id="s11" data-title="Mini Quiz">
+  <div class="slide-header">
+    <div class="section-label">Evaluasi Formatif</div>
+    <h2>Mini Quiz — Pertemuan 15</h2>
+    <p>5 soal · Autentikasi, Otorisasi, Token API & Pengujian Keamanan API</p>
+  </div>
+  <div class="slide-body">
+    <div class="quiz-container">
+      <!-- Q1 -->
+      <div id="q1">
+        <div class="q-num">Soal 1 dari 5</div>
+        <div class="q-text">Endpoint <code>GET /api/invoices/{id}</code> memverifikasi token JWT valid, tetapi tidak memeriksa apakah invoice tersebut milik pemegang token. Kerentanan yang terjadi adalah:</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(1,'a')">a) Broken Authentication — karena token tidak diverifikasi</button>
+          <button class="q-option" onclick="answer(1,'b')">b) Broken Object Level Authorization (BOLA) — otorisasi kepemilikan objek tidak dicek</button>
+          <button class="q-option" onclick="answer(1,'c')">c) Unrestricted Resource Consumption — karena tidak ada rate limiting</button>
+          <button class="q-option" onclick="answer(1,'d')">d) SQL Injection karena menggunakan parameter id</button>
+        </div>
+        <div id="q1-ok" class="q-feedback ok">Benar! Token valid (autentikasi berhasil), tetapi API gagal memverifikasi apakah pemegang token berhak atas invoice tersebut (otorisasi objek) — ini persis definisi BOLA, API1:2023.</div>
+        <div id="q1-ko" class="q-feedback ko">Jawaban yang benar adalah (b) BOLA. Soal menyebutkan token diverifikasi valid, jadi bukan Broken Authentication. Tidak ada indikasi soal rate limiting atau SQL Injection di sini.</div>
+        <div class="quiz-nav">
+          <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none;">← Sebelumnya</button>
+          <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none;">Berikutnya →</button>
+        </div>
+      </div>
+      <!-- Q2 -->
+      <div id="q2" style="display:none;">
+        <div class="q-num">Soal 2 dari 5</div>
+        <div class="q-text">Mengapa data sensitif (seperti password atau NIK mentah) TIDAK boleh dimasukkan ke dalam payload JWT?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(2,'a')">a) JWT memiliki batas ukuran maksimal 100 karakter</button>
+          <button class="q-option" onclick="answer(2,'b')">b) Payload JWT hanya di-encode Base64 (bukan dienkripsi), sehingga dapat dibaca oleh siapa pun yang memiliki token</button>
+          <button class="q-option" onclick="answer(2,'c')">c) JWT hanya mendukung tipe data angka pada payload</button>
+          <button class="q-option" onclick="answer(2,'d')">d) Payload JWT otomatis terhapus setelah 1 menit</button>
+        </div>
+        <div id="q2-ok" class="q-feedback ok">Benar! Base64 bukan enkripsi — siapa pun dapat men-decode payload JWT dan membaca isinya. Signature hanya menjamin integritas (tidak diubah), bukan kerahasiaan.</div>
+        <div id="q2-ko" class="q-feedback ko">Jawaban yang benar adalah (b). Tidak ada batas ukuran ketat 100 karakter, JWT mendukung berbagai tipe data JSON, dan payload tidak otomatis terhapus — masalah utamanya adalah keterbacaan Base64.</div>
+        <div class="quiz-nav">
+          <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none;">← Sebelumnya</button>
+          <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none;">Berikutnya →</button>
+        </div>
+      </div>
+      <!-- Q3 -->
+      <div id="q3" style="display:none;">
+        <div class="q-num">Soal 3 dari 5</div>
+        <div class="q-text">Seorang penguji memodifikasi klaim <code>"role":"user"</code> menjadi <code>"role":"admin"</code> pada payload JWT tanpa menandatangani ulang, lalu mengirimkannya ke API. Perilaku API yang BENAR adalah:</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(3,'a')">a) Menerima token karena format JSON masih valid</button>
+          <button class="q-option" onclick="answer(3,'b')">b) Menolak token dengan 401 Unauthorized karena signature tidak lagi cocok dengan payload yang diubah</button>
+          <button class="q-option" onclick="answer(3,'c')">c) Menerima token tetapi membatasi akses ke fitur read-only</button>
+          <button class="q-option" onclick="answer(3,'d')">d) Meminta pengguna login ulang dengan password baru</button>
+        </div>
+        <div id="q3-ok" class="q-feedback ok">Benar! Modifikasi payload tanpa menandatangani ulang akan membuat signature tidak cocok. Server yang memverifikasi signature dengan benar akan menolak token ini — jika diterima, ini adalah kerentanan serius (Broken Authentication).</div>
+        <div id="q3-ko" class="q-feedback ko">Jawaban yang benar adalah (b). API yang aman WAJIB menolak token dengan signature tidak valid, apa pun isi payloadnya — bukan menerimanya dengan pembatasan atau meminta login ulang.</div>
+        <div class="quiz-nav">
+          <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none;">← Sebelumnya</button>
+          <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none;">Berikutnya →</button>
+        </div>
+      </div>
+      <!-- Q4 -->
+      <div id="q4" style="display:none;">
+        <div class="q-num">Soal 4 dari 5</div>
+        <div class="q-text">Mengapa disarankan menggunakan kombinasi <strong>access token berumur pendek</strong> + <strong>refresh token berumur panjang</strong>, dibandingkan satu token yang berumur panjang saja?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(4,'a')">a) Karena refresh token lebih cepat diproses oleh CPU server</button>
+          <button class="q-option" onclick="answer(4,'b')">b) Jika access token bocor, dampaknya terbatas karena cepat kedaluwarsa, sementara refresh token yang lebih sensitif disimpan lebih ketat dan dapat direvokasi</button>
+          <button class="q-option" onclick="answer(4,'c')">c) Karena browser tidak mendukung token yang berumur lebih dari 1 jam</button>
+          <button class="q-option" onclick="answer(4,'d')">d) Agar ukuran file token menjadi lebih kecil</button>
+        </div>
+        <div id="q4-ok" class="q-feedback ok">Benar! Prinsip "blast radius" — access token berumur pendek meminimalkan jendela waktu penyalahgunaan jika bocor, sementara refresh token yang jarang dikirim dan disimpan lebih aman menjadi mekanisme kontrol tambahan (dapat direvokasi di server).</div>
+        <div id="q4-ko" class="q-feedback ko">Jawaban yang benar adalah (b). Ini bukan soal performa CPU, dukungan browser, atau ukuran file — melainkan strategi keamanan untuk membatasi dampak kebocoran token.</div>
+        <div class="quiz-nav">
+          <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none;">← Sebelumnya</button>
+          <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none;">Berikutnya →</button>
+        </div>
+      </div>
+      <!-- Q5 -->
+      <div id="q5" style="display:none;">
+        <div class="q-num">Soal 5 dari 5</div>
+        <div class="q-text">Saat menguji API dengan mengakses <code>/api/orders/999</code> milik user lain menggunakan token milik diri sendiri, respons yang PALING TEPAT dari sisi keamanan adalah:</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(5,'a')">a) 200 OK dengan data lengkap order tersebut</button>
+          <button class="q-option" onclick="answer(5,'b')">b) 403 Forbidden dengan pesan "Order ini bukan milik Anda"</button>
+          <button class="q-option" onclick="answer(5,'c')">c) 404 Not Found — respons yang sama seperti jika order memang tidak ada, untuk mencegah enumerasi</button>
+          <button class="q-option" onclick="answer(5,'d')">d) 500 Internal Server Error</button>
+        </div>
+        <div id="q5-ok" class="q-feedback ok">Benar! Mengembalikan 404 yang identik baik untuk "resource tidak ada" maupun "resource ada tapi bukan milik Anda" mencegah attacker membedakan keduanya — teknik ini mengurangi risiko enumerasi ID yang valid.</div>
+        <div id="q5-ko" class="q-feedback ko">Jawaban yang benar adalah (c). 200 OK jelas merupakan kerentanan BOLA. 403 Forbidden, meski menolak akses, membocorkan informasi bahwa order tersebut memang ada — lebih baik disamarkan menjadi 404.</div>
+        <div class="quiz-nav">
+          <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none;">← Sebelumnya</button>
+          <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none;">Lihat Skor →</button>
+        </div>
+      </div>
+      <!-- Score -->
+      <div class="quiz-score" id="quiz-score">
+        <h3 id="score-display"></h3>
+        <p>Skor Anda — Mini Quiz Pertemuan 15</p>
+        <p style="margin-top:8px;font-size:13px;">Keamanan API: Autentikasi, Otorisasi & Token API · RKS222 PSSN</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<div id="navbar">
+  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>← Sebelumnya</button>
+  <div id="slide-title-bar">Cover</div>
+  <div id="progress-bar"><div id="progress-fill" style="width:8.33%"></div></div>
+  <div id="slide-counter">1 / 12</div>
+  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Berikutnya →</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let cur = 0;
+  const total = slides.length;
+  function showSlide(n) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(n, total - 1));
+    slides[cur].classList.add('active');
+    slides[cur].scrollTop = 0;
+    document.getElementById('btn-prev').disabled = cur === 0;
+    document.getElementById('btn-next').disabled = cur === total - 1;
+    document.getElementById('slide-counter').textContent = (cur+1) + ' / ' + total;
+    document.getElementById('progress-fill').style.width = ((cur+1)/total*100) + '%';
+    document.getElementById('slide-title-bar').textContent = slides[cur].dataset.title || '';
+  }
+  function changeSlide(d) { showSlide(cur + d); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  const correctAnswers = { 1:'b', 2:'b', 3:'b', 4:'b', 5:'c' };
+  const answered = {};
+  let qCur = 1;
+  const totalQ = 5;
+  let score = 0;
+
+  function answer(q, choice) {
+    if (answered[q]) return;
+    answered[q] = choice;
+    const options = document.querySelectorAll('#q' + q + ' .q-option');
+    const letters = ['a','b','c','d'];
+    options.forEach((btn, i) => {
+      btn.disabled = true;
+      if (letters[i] === correctAnswers[q]) btn.classList.add('correct');
+      else if (letters[i] === choice)       btn.classList.add('wrong');
+    });
+    const isOk = choice === correctAnswers[q];
+    if (isOk) score++;
+    document.getElementById('q' + q + (isOk ? '-ok' : '-ko')).classList.add('show');
+    const nxtBtns = document.querySelectorAll('#q' + q + ' #next-btn');
+    const prvBtns = document.querySelectorAll('#q' + q + ' #prev-btn');
+    nxtBtns.forEach(b => b.style.display = 'inline-block');
+    if (q > 1) prvBtns.forEach(b => b.style.display = 'inline-block');
+    if (q === totalQ) nxtBtns.forEach(b => b.textContent = 'Lihat Skor →');
+  }
+
+  function nextQ() {
+    if (qCur === totalQ) {
+      document.getElementById('q' + qCur).style.display = 'none';
+      document.getElementById('score-display').textContent = score + ' / ' + totalQ;
+      document.getElementById('quiz-score').style.display = 'block';
+      return;
+    }
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur++;
+    document.getElementById('q' + qCur).style.display = 'block';
+  }
+
+  function prevQ() {
+    if (qCur <= 1) return;
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur--;
+    document.getElementById('q' + qCur).style.display = 'block';
+  }
+</script>
+</body>
+</html>

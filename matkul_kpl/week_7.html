@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pertemuan 7 – Kriptografi & Otorisasi Mobile | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-purple: #8e44ad;
+    --accent-red: #e74c3c;
+    --accent-teal: #16a085;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-light); color: var(--text-dark); overflow: hidden; height: 100vh; width: 100vw; }
+  #slideshow { width: 100%; height: 100vh; position: relative; }
+  .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.45s ease; overflow-y: auto; }
+  .slide.active { opacity: 1; pointer-events: all; }
+  #navbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 999; background: var(--pssn-darkblue); display: flex; align-items: center; justify-content: space-between; padding: 10px 24px; gap: 12px; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); }
+  .nav-btn { background: var(--pssn-gold); color: var(--pssn-darkblue); border: none; border-radius: 8px; padding: 8px 22px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .nav-btn:hover { background: var(--pssn-lightgold); transform: translateY(-1px); }
+  .nav-btn:disabled { background: #555; color: #aaa; cursor: not-allowed; transform: none; }
+  #slide-counter { color: #aaa; font-size: 13px; min-width: 90px; text-align: center; }
+  #progress-bar { flex: 1; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+  #progress-fill { height: 100%; background: var(--pssn-gold); border-radius: 3px; transition: width 0.4s ease; }
+  #slide-title-bar { color: #ccc; font-size: 12px; flex: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .section-label { display: inline-block; background: var(--pssn-gold); color: var(--pssn-darkblue); font-weight: 800; font-size: 11px; letter-spacing: 1.5px; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; margin-bottom: 12px; }
+  .slide-header { background: var(--pssn-blue); padding: 28px 48px 22px; color: white; flex-shrink: 0; }
+  .slide-header h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .slide-header p { font-size: 14px; color: rgba(255,255,255,0.7); }
+  .slide-body { padding: 28px 48px 100px; flex: 1; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .mt8{margin-top:8px;} .mt12{margin-top:12px;} .mt16{margin-top:16px;} .mt20{margin-top:20px;}
+
+  .card { background: #fff; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+  .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .card p, .card li { font-size: 13.5px; line-height: 1.7; color: #444; }
+  .card ul { padding-left: 18px; } .card ul li { margin-bottom: 4px; }
+
+  .cp-box { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid var(--pssn-blue); }
+  .cp-box h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 5px; }
+  .cp-box p { font-size: 14px; font-weight: 600; color: var(--pssn-blue); line-height: 1.5; }
+
+  .indikator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .indikator-card { background: #fff; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start; border-top: 3px solid; }
+  .ind-letter { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; color: white; }
+  .ind-text { font-size: 13px; color: #333; line-height: 1.5; font-weight: 500; }
+  .ind-bloom { font-size: 11px; color: #888; margin-top: 3px; }
+
+  #s0 { background: linear-gradient(135deg, #0d2b6b 0%, #1a5276 50%, #0e6655 100%); justify-content: center; align-items: center; text-align: center; position: relative; padding: 40px; }
+  #s0::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E"); }
+  .cover-badge { background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold); color: var(--pssn-gold); border-radius: 20px; padding: 6px 18px; font-size: 13px; font-weight: 600; letter-spacing: 1px; margin-bottom: 24px; display: inline-block; }
+  .cover-title { color: white; font-size: 36px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .cover-subtitle { color: var(--pssn-lightgold); font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .cover-meta { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 36px; }
+  .cover-divider { width: 80px; height: 3px; background: var(--pssn-gold); border-radius: 2px; margin: 24px auto; }
+  .cover-pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .cover-pill { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; }
+  .cover-pill strong { color: var(--pssn-gold); }
+  .cover-inst { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 32px; }
+
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.6; margin: 10px 0; overflow-x: auto; }
+  .code-block .cmd { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .str { color: #fab387; }
+  .code-block .out { color: #89dceb; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid var(--pssn-blue); border-radius: 8px; padding: 12px 16px; }
+  .info-box p, .info-box li { font-size: 12.5px; color: #333; line-height: 1.6; }
+  .tip-box { background: linear-gradient(135deg,#fff8e1,#fffde7); border-left: 4px solid var(--pssn-gold); border-radius: 8px; padding: 12px 16px; }
+  .tip-box .tip-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-orange); margin-bottom: 4px; }
+  .tip-box p, .tip-box li { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .warn-box { background: #ffebee; border-left: 4px solid var(--accent-red); border-radius: 8px; padding: 12px 16px; }
+  .warn-box .warn-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-red); margin-bottom: 4px; }
+  .warn-box p { font-size: 12.5px; color: #555; line-height: 1.6; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag { background: #e8eaf6; color: #3949ab; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 4px 10px; }
+  .tag.green { background: #e8f5e9; color: #2e7d32; }
+  .tag.red { background: #ffebee; color: #c62828; }
+  .tag.gold { background: #fff8e1; color: #e65100; }
+  .tag.teal { background: #e0f7fa; color: #00695c; }
+  .tag.purple { background: #f3e5f5; color: #6a1b9a; }
+  .tag-red    { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fdedec; color: #c0392b; }
+  .tag-orange { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fef9e7; color: #d35400; }
+  .tag-blue   { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #e8f4fd; color: #1a4a6b; }
+  .tag-green  { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #eafaf1; color: #145a32; }
+  .tag-purple { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #f5eef8; color: #7d3c98; }
+
+  .step-flow { display: flex; gap: 0; align-items: stretch; margin: 14px 0; }
+  .step-item { flex: 1; min-width: 90px; background: #fff; border-radius: 8px; padding: 14px 10px; text-align: center; box-shadow: var(--shadow); position: relative; }
+  .step-item:not(:last-child)::after { content: '→'; position: absolute; right: -16px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--pssn-gold); font-weight: 900; z-index: 1; }
+  .step-item + .step-item { margin-left: 22px; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--pssn-blue); color: white; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+  .step-item h5 { font-size: 12px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 4px; }
+  .step-item p { font-size: 11px; color: #666; line-height: 1.4; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; }
+  .sum-card { background: #fff; border-radius: 10px; padding: 14px 12px; box-shadow: var(--shadow); text-align: center; border-top: 3px solid; }
+  .sum-card .sum-icon { font-size: 26px; margin-bottom: 6px; }
+  .sum-card h5 { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .sum-card p { font-size: 11px; color: #666; line-height: 1.4; }
+  .key-points { background: #fff; border-radius: var(--radius); padding: 18px 22px; box-shadow: var(--shadow); }
+  .key-points h4 { font-size: 14px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 12px; }
+  .kp-item { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+  .kp-check { width: 22px; height: 22px; background: var(--accent-green); border-radius: 50%; color: white; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .kp-text { font-size: 13px; color: #333; line-height: 1.5; }
+
+  .task-card { background: #fff; border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid; }
+  .task-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+  .task-card p, .task-card li { font-size: 13.5px; color: #444; line-height: 1.7; }
+  .task-card ul { padding-left: 18px; margin-top: 6px; }
+  .task-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .task-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+  .tb-red{background:#ffebee;color:#c62828;} .tb-blue{background:#e3f2fd;color:#1565c0;}
+  .tb-green{background:#e8f5e9;color:#2e7d32;} .tb-gold{background:#fff8e1;color:#e65100;}
+  .tb-teal{background:#e0f7fa;color:#00695c;}
+
+  .quiz-container { max-width: 720px; margin: 0 auto; }
+  .q-num { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--pssn-gold); margin-bottom: 6px; }
+  .q-text { font-size: 15px; font-weight: 600; color: var(--pssn-blue); margin-bottom: 14px; line-height: 1.5; }
+  .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  .q-option { background: #fff; border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; cursor: pointer; transition: all 0.2s; font-size: 13.5px; color: #333; font-weight: 500; text-align: left; }
+  .q-option:hover { border-color: var(--pssn-blue); background: #f0f4ff; }
+  .q-option.correct { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; font-weight: 700; }
+  .q-option.wrong { border-color: #ef5350; background: #ffebee; color: #c62828; }
+  .q-feedback { font-size: 13px; padding: 10px 14px; border-radius: 8px; margin-top: 8px; display: none; line-height: 1.6; }
+  .q-feedback.show { display: block; }
+  .q-feedback.ok { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
+  .q-feedback.ko { background: #ffebee; color: #c62828; border-left: 3px solid #ef5350; }
+  .quiz-score { text-align: center; background: var(--pssn-blue); color: white; border-radius: var(--radius); padding: 16px; margin-top: 16px; display: none; }
+  .quiz-score h3 { font-size: 22px; font-weight: 900; color: var(--pssn-gold); }
+  .quiz-score p { font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+  .quiz-nav { display: flex; gap: 10px; margin-top: 12px; justify-content: center; }
+  .quiz-btn { background: var(--pssn-blue); color: white; border: none; border-radius: 8px; padding: 10px 24px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+  .quiz-btn:hover { background: #1a3a8f; }
+
+  .ref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ref-card { background: #fff; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border-top: 3px solid; }
+  .ref-card h4 { font-size: 13px; font-weight: 800; margin-bottom: 8px; }
+  .ref-card li { font-size: 12.5px; color: #444; line-height: 1.8; }
+  .ref-card ul { padding-left: 16px; }
+
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  .cmp-table th { background: var(--pssn-blue); color: white; padding: 8px 12px; text-align: left; font-size: 12px; }
+  .cmp-table td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; color: #444; line-height: 1.5; }
+  .cmp-table tr:nth-child(even) { background: #f8f9ff; }
+  .cmp-table td:first-child { font-weight: 700; color: var(--pssn-blue); }
+
+  h3.section-h { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 18px; }
+  h3.section-h:first-child { margin-top: 0; }
+  .vuln-box { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); border-left: 5px solid; margin-bottom: 12px; }
+  .vuln-box h4 { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+  .vuln-box p, .vuln-box li { font-size: 12.5px; color: #444; line-height: 1.6; }
+  .vuln-box ul { padding-left: 16px; }
+  .report-section { background: #fff; border-radius: var(--radius); padding: 14px 18px; box-shadow: var(--shadow); margin-bottom: 10px; border-left: 4px solid; }
+  .report-section h4 { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+  .report-section p, .report-section li { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .report-section ul { padding-left: 16px; }
+</style>
+</head>
+<body>
+<div id="slideshow">
+
+<!-- SLIDE 0: COVER -->
+<div class="slide active" id="s0" data-title="Cover">
+  <div style="position:relative;z-index:1;text-align:center;max-width:820px;margin:auto;">
+    <div class="cover-badge">RKS222 • Keamanan Perangkat Lunak • Semester 4</div>
+    <div class="cover-title">Kriptografi & Otorisasi<br>pada Aplikasi Mobile</div>
+    <div class="cover-subtitle">Pengujian Kriptografi Lemah, Otorisasi Tidak Tepat & Laporan Temuan</div>
+    <div class="cover-meta">Sub-CPMK 262.1 & 262.2 &nbsp;|&nbsp; Pertemuan 7 &nbsp;|&nbsp; Bobot 15%</div>
+    <div class="cover-divider"></div>
+    <div class="cover-pills">
+      <div class="cover-pill"><strong>Topik:</strong> Insufficient Cryptography (M10)</div>
+      <div class="cover-pill"><strong>Topik:</strong> Improper Authorization (M3)</div>
+      <div class="cover-pill"><strong>Topik:</strong> Laporan Pengujian Keamanan</div>
+      <div class="cover-pill"><strong>Tools:</strong> Jadx · Frida · Objection · Burp</div>
+    </div>
+    <div class="cover-inst">Program Studi Rekayasa Keamanan Siber — Politeknik SSN</div>
+  </div>
+</div>
+
+<!-- SLIDE 1: CAPAIAN PEMBELAJARAN -->
+<div class="slide" id="s1" data-title="Capaian Pembelajaran">
+  <div class="slide-header">
+    <div class="section-label">Capaian Pembelajaran</div>
+    <h2>Capaian Pembelajaran Pertemuan 7</h2>
+    <p>Sub-CPMK 262.1 & 262.2 | CPMK262 | CPL02 — RKS222, PSSN</p>
+  </div>
+  <div class="slide-body">
+    <div class="cp-box">
+      <h3>Sub-CPMK 262.1 — Lanjutan</h3>
+      <p>Mahasiswa mampu mengonfigurasi dan menjalankan pengujian kriptografi lemah serta otorisasi tidak tepat pada aplikasi mobile menggunakan tools analisis statis dan dinamis.</p>
+    </div>
+    <div class="cp-box">
+      <h3>Sub-CPMK 262.2 — Inti</h3>
+      <p>Mahasiswa mampu menganalisis dan mendokumentasikan seluruh temuan pengujian mobile ke dalam laporan pengujian keamanan profesional lengkap dengan risk rating dan rekomendasi mitigasi.</p>
+    </div>
+    <div class="indikator-grid mt12">
+      <div class="indikator-card" style="border-top-color:#1abc9c;">
+        <div class="ind-letter" style="background:#1abc9c;">A</div>
+        <div>
+          <div class="ind-text">Mengidentifikasi penggunaan algoritma kriptografi lemah (MD5, DES, ECB) dan kunci yang ditanam keras (hardcoded)</div>
+          <div class="ind-bloom">Bloom C4 — Menganalisis</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-top-color:#e67e22;">
+        <div class="ind-letter" style="background:#e67e22;">B</div>
+        <div>
+          <div class="ind-text">Menjalankan pengujian otorisasi mobile — deteksi IDOR, privilege escalation, dan bypass kontrol akses pada API</div>
+          <div class="ind-bloom">Bloom C3 — Menerapkan</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-top-color:#2980b9;">
+        <div class="ind-letter" style="background:#2980b9;">C</div>
+        <div>
+          <div class="ind-text">Menggunakan Frida/Objection untuk hooking fungsi kriptografi dan analisis runtime</div>
+          <div class="ind-bloom">Bloom C3 — Menerapkan</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-top-color:#27ae60;">
+        <div class="ind-letter" style="background:#27ae60;">D</div>
+        <div>
+          <div class="ind-text">Menyusun laporan pengujian keamanan lengkap dengan Executive Summary, temuan, CVSS scoring, dan rekomendasi</div>
+          <div class="ind-bloom">Bloom C6 — Mencipta</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: PETA MATERI -->
+<div class="slide" id="s2" data-title="Peta Materi & Review">
+  <div class="slide-header">
+    <div class="section-label">Orientasi</div>
+    <h2>Peta Materi & Review Pertemuan 6</h2>
+    <p>Melengkapi pengujian mobile dengan kriptografi, otorisasi, dan pelaporan</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Review Pertemuan 6</h3>
+        <div style="background:#e8f4fd;border-left:4px solid #2980b9;border-radius:8px;padding:12px 16px;margin-bottom:10px;">
+          <strong>SQLi & Intent Injection:</strong> Input validation, rawQuery(), exported components
+        </div>
+        <div style="background:#eafaf1;border-left:4px solid #27ae60;border-radius:8px;padding:12px 16px;margin-bottom:10px;">
+          <strong>Broken Auth:</strong> Hardcoded creds, weak session, SharedPrefs plaintext
+        </div>
+        <div style="background:#fef9e7;border-left:4px solid #f39c12;border-radius:8px;padding:12px 16px;margin-bottom:10px;">
+          <strong>Insecure Storage:</strong> M9, SQLite, External Storage, Logcat
+        </div>
+        <h3 class="section-h mt12">Agenda Pertemuan 7</h3>
+        <div style="background:#fdedec;border-left:4px solid #e74c3c;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 1:</strong> Kriptografi Lemah (M10) — deteksi & pengujian
+        </div>
+        <div style="background:#f5eef8;border-left:4px solid #8e44ad;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 2:</strong> Otorisasi Tidak Tepat (M3) — IDOR, bypass
+        </div>
+        <div style="background:#e8f5e9;border-left:4px solid #27ae60;border-radius:8px;padding:12px 16px;">
+          <strong>Blok 3:</strong> Laporan Pengujian (Sub-CPMK 262.2) — format profesional
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Cakupan OWASP Mobile Top 10 Minggu 6–7</h3>
+        <table class="cmp-table">
+          <thead><tr><th>ID</th><th>Kategori</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>M1</td><td>Improper Credential Usage</td><td><span class="tag-green">Mg 6 ✓</span></td></tr>
+            <tr><td>M3</td><td>Insecure Auth (Auth bagian)</td><td><span class="tag-green">Mg 6 ✓</span></td></tr>
+            <tr><td>M3</td><td>Insecure Authorization</td><td><span class="tag-orange">Mg 7</span></td></tr>
+            <tr><td>M4</td><td>Insufficient Input Validation</td><td><span class="tag-green">Mg 6 ✓</span></td></tr>
+            <tr><td>M9</td><td>Insecure Data Storage</td><td><span class="tag-green">Mg 6 ✓</span></td></tr>
+            <tr><td>M10</td><td>Insufficient Cryptography</td><td><span class="tag-orange">Mg 7</span></td></tr>
+          </tbody>
+        </table>
+        <div class="info-box mt12">
+          <p><strong>Sub-CPMK 262.2 Fokus Hari Ini:</strong> Setelah mengumpulkan temuan (Mg 4–6), kini saatnya menyusun <em>laporan pengujian keamanan profesional</em> — komponen utama Sub-CPMK 262.2.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: KRIPTOGRAFI LEMAH (M10) -->
+<div class="slide" id="s3" data-title="Kriptografi Lemah — OWASP M10">
+  <div class="slide-header">
+    <div class="section-label">Blok 1 — Kriptografi</div>
+    <h2>Insufficient Cryptography — OWASP Mobile M10</h2>
+    <p>Penggunaan algoritma kriptografi lemah, kunci hardcoded, atau implementasi yang salah | CWE-327</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Pola Kerentanan Kriptografi Mobile</h3>
+        <div class="vuln-box" style="border-left-color:#c0392b;">
+          <h4 style="color:#c0392b;">1. Algoritma Usang/Lemah</h4>
+          <ul>
+            <li><strong>MD5/SHA1</strong> untuk hashing password — dapat di-crack dengan rainbow table</li>
+            <li><strong>DES/3DES</strong> untuk enkripsi data — kunci 56-bit, tidak aman</li>
+            <li><strong>RC4</strong> — stream cipher dengan kelemahan bias</li>
+            <li><strong>AES-ECB mode</strong> — pola terlihat dalam ciphertext</li>
+          </ul>
+        </div>
+        <div class="vuln-box mt8" style="border-left-color:#e67e22;">
+          <h4 style="color:#d35400;">2. Kunci yang Ditanam Keras</h4>
+          <ul>
+            <li>Secret key/IV ditulis langsung dalam kode Java/Kotlin</li>
+            <li>Disimpan di <code>strings.xml</code> atau <code>BuildConfig</code></li>
+            <li>Mudah diekstrak saat APK di-decompile dengan jadx</li>
+          </ul>
+        </div>
+        <div class="vuln-box mt8" style="border-left-color:#8e44ad;">
+          <h4 style="color:#7d3c98;">3. IV/Salt Statis atau Tidak Ada</h4>
+          <p>Initialization Vector (IV) yang sama digunakan berulang, atau tidak ada salt pada hashing password — memungkinkan serangan replay dan rainbow table.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Contoh Kode Rentan vs Aman</h3>
+        <div class="warn-box">
+          <div class="warn-label">Kode Rentan — MD5 Password Hashing</div>
+        </div>
+        <div class="code-block">
+<span class="comment">// RENTAN — MD5 tanpa salt</span>
+<span class="kw">MessageDigest</span> md = MessageDigest.getInstance(<span class="str">"MD5"</span>);
+<span class="kw">byte</span>[] hash = md.digest(password.getBytes());
+<span class="comment">// Sama dengan bcrypt cracking online!</span>
+
+<span class="comment">// RENTAN — Hardcoded AES key</span>
+<span class="kw">private static final byte</span>[] KEY = <span class="str">"MySecretKey12345"</span>.getBytes();
+<span class="kw">Cipher</span> c = Cipher.getInstance(<span class="str">"AES/ECB/PKCS5Padding"</span>);
+        </div>
+        <div class="tip-box mt8">
+          <div class="tip-label">Kode Aman</div>
+        </div>
+        <div class="code-block">
+<span class="comment">// AMAN — BCrypt dengan salt otomatis</span>
+<span class="comment">// Gunakan library: mindrot.jbcrypt</span>
+String hashed = BCrypt.hashpw(password, BCrypt.gensalt(12));
+
+<span class="comment">// AMAN — AES-GCM dengan key dari Keystore</span>
+KeyGenerator kg = KeyGenerator.getInstance(<span class="str">"AES"</span>, <span class="str">"AndroidKeyStore"</span>);
+<span class="comment">// Key disimpan di hardware-backed Keystore</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: PENGUJIAN KRIPTOGRAFI MOBILE -->
+<div class="slide" id="s4" data-title="Pengujian Kriptografi Mobile">
+  <div class="slide-header">
+    <div class="section-label">Blok 1 — Pengujian Crypto</div>
+    <h2>Pengujian Kriptografi Mobile</h2>
+    <p>Analisis statis dengan Jadx dan analisis dinamis dengan Frida untuk mendeteksi kelemahan kriptografi</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Analisis Statis — Jadx</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:10px;">Decompile APK dan cari penggunaan API kriptografi:</p>
+        <div class="code-block">
+<span class="comment"># Buka jadx-gui, load APK, gunakan Find Usage</span>
+<span class="comment"># Keyword pencarian di source code:</span>
+<span class="out">MessageDigest.getInstance("MD5")
+MessageDigest.getInstance("SHA1")
+Cipher.getInstance("DES")
+Cipher.getInstance("AES/ECB")
+"AES/CBC" + hardcoded IV
+SecretKeySpec(keyBytes, "AES")</span>
+
+<span class="comment"># Cari juga di strings.xml dan BuildConfig:</span>
+<span class="cmd">grep -r "secret\|key\|encrypt\|aes\|des" \</span>
+<span class="cmd">  res/values/strings.xml</span>
+        </div>
+        <div class="warn-box mt8">
+          <div class="warn-label">Tanda Bahaya</div>
+          <p>Temuan <code>SecretKeySpec(hardcoded_bytes, "AES")</code> atau <code>IvParameterSpec(new byte[]{0,0,0,...})</code> adalah indikator kuat kerentanan kriptografi serius.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Analisis Dinamis — Frida Hooking</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:8px;">Hook API kriptografi Android saat runtime untuk menangkap key dan plaintext:</p>
+        <div class="code-block">
+<span class="comment">// frida-hook-crypto.js</span>
+<span class="kw">Java</span>.perform(<span class="kw">function</span>() {
+  <span class="kw">var</span> MessageDigest = Java.use(
+    <span class="str">'java.security.MessageDigest'</span>);
+
+  MessageDigest.getInstance.overload(<span class="str">'java.lang.String'</span>)
+    .implementation = <span class="kw">function</span>(algo) {
+      console.log(<span class="str">"[*] MessageDigest.getInstance: "</span> + algo);
+      <span class="kw">return</span> <span class="kw">this</span>.getInstance(algo);
+  };
+
+  <span class="kw">var</span> Cipher = Java.use(<span class="str">'javax.crypto.Cipher'</span>);
+  Cipher.getInstance.overload(<span class="str">'java.lang.String'</span>)
+    .implementation = <span class="kw">function</span>(transform) {
+      console.log(<span class="str">"[*] Cipher: "</span> + transform);
+      <span class="kw">return</span> <span class="kw">this</span>.getInstance(transform);
+  };
+});
+        </div>
+        <div class="code-block">
+<span class="comment"># Jalankan script Frida:</span>
+<span class="cmd">frida -U -l frida-hook-crypto.js \</span>
+<span class="cmd">  -f com.target.app --no-pause</span>
+<span class="out">[*] Cipher: AES/ECB/PKCS5Padding  ← RENTAN!
+[*] MessageDigest.getInstance: MD5</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: OTORISASI TIDAK TEPAT -->
+<div class="slide" id="s5" data-title="Otorisasi Tidak Tepat — OWASP M3">
+  <div class="slide-header">
+    <div class="section-label">Blok 2 — Otorisasi</div>
+    <h2>Otorisasi Tidak Tepat pada Aplikasi Mobile</h2>
+    <p>OWASP Mobile M3 (Authorization) | CWE-862, CWE-639 — Broken Object Level Authorization</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Jenis Kelemahan Otorisasi Mobile</h3>
+        <div class="vuln-box" style="border-left-color:#c0392b;">
+          <h4 style="color:#c0392b;">IDOR — Insecure Direct Object Reference</h4>
+          <p>Aplikasi menggunakan ID yang dapat ditebak/dimanipulasi untuk mengakses data pengguna lain. Contoh: mengganti <code>userId=101</code> menjadi <code>userId=102</code> di request API.</p>
+          <div class="code-block" style="margin-top:6px;font-size:11px;">
+<span class="comment"># Request normal pengguna A:</span>
+<span class="out">GET /api/profile?userId=101</span>
+<span class="comment"># IDOR — akses data pengguna B:</span>
+<span class="cmd">GET /api/profile?userId=102</span>
+          </div>
+        </div>
+        <div class="vuln-box mt8" style="border-left-color:#e67e22;">
+          <h4 style="color:#d35400;">Privilege Escalation</h4>
+          <p>Pengguna biasa dapat mengakses endpoint admin karena server tidak memvalidasi role. Misalnya: <code>/api/admin/deleteUser</code> bisa diakses oleh non-admin.</p>
+        </div>
+        <div class="vuln-box mt8" style="border-left-color:#8e44ad;">
+          <h4 style="color:#7d3c98;">Missing Authorization Checks</h4>
+          <p>API endpoint tidak memvalidasi apakah user yang terautentikasi berhak mengakses resource. Token valid tapi tidak ada pengecekan kepemilikan data.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Dampak & Contoh Nyata</h3>
+        <div class="card mb12" style="border-left:4px solid #c0392b;">
+          <h3 style="font-size:13px;">Kasus: Gojek API IDOR (2019)</h3>
+          <p>Peneliti menemukan IDOR pada API Gojek — memungkinkan akses profil, riwayat order, dan informasi driver pengguna lain hanya dengan mengganti ID order di request.</p>
+          <div class="tag-row mt8">
+            <span class="tag red">IDOR</span>
+            <span class="tag gold">Bug Bounty</span>
+            <span class="tag-orange">Data Breach</span>
+          </div>
+        </div>
+        <div class="card" style="border-left:4px solid #e67e22;">
+          <h3 style="font-size:13px;">Kasus: Banking App JWT Bypass</h3>
+          <p>Aplikasi mobile bank menggunakan JWT dengan algoritma "none" — server menerima token tanpa signature, memungkinkan penyerang membuat token untuk akun siapa pun.</p>
+          <div class="tag-row mt8">
+            <span class="tag red">JWT Bypass</span>
+            <span class="tag purple">Privilege Escalation</span>
+          </div>
+        </div>
+        <div class="info-box mt12">
+          <p><strong>Mitigasi:</strong> Validasi otorisasi di sisi server untuk setiap request. Gunakan RBAC (Role-Based Access Control). Jangan mengandalkan client-side untuk penegakan hak akses. Validasi kepemilikan resource per request.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: PENGUJIAN OTORISASI MOBILE -->
+<div class="slide" id="s6" data-title="Pengujian Otorisasi Mobile">
+  <div class="slide-header">
+    <div class="section-label">Blok 2 — Pengujian Auth</div>
+    <h2>Pengujian Otorisasi Mobile dengan Burp Suite & Objection</h2>
+    <p>Teknik intercepting, analisis JWT, dan pengujian kontrol akses pada API mobile</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Setup Burp Suite sebagai Mobile Proxy</h3>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="background:#fff;border-radius:8px;padding:10px 14px;box-shadow:var(--shadow);display:flex;gap:10px;">
+            <div class="step-num">1</div>
+            <div><h5 style="font-size:12px;">Configure Burp Listener</h5><p style="font-size:11.5px;color:#666;">Proxy → Options → Add listener 0.0.0.0:8080</p></div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 14px;box-shadow:var(--shadow);display:flex;gap:10px;">
+            <div class="step-num" style="background:#e67e22;">2</div>
+            <div><h5 style="font-size:12px;">Set Android Proxy</h5><p style="font-size:11.5px;color:#666;">Wi-Fi Settings → Manual proxy → Burp IP:8080</p></div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 14px;box-shadow:var(--shadow);display:flex;gap:10px;">
+            <div class="step-num" style="background:#8e44ad;">3</div>
+            <div><h5 style="font-size:12px;">Install Burp CA Certificate</h5><p style="font-size:11.5px;color:#666;">Download & install Burp CA di Android (untuk HTTPS)</p></div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 14px;box-shadow:var(--shadow);display:flex;gap:10px;">
+            <div class="step-num" style="background:#27ae60;">4</div>
+            <div><h5 style="font-size:12px;">Bypass SSL Pinning (jika ada)</h5><p style="font-size:11.5px;color:#666;"><code>objection -g com.app explore</code> → android sslpinning disable</p></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Analisis JWT & Pengujian IDOR</h3>
+        <div class="code-block">
+<span class="comment"># Decode JWT (tanpa verifikasi)</span>
+<span class="comment"># Header.Payload.Signature</span>
+<span class="out">eyJhbGciOiJIUzI1NiJ9  ← Header
+eyJ1c2VySWQiOiIxMDEiLCJyb2xlIjoidXNlciJ9
+← Payload: {"userId":"101","role":"user"}</span>
+
+<span class="comment"># Uji "alg:none" attack</span>
+<span class="comment"># Modifikasi header ke {"alg":"none"}</span>
+<span class="comment"># Hapus signature, kirim ke server</span>
+
+<span class="comment"># Pengujian IDOR dengan Burp Intruder</span>
+<span class="comment"># Ganti userId=§101§ → range 100-200</span>
+<span class="cmd">GET /api/transactions?userId=§101§</span>
+<span class="comment"># Response 200 = IDOR ditemukan</span>
+        </div>
+        <div class="warn-box mt8">
+          <div class="warn-label">Perhatian Etika</div>
+          <p>Pengujian IDOR hanya dilakukan pada akun milik sendiri (akun pengujian) atau dengan izin tertulis. Jangan mengakses data akun pengguna nyata lain tanpa persetujuan.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: TOOLS LANJUTAN -->
+<div class="slide" id="s7" data-title="Tools Lanjutan: Jadx, Objection, Frida, Burp">
+  <div class="slide-header">
+    <div class="section-label">Tools Lanjutan</div>
+    <h2>Tools Lanjutan Pengujian Keamanan Mobile</h2>
+    <p>Jadx, Objection, Frida, dan Burp Suite — ekosistem pengujian runtime & analisis mendalam</p>
+  </div>
+  <div class="slide-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div style="background:#fff;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);border-top:3px solid #2980b9;">
+        <div style="font-size:10px;font-weight:700;color:#2980b9;letter-spacing:1px;margin-bottom:6px;">DECOMPILER</div>
+        <h4 style="font-size:14px;font-weight:800;margin-bottom:6px;">Jadx-GUI</h4>
+        <p style="font-size:12.5px;color:#555;line-height:1.5;">Decompile APK ke kode Java/Kotlin yang mudah dibaca. Mendukung pencarian teks di seluruh codebase — ideal untuk mencari hardcoded keys, algoritma crypto, dan logika otorisasi.</p>
+        <div class="code-block" style="margin-top:8px;font-size:11px;">
+<span class="comment"># CLI mode</span>
+<span class="cmd">jadx -d output/ app.apk</span>
+<span class="cmd">grep -r "Cipher\|AES\|MD5" output/</span>
+        </div>
+      </div>
+      <div style="background:#fff;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);border-top:3px solid #27ae60;">
+        <div style="font-size:10px;font-weight:700;color:#27ae60;letter-spacing:1px;margin-bottom:6px;">RUNTIME EXPLORATION</div>
+        <h4 style="font-size:14px;font-weight:800;margin-bottom:6px;">Objection</h4>
+        <p style="font-size:12.5px;color:#555;line-height:1.5;">Framework runtime berbasis Frida dengan interface yang lebih mudah. Memudahkan bypass SSL pinning, root detection, eksplorasi file, dan analisis class yang dimuat saat runtime.</p>
+        <div class="code-block" style="margin-top:8px;font-size:11px;">
+<span class="cmd">objection -g com.target.app explore</span>
+<span class="out">objection> android sslpinning disable</span>
+<span class="out">objection> android root disable</span>
+<span class="out">objection> android hooking list classes</span>
+        </div>
+      </div>
+      <div style="background:#fff;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);border-top:3px solid #8e44ad;">
+        <div style="font-size:10px;font-weight:700;color:#8e44ad;letter-spacing:1px;margin-bottom:6px;">DYNAMIC INSTRUMENTATION</div>
+        <h4 style="font-size:14px;font-weight:800;margin-bottom:6px;">Frida</h4>
+        <p style="font-size:12.5px;color:#555;line-height:1.5;">Hook dan modifikasi perilaku fungsi saat runtime. Dapat menangkap parameter/return value, bypass security control, dan trace eksekusi program secara real-time dengan JavaScript.</p>
+        <div class="code-block" style="margin-top:8px;font-size:11px;">
+<span class="cmd">frida-ps -U</span>
+<span class="comment">  # daftar proses Android</span>
+<span class="cmd">frida -U -l script.js -f com.app</span>
+        </div>
+      </div>
+      <div style="background:#fff;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);border-top:3px solid #e67e22;">
+        <div style="font-size:10px;font-weight:700;color:#e67e22;letter-spacing:1px;margin-bottom:6px;">HTTP PROXY & API TESTING</div>
+        <h4 style="font-size:14px;font-weight:800;margin-bottom:6px;">Burp Suite (Community)</h4>
+        <p style="font-size:12.5px;color:#555;line-height:1.5;">Intercept dan modifikasi HTTP/HTTPS request dari aplikasi mobile. Sangat efektif untuk pengujian IDOR (Intruder), analisis JWT (Decoder tab), dan testing business logic API.</p>
+        <div class="code-block" style="margin-top:8px;font-size:11px;">
+<span class="comment"># Useful extensions:</span>
+<span class="out">JWT Editor (JWT analysis/modify)
+Autorize (authorization testing)
+Param Miner (hidden parameters)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: STRUKTUR LAPORAN PENGUJIAN -->
+<div class="slide" id="s8" data-title="Struktur Laporan Pengujian Keamanan">
+  <div class="slide-header">
+    <div class="section-label">Blok 3 — Laporan</div>
+    <h2>Struktur Laporan Pengujian Keamanan (Sub-CPMK 262.2)</h2>
+    <p>Format laporan pengujian keamanan profesional yang diakui industri</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Bagian Utama Laporan</h3>
+        <div class="report-section" style="border-left-color:#2980b9;">
+          <h4 style="color:#1a5276;">1. Executive Summary</h4>
+          <ul>
+            <li>Tujuan dan ruang lingkup pengujian</li>
+            <li>Metodologi yang digunakan</li>
+            <li>Ringkasan temuan (jumlah per severity)</li>
+            <li>Rekomendasi strategis (2–3 kalimat)</li>
+          </ul>
+        </div>
+        <div class="report-section" style="border-left-color:#e67e22;">
+          <h4 style="color:#d35400;">2. Metodologi & Scope</h4>
+          <ul>
+            <li>Target: nama aplikasi, versi, platform</li>
+            <li>Metode: SAST, DAST, MSTG test cases</li>
+            <li>Tools: MobSF, Drozer, Frida, Burp</li>
+            <li>Periode pengujian & batasan</li>
+          </ul>
+        </div>
+        <div class="report-section" style="border-left-color:#c0392b;">
+          <h4 style="color:#c0392b;">3. Temuan (Findings)</h4>
+          <ul>
+            <li>Setiap temuan: ID, nama, kategori, severity</li>
+            <li>Deskripsi teknis + bukti (screenshot, payload)</li>
+            <li>Dampak bisnis dan teknis</li>
+            <li>CVSS Score + OWASP Risk Rating</li>
+          </ul>
+        </div>
+        <div class="report-section" style="border-left-color:#27ae60;">
+          <h4 style="color:#1e8449;">4. Rekomendasi</h4>
+          <ul>
+            <li>Mitigasi spesifik per temuan</li>
+            <li>Prioritas berdasarkan severity</li>
+            <li>Referensi standar (OWASP, CWE, NIST)</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Severity Classification</h3>
+        <table class="cmp-table">
+          <thead><tr><th>Level</th><th>CVSS Range</th><th>SLA Fix</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span style="background:#7b241c;color:white;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;">CRITICAL</span></td>
+              <td>9.0 – 10.0</td>
+              <td>24 jam</td>
+            </tr>
+            <tr>
+              <td><span style="background:#c0392b;color:white;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;">HIGH</span></td>
+              <td>7.0 – 8.9</td>
+              <td>1 minggu</td>
+            </tr>
+            <tr>
+              <td><span style="background:#d35400;color:white;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;">MEDIUM</span></td>
+              <td>4.0 – 6.9</td>
+              <td>1 bulan</td>
+            </tr>
+            <tr>
+              <td><span style="background:#1e8449;color:white;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;">LOW</span></td>
+              <td>0.1 – 3.9</td>
+              <td>Next Sprint</td>
+            </tr>
+            <tr>
+              <td><span style="background:#2471a3;color:white;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;">INFO</span></td>
+              <td>0.0</td>
+              <td>Best Effort</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="info-box mt12">
+          <p><strong>CVSS vs OWASP Risk Rating:</strong> Gunakan OWASP Risk Rating (Mg 5) untuk menghitung severity dari faktor Likelihood + Impact. Sertakan juga CVSS Base Score jika laporan untuk auditor eksternal.</p>
+        </div>
+        <div class="tip-box mt8">
+          <div class="tip-label">Tips Laporan Profesional</div>
+          <p>Pastikan setiap temuan memiliki: <strong>bukti yang jelas</strong> (screenshot/payload), <strong>langkah reproduksi</strong> (proof of concept), dan <strong>rekomendasi spesifik</strong> — bukan hanya "fix the vulnerability".</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: TEMPLATE LAPORAN -->
+<div class="slide" id="s9" data-title="Template & Contoh Laporan">
+  <div class="slide-header">
+    <div class="section-label">Blok 3 — Template</div>
+    <h2>Template Format Laporan & Tabel Temuan</h2>
+    <p>Format yang digunakan dalam laporan pengujian profesional (pentest report)</p>
+  </div>
+  <div class="slide-body">
+    <h3 class="section-h">Tabel Ringkasan Temuan (Finding Summary)</h3>
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>ID Temuan</th>
+          <th>Judul Kerentanan</th>
+          <th>Kategori (OWASP M)</th>
+          <th>Likelihood</th>
+          <th>Impact</th>
+          <th>Severity</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>FIND-001</td>
+          <td>Hardcoded API Key di BuildConfig</td>
+          <td>M1 — Improper Creds</td>
+          <td><span class="tag-red">HIGH 8.5</span></td>
+          <td><span class="tag-red">HIGH 9.0</span></td>
+          <td><span style="background:#7b241c;color:white;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;">CRITICAL</span></td>
+          <td>Open</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>FIND-002</td>
+          <td>SQL Injection via rawQuery()</td>
+          <td>M4 — Input Validation</td>
+          <td><span class="tag-orange">MED 6.0</span></td>
+          <td><span class="tag-red">HIGH 8.0</span></td>
+          <td><span class="tag-red">HIGH</span></td>
+          <td>Open</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>FIND-003</td>
+          <td>Token Tersimpan di SharedPrefs Plaintext</td>
+          <td>M9 — Insecure Storage</td>
+          <td><span class="tag-orange">MED 5.5</span></td>
+          <td><span class="tag-red">HIGH 7.5</span></td>
+          <td><span class="tag-red">HIGH</span></td>
+          <td>Open</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>FIND-004</td>
+          <td>Penggunaan MD5 untuk Password Hash</td>
+          <td>M10 — Weak Crypto</td>
+          <td><span class="tag-orange">MED 5.0</span></td>
+          <td><span class="tag-red">HIGH 7.0</span></td>
+          <td><span class="tag-orange">HIGH</span></td>
+          <td>Open</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>FIND-005</td>
+          <td>IDOR pada API /profile?userId=</td>
+          <td>M3 — Insecure Auth</td>
+          <td><span class="tag-red">HIGH 7.0</span></td>
+          <td><span class="tag-orange">MED 6.5</span></td>
+          <td><span class="tag-orange">HIGH</span></td>
+          <td>Open</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>FIND-006</td>
+          <td>allowBackup=true tanpa enkripsi</td>
+          <td>M9 — Insecure Storage</td>
+          <td><span class="tag-orange">MED 4.5</span></td>
+          <td><span class="tag-orange">MED 5.0</span></td>
+          <td><span class="tag-orange">MEDIUM</span></td>
+          <td>Open</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="two-col mt12">
+      <div class="tip-box">
+        <div class="tip-label">Format Setiap Temuan (Detail)</div>
+        <p><strong>ID:</strong> FIND-NNN<br>
+        <strong>Judul:</strong> Nama kerentanan singkat<br>
+        <strong>Deskripsi:</strong> Penjelasan teknis<br>
+        <strong>Langkah Reproduksi:</strong> Step-by-step PoC<br>
+        <strong>Bukti:</strong> Screenshot, payload, response<br>
+        <strong>Dampak:</strong> Dampak bisnis + teknis<br>
+        <strong>CVSS/Risk Score:</strong> Perhitungan skor<br>
+        <strong>Rekomendasi:</strong> Mitigasi spesifik</p>
+      </div>
+      <div class="info-box">
+        <p><strong>Catatan Pelaporan:</strong> Laporan pengujian yang baik harus bisa dipahami oleh dua audiens: (1) <strong>Technical Team</strong> — butuh PoC dan detail kode; (2) <strong>Management</strong> — butuh Executive Summary dan dampak bisnis. Tulis untuk keduanya.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: STUDI KASUS -->
+<div class="slide" id="s10" data-title="Studi Kasus: Temuan Kriptografi & Otorisasi">
+  <div class="slide-header">
+    <div class="section-label">Studi Kasus</div>
+    <h2>Studi Kasus: Temuan Kriptografi & Otorisasi di Fintech App</h2>
+    <p>FinPay Mobile App v3.2 (Android) — Authorized Security Assessment</p>
+  </div>
+  <div class="slide-body">
+    <div style="background:linear-gradient(135deg,#0e6655,#0d2b6b);color:white;border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;">
+      <h3 style="font-size:16px;font-weight:800;">Target: FinPay Mobile App v3.2</h3>
+      <p style="font-size:13px;opacity:0.9;margin-top:3px;">Aplikasi fintech untuk transfer dan pembayaran digital. Assessment dilakukan tim keamanan internal sebelum rilis ke production.</p>
+    </div>
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Temuan Kriptografi (FIND-007)</h3>
+        <div class="card" style="border-left:4px solid #c0392b;">
+          <h3 style="color:#c0392b;font-size:13px;">AES-ECB Mode pada Enkripsi PIN</h3>
+          <p style="font-size:12px;"><strong>Lokasi:</strong> PinManager.java:89<br>
+          <strong>Bukti Statis (Jadx):</strong><br></p>
+          <div class="code-block" style="font-size:11px;margin-top:6px;">
+<span class="kw">Cipher</span>.getInstance(<span class="str">"AES/ECB/PKCS5Padding"</span>);
+<span class="kw">private byte</span>[] KEY = <span class="str">"FinPay2024Key128"</span>.getBytes();
+          </div>
+          <p style="font-size:12px;margin-top:6px;"><strong>Dampak:</strong> PIN 4-digit hanya memiliki 10.000 kemungkinan. ECB mode tidak menggunakan IV — PIN yang sama menghasilkan ciphertext yang sama, memungkinkan serangan analisis frekuensi.</p>
+          <p style="font-size:12px;"><strong>Severity:</strong> <span class="tag-red">HIGH (7.5)</span></p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Temuan Otorisasi (FIND-008)</h3>
+        <div class="card" style="border-left:4px solid #8e44ad;">
+          <h3 style="color:#7d3c98;font-size:13px;">IDOR pada API Riwayat Transaksi</h3>
+          <p style="font-size:12px;"><strong>Lokasi:</strong> API /api/v2/transactions</p>
+          <div class="code-block" style="font-size:11px;margin-top:6px;">
+<span class="comment"># Request akun sendiri:</span>
+<span class="out">GET /api/v2/transactions?accountId=FP10045</span>
+<span class="comment"># IDOR — ganti ID ke akun lain:</span>
+<span class="cmd">GET /api/v2/transactions?accountId=FP10046</span>
+<span class="out">HTTP 200 — Data transaksi akun lain!</span>
+          </div>
+          <p style="font-size:12px;margin-top:6px;"><strong>Dampak:</strong> Penyerang dapat melihat seluruh riwayat transaksi, saldo, dan data keuangan pengguna lain. Potensi pelanggaran UU PDP dan reputasi bisnis.</p>
+          <p style="font-size:12px;"><strong>Severity:</strong> <span class="tag-red">HIGH (8.0)</span></p>
+        </div>
+        <div class="tip-box mt8">
+          <div class="tip-label">Rekomendasi</div>
+          <p>Ganti AES-ECB dengan AES-GCM. Gunakan Android Keystore untuk menyimpan kunci. Tambahkan server-side ownership check pada setiap API endpoint dengan parameter accountId.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: LAB PRAKTIKUM -->
+<div class="slide" id="s11" data-title="Lab Praktikum — Kriptografi & Otorisasi">
+  <div class="slide-header">
+    <div class="section-label">Praktikum</div>
+    <h2>Lab Praktikum — Kriptografi, Otorisasi & Pelaporan</h2>
+    <p>Target: DIVA Android + API Testing | Durasi: 90 menit</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Lab 7A — Analisis Kriptografi</h3>
+        <div class="task-card" style="border-left-color:#1abc9c;">
+          <div class="task-meta">
+            <span class="task-badge tb-teal">Lab 7A</span>
+            <span class="task-badge tb-blue">Crypto Analysis</span>
+          </div>
+          <h4>Deteksi Kelemahan Kriptografi di DIVA</h4>
+          <ul>
+            <li>Decompile DIVA APK dengan Jadx-GUI</li>
+            <li>Cari penggunaan: <code>MD5</code>, <code>SHA1</code>, <code>AES/ECB</code>, hardcoded keys</li>
+            <li>Jalankan Frida hook untuk menangkap Cipher.getInstance() saat runtime</li>
+            <li>Dokumentasikan: nama API crypto, algoritma, apakah rentan, rekomendasi</li>
+          </ul>
+        </div>
+        <div class="task-card mt8" style="border-left-color:#8e44ad;">
+          <div class="task-meta">
+            <span class="task-badge tb-red">Lab 7B</span>
+            <span class="task-badge tb-blue">Authorization</span>
+          </div>
+          <h4>Pengujian Otorisasi via Burp Suite</h4>
+          <ul>
+            <li>Setup Burp Suite sebagai proxy emulator Android</li>
+            <li>Intercept traffic DIVA atau aplikasi target</li>
+            <li>Identifikasi parameter yang berpotensi IDOR</li>
+            <li>Dokumentasikan temuan dengan screenshot request/response</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Lab 7C — Penyusunan Laporan Kelompok</h3>
+        <div class="task-card" style="border-left-color:#27ae60;">
+          <div class="task-meta">
+            <span class="task-badge tb-green">Lab 7C</span>
+            <span class="task-badge tb-gold">Kelompok</span>
+            <span class="task-badge tb-teal">Sub-CPMK 262.2</span>
+          </div>
+          <h4>Finalisasi Laporan Pengujian Mobile</h4>
+          <ul>
+            <li>Gabungkan temuan dari Lab 6 dan Lab 7 kelompok Anda</li>
+            <li>Susun dalam format laporan: Executive Summary, Metodologi, Tabel Temuan, Rekomendasi</li>
+            <li>Hitung OWASP Risk Score untuk setiap temuan</li>
+            <li>Review silang antar anggota (peer review)</li>
+            <li>Presentasi singkat 5 menit di awal Pertemuan 8 (sebelum UTS)</li>
+          </ul>
+        </div>
+        <div class="info-box mt8">
+          <p><strong>Template laporan</strong> tersedia di LMS poltekssn.co.id pada folder Pertemuan 7. Laporan minimal 8 halaman + lampiran bukti (screenshot).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 12: RANGKUMAN -->
+<div class="slide" id="s12" data-title="Rangkuman & Persiapan UTS">
+  <div class="slide-header">
+    <div class="section-label">Rangkuman</div>
+    <h2>Rangkuman Pertemuan 7 & Persiapan UTS</h2>
+    <p>Kriptografi, Otorisasi, Laporan — Sub-CPMK 262.1 & 262.2 | Minggu 8 = UTS</p>
+  </div>
+  <div class="slide-body">
+    <div class="summary-grid">
+      <div class="sum-card" style="border-top-color:#1abc9c;">
+        <div class="sum-icon">🔒</div>
+        <h5>Kriptografi Lemah</h5>
+        <p>MD5/SHA1/DES/ECB dan hardcoded keys — M10, CWE-327, deteksi via Jadx + Frida</p>
+      </div>
+      <div class="sum-card" style="border-top-color:#8e44ad;">
+        <div class="sum-icon">🚪</div>
+        <h5>Otorisasi Tidak Tepat</h5>
+        <p>IDOR, privilege escalation, JWT bypass — M3, uji dengan Burp Suite Intruder</p>
+      </div>
+      <div class="sum-card" style="border-top-color:#2980b9;">
+        <div class="sum-icon">🔧</div>
+        <h5>Tools Runtime</h5>
+        <p>Jadx (decompile), Frida (hook), Objection (SSL bypass), Burp (API proxy)</p>
+      </div>
+      <div class="sum-card" style="border-top-color:#27ae60;">
+        <div class="sum-icon">📄</div>
+        <h5>Laporan Pengujian</h5>
+        <p>Exec Summary + Metodologi + Temuan + Rekomendasi — format profesional</p>
+      </div>
+    </div>
+    <div class="key-points">
+      <h4>Poin Kunci untuk UTS (Sub-CPMK 261.1, 261.2, 262.1, 262.2)</h4>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">MD5/SHA1 tidak aman untuk hashing password — gunakan bcrypt/argon2. AES-ECB tidak aman — gunakan AES-GCM. Kunci crypto tidak boleh hardcoded di source code.</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">IDOR terjadi ketika server tidak memvalidasi kepemilikan resource — selalu lakukan server-side ownership check.</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Frida + Objection untuk bypass SSL pinning dan hook crypto functions. Jadx untuk decompile dan cari kerentanan statis.</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Laporan pengujian profesional: Exec Summary → Metodologi → Temuan (dengan PoC + CVSS) → Rekomendasi.</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Alur pengujian mobile: MobSF (statis) → Drozer (IPC) → Burp (API) → Frida (runtime) → Laporan.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 13: TUGAS AKHIR -->
+<div class="slide" id="s13" data-title="Tugas Akhir Praktikum">
+  <div class="slide-header">
+    <div class="section-label">Penugasan Akhir</div>
+    <h2>Tugas Akhir Praktikum — Laporan Kelompok Lengkap</h2>
+    <p>Sub-CPMK 262.1 & 262.2 | Dikumpulkan sebelum UTS (Pertemuan 8) via LMS</p>
+  </div>
+  <div class="slide-body">
+    <div class="task-card" style="border-left-color:#27ae60;">
+      <div class="task-meta">
+        <span class="task-badge tb-green">Tugas Kelompok Final</span>
+        <span class="task-badge tb-blue">Sub-CPMK 262.1 & 262.2</span>
+        <span class="task-badge tb-gold">Bobot 40%</span>
+      </div>
+      <h4>Laporan Pengujian Keamanan Mobile — Final Report</h4>
+      <ul>
+        <li><strong>Gabungkan</strong> temuan dari Lab 6 (injeksi, auth, storage) dan Lab 7 (kriptografi, otorisasi)</li>
+        <li><strong>Format laporan wajib:</strong>
+          <ul>
+            <li>Cover: Nama tim, target aplikasi, tanggal</li>
+            <li>Executive Summary: ringkasan temuan per severity</li>
+            <li>Metodologi: tools, MSTG test cases yang digunakan</li>
+            <li>Tabel temuan: minimal 5 finding berbeda</li>
+            <li>Detail setiap temuan: deskripsi, PoC, OWASP Risk Score, rekomendasi</li>
+            <li>Lampiran: screenshot bukti, raw tool output</li>
+          </ul>
+        </li>
+        <li><strong>Panjang minimal:</strong> 10 halaman + lampiran</li>
+        <li><strong>Format file:</strong> PDF, nama file: KelompokX_Laporan_RKS222.pdf</li>
+      </ul>
+    </div>
+    <div class="task-card mt12" style="border-left-color:#e67e22;">
+      <div class="task-meta">
+        <span class="task-badge tb-gold">Presentasi Singkat</span>
+        <span class="task-badge tb-blue">5 Menit/Kelompok</span>
+        <span class="task-badge tb-teal">Mg 8 (Sebelum UTS)</span>
+      </div>
+      <h4>Presentasi Draf Laporan (H sebelum UTS)</h4>
+      <p>Presentasi 5 menit di awal Pertemuan 8 sebelum UTS dimulai. Fokus pada: 3 temuan terpenting, severity tertinggi, dan rekomendasi utama.</p>
+    </div>
+    <div class="warn-box mt12">
+      <div class="warn-label">Perhatian</div>
+      <p>Pastikan laporan hanya mencantumkan temuan dari aplikasi pengujian yang diizinkan (DIVA, aplikasi buatan sendiri, atau target yang telah mendapat izin tertulis). Dilarang melakukan pengujian tanpa otorisasi.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 14: KUIS INTERAKTIF -->
+<div class="slide" id="s14" data-title="Kuis Interaktif">
+  <div class="slide-header">
+    <div class="section-label">Evaluasi</div>
+    <h2>Kuis Interaktif — Pertemuan 7</h2>
+    <p>5 soal pilihan ganda · Sub-CPMK 262.1 & 262.2</p>
+  </div>
+  <div class="slide-body">
+    <div class="quiz-container">
+
+      <div id="q1">
+        <div class="q-num">Soal 1 dari 5</div>
+        <div class="q-text">Mengapa MD5 TIDAK aman digunakan untuk menyimpan password pengguna?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(1,'a')">A. MD5 terlalu lambat untuk komputasi</button>
+          <button class="q-option" onclick="answer(1,'b')">B. MD5 terlalu cepat & dapat di-crack dengan rainbow table/GPU</button>
+          <button class="q-option" onclick="answer(1,'c')">C. MD5 menghasilkan hash yang berbeda tiap kali dijalankan</button>
+          <button class="q-option" onclick="answer(1,'d')">D. MD5 hanya bekerja pada sistem Linux</button>
+        </div>
+        <div id="q1-ok" class="q-feedback ok">Benar! MD5 terlalu cepat — dapat menghash miliaran percobaan per detik dengan GPU. Ditambah tersedia database rainbow table online. Password hashing harus menggunakan fungsi lambat: bcrypt, argon2, atau PBKDF2.</div>
+        <div id="q1-ko" class="q-feedback ko">Kurang tepat. MD5 tidak aman karena TERLALU CEPAT, bukan lambat. Kecepatan membuatnya rentan terhadap brute force dengan GPU dan rainbow table attack.</div>
+      </div>
+
+      <div id="q2" style="display:none">
+        <div class="q-num">Soal 2 dari 5</div>
+        <div class="q-text">Kategori OWASP Mobile Top 10 mana yang mencakup kerentanan hardcoded API key dalam kode APK?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(2,'a')">A. M9 — Insecure Data Storage</button>
+          <button class="q-option" onclick="answer(2,'b')">B. M10 — Insufficient Cryptography</button>
+          <button class="q-option" onclick="answer(2,'c')">C. M1 — Improper Credential Usage</button>
+          <button class="q-option" onclick="answer(2,'d')">D. M4 — Insufficient Input Validation</button>
+        </div>
+        <div id="q2-ok" class="q-feedback ok">Benar! M1 — Improper Credential Usage mencakup hardcoded credentials (API keys, passwords, tokens) yang ditemukan dalam kode APK. Mudah diekstrak dengan jadx atau strings command.</div>
+        <div id="q2-ko" class="q-feedback ko">Kurang tepat. Hardcoded API key masuk ke M1 — Improper Credential Usage. M9 untuk data storage, M10 untuk algoritma crypto yang lemah.</div>
+      </div>
+
+      <div id="q3" style="display:none">
+        <div class="q-num">Soal 3 dari 5</div>
+        <div class="q-text">Tool yang digunakan untuk melakukan hooking fungsi kriptografi Android secara real-time (dynamic instrumentation) adalah…</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(3,'a')">A. Jadx</button>
+          <button class="q-option" onclick="answer(3,'b')">B. MobSF</button>
+          <button class="q-option" onclick="answer(3,'c')">C. Frida</button>
+          <button class="q-option" onclick="answer(3,'d')">D. Drozer</button>
+        </div>
+        <div id="q3-ok" class="q-feedback ok">Benar! Frida adalah dynamic instrumentation toolkit yang memungkinkan hooking fungsi Java/Native saat runtime. Objection (berbasis Frida) menyediakan interface yang lebih mudah untuk operasi umum seperti SSL pinning bypass.</div>
+        <div id="q3-ko" class="q-feedback ko">Kurang tepat. Frida adalah tool untuk dynamic instrumentation/hooking. Jadx adalah decompiler statis, MobSF untuk analisis otomatis, Drozer untuk IPC testing.</div>
+      </div>
+
+      <div id="q4" style="display:none">
+        <div class="q-num">Soal 4 dari 5</div>
+        <div class="q-text">Bagian laporan pengujian keamanan yang berisi ringkasan temuan, metodologi, dan rekomendasi strategis yang ditujukan untuk pimpinan/manajemen adalah…</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(4,'a')">A. Technical Appendix</button>
+          <button class="q-option" onclick="answer(4,'b')">B. Executive Summary</button>
+          <button class="q-option" onclick="answer(4,'c')">C. Proof of Concept</button>
+          <button class="q-option" onclick="answer(4,'d')">D. Finding Detail</button>
+        </div>
+        <div id="q4-ok" class="q-feedback ok">Benar! Executive Summary adalah bagian yang ditulis untuk audiens non-teknis/manajemen — berisi ringkasan temuan per severity, dampak bisnis, dan rekomendasi strategis tanpa detail teknis mendalam.</div>
+        <div id="q4-ko" class="q-feedback ko">Kurang tepat. Executive Summary adalah bagian untuk manajemen. Finding Detail dan Technical Appendix untuk tim teknis. PoC adalah bukti eksploitasi, bukan bagian ringkasan.</div>
+      </div>
+
+      <div id="q5" style="display:none">
+        <div class="q-num">Soal 5 dari 5</div>
+        <div class="q-text">Serangan IDOR (Insecure Direct Object Reference) pada API mobile terjadi karena…</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(5,'a')">A. Server tidak mengenkripsi response API</button>
+          <button class="q-option" onclick="answer(5,'b')">B. Aplikasi menggunakan HTTP bukan HTTPS</button>
+          <button class="q-option" onclick="answer(5,'c')">C. Server tidak memvalidasi kepemilikan resource yang diminta</button>
+          <button class="q-option" onclick="answer(5,'d')">D. Database tidak memiliki index yang tepat</button>
+        </div>
+        <div id="q5-ok" class="q-feedback ok">Benar! IDOR terjadi karena server hanya memeriksa apakah user terautentikasi, tapi tidak memvalidasi apakah user tersebut berhak mengakses resource spesifik yang diminta. Solusi: server-side ownership check per request.</div>
+        <div id="q5-ko" class="q-feedback ko">Kurang tepat. IDOR terjadi karena tidak ada validasi kepemilikan (ownership validation) di sisi server. Bukan masalah enkripsi atau protokol HTTP.</div>
+      </div>
+
+      <div class="quiz-score" id="quiz-score">
+        <h3><span id="score-display"></span></h3>
+        <p>Skor Kuis Pertemuan 7 — Kriptografi, Otorisasi & Laporan</p>
+      </div>
+
+      <div class="quiz-nav">
+        <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none">← Soal Sebelumnya</button>
+        <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none">Soal Berikutnya →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 15: REFERENSI -->
+<div class="slide" id="s15" data-title="Referensi & Sumber Belajar">
+  <div class="slide-header">
+    <div class="section-label">Referensi</div>
+    <h2>Referensi & Sumber Belajar</h2>
+    <p>Sumber materi Pertemuan 7 — Sub-CPMK 262.1 & 262.2</p>
+  </div>
+  <div class="slide-body">
+    <div class="ref-grid">
+      <div class="ref-card" style="border-top-color:#1abc9c;">
+        <h4>Kriptografi & Standar</h4>
+        <ul>
+          <li>NIST SP 800-57 — Key Management Guidelines</li>
+          <li>NIST SP 800-111 — Storage Encryption</li>
+          <li>CWE-327 — Use of Broken Crypto Algorithm</li>
+          <li>CWE-326 — Inadequate Encryption Strength</li>
+          <li>Android Keystore System — developer.android.com</li>
+        </ul>
+      </div>
+      <div class="ref-card" style="border-top-color:#8e44ad;">
+        <h4>Otorisasi & OWASP</h4>
+        <ul>
+          <li>OWASP API Security Top 10 — API1:2023 BOLA (IDOR)</li>
+          <li>OWASP Mobile M3 — Insecure Authorization</li>
+          <li>CWE-862 — Missing Authorization</li>
+          <li>CWE-639 — Authorization Bypass Through IDOR</li>
+          <li>HackerOne IDOR Reports — hackerone.com/hacktivity</li>
+        </ul>
+      </div>
+      <div class="ref-card" style="border-top-color:#2980b9;">
+        <h4>Tools & Framework</h4>
+        <ul>
+          <li>Frida — frida.re (official docs)</li>
+          <li>Objection — github.com/sensepost/objection</li>
+          <li>Burp Suite Academy — portswigger.net/web-security</li>
+          <li>Jadx — github.com/skylot/jadx</li>
+          <li>DIVA Android — github.com/payatu/diva-android</li>
+        </ul>
+      </div>
+      <div class="ref-card" style="border-top-color:#27ae60;">
+        <h4>Laporan & Template</h4>
+        <ul>
+          <li>PTES — Penetration Testing Execution Standard</li>
+          <li>OWASP Testing Report Format — owasp.org</li>
+          <li>CVSS v3.1 Calculator — nvd.nist.gov/vuln-metrics</li>
+          <li>Sample Pentest Reports — github.com/juliocesarfort</li>
+          <li>MSTG Checklist (MASTG) — mas.owasp.org</li>
+        </ul>
+      </div>
+    </div>
+    <div class="warn-box mt16">
+      <div class="warn-label">Persiapan UTS — Minggu 8</div>
+      <p><strong>UTS (Ujian Tengah Semester)</strong> mencakup materi Sub-CPMK 261.1, 261.2, 262.1, dan 262.2 (Pertemuan 1–7). Pastikan memahami: jenis kerawanan, OWASP Top 10 (web & mobile), STRIDE, mitigasi, OWASP Risk Rating, WSTG, MSTG, dan struktur laporan pengujian. <strong>Kumpulkan Laporan Praktikum sebelum UTS dimulai.</strong></p>
+    </div>
+  </div>
+</div>
+
+</div><!-- end #slideshow -->
+
+<!-- NAVBAR -->
+<div id="navbar">
+  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>← Sebelumnya</button>
+  <div id="slide-title-bar">Cover</div>
+  <div id="progress-bar"><div id="progress-fill" style="width:6.25%"></div></div>
+  <div id="slide-counter">1 / 16</div>
+  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Berikutnya →</button>
+</div>
+
+<script>
+  /* ---- SLIDESHOW ---- */
+  const slides = document.querySelectorAll('.slide');
+  let cur = 0;
+  const total = slides.length;
+  function showSlide(n) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(n, total - 1));
+    slides[cur].classList.add('active');
+    slides[cur].scrollTop = 0;
+    document.getElementById('btn-prev').disabled = cur === 0;
+    document.getElementById('btn-next').disabled = cur === total - 1;
+    document.getElementById('slide-counter').textContent = (cur+1) + ' / ' + total;
+    document.getElementById('progress-fill').style.width = ((cur+1)/total*100) + '%';
+    document.getElementById('slide-title-bar').textContent = slides[cur].dataset.title || '';
+  }
+  function changeSlide(d) { showSlide(cur + d); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  /* ---- QUIZ ---- */
+  const correctAnswers = { 1:'b', 2:'c', 3:'c', 4:'b', 5:'c' };
+  const answered = {};
+  let qCur = 1;
+  const totalQ = 5;
+  let score = 0;
+
+  function answer(q, choice) {
+    if (answered[q]) return;
+    answered[q] = choice;
+    const options = document.querySelectorAll('#q' + q + ' .q-option');
+    const letters = ['a','b','c','d'];
+    options.forEach((btn, i) => {
+      btn.disabled = true;
+      if (letters[i] === correctAnswers[q]) btn.classList.add('correct');
+      else if (letters[i] === choice)       btn.classList.add('wrong');
+    });
+    const isOk = choice === correctAnswers[q];
+    if (isOk) score++;
+    document.getElementById('q' + q + (isOk ? '-ok' : '-ko')).classList.add('show');
+    document.getElementById('next-btn').style.display = 'inline-block';
+    if (q > 1) document.getElementById('prev-btn').style.display = 'inline-block';
+    if (q === totalQ) {
+      document.getElementById('next-btn').textContent = 'Lihat Skor →';
+    }
+  }
+
+  function nextQ() {
+    if (qCur === totalQ) {
+      document.getElementById('q' + qCur).style.display = 'none';
+      document.getElementById('score-display').textContent = score + ' / ' + totalQ;
+      document.getElementById('quiz-score').style.display = 'block';
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('prev-btn').style.display = 'none';
+      return;
+    }
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur++;
+    document.getElementById('q' + qCur).style.display = 'block';
+    document.getElementById('next-btn').style.display = answered[qCur] ? 'inline-block' : 'none';
+    document.getElementById('prev-btn').style.display = qCur > 1 ? 'inline-block' : 'none';
+  }
+
+  function prevQ() {
+    if (qCur <= 1) return;
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur--;
+    document.getElementById('q' + qCur).style.display = 'block';
+    document.getElementById('next-btn').style.display = 'inline-block';
+    document.getElementById('prev-btn').style.display = qCur > 1 ? 'inline-block' : 'none';
+  }
+</script>
+</body>
+</html>

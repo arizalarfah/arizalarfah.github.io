@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praktikum Pertemuan 15 – Keamanan API: JWT, Otorisasi & Pengujian | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-red: #e74c3c;
+    --accent-blue: #2980b9;
+    --accent-purple: #8e44ad;
+    --accent-teal: #16a085;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-light); color: var(--text-dark); }
+
+  /* HEADER */
+  .page-header { background: linear-gradient(135deg, #0d2b6b 0%, #e8a020 100%); color: white; padding: 36px 60px 28px; }
+  .header-badge { display: inline-block; background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold); color: var(--pssn-gold); border-radius: 20px; padding: 4px 16px; font-size: 12px; font-weight: 600; letter-spacing: 1px; margin-bottom: 16px; }
+  .page-header h1 { font-size: 30px; font-weight: 800; margin-bottom: 8px; }
+  .page-header p { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+  .header-meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+  .meta-item { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 18px; }
+  .meta-item .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.6); }
+  .meta-item .value { font-size: 13px; font-weight: 700; color: var(--pssn-lightgold); margin-top: 2px; }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 36px 24px 80px; }
+  .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--pssn-gold); margin-bottom: 8px; }
+  h2.lab-title { font-size: 22px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 6px; }
+  h3.sub-title { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 20px; }
+  h3.sub-title:first-child { margin-top: 0; }
+
+  /* LAB CARD */
+  .lab-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 36px; overflow: hidden; }
+  .lab-card-header { padding: 20px 28px; border-left: 6px solid; display: flex; align-items: center; gap: 16px; }
+  .lab-num { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; color: white; flex-shrink: 0; }
+  .lab-card-header h2 { font-size: 18px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 2px; }
+  .lab-card-header p { font-size: 13px; color: #666; }
+  .lab-body { padding: 24px 28px; }
+
+  /* INFO BOXES */
+  .info-box { background: #e3f2fd; border-left: 4px solid var(--accent-blue); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .info-box p, .info-box li { font-size: 13px; color: #333; line-height: 1.6; }
+  .info-box ul { padding-left: 18px; }
+  .warn-box { background: #fff8e1; border-left: 4px solid #f39c12; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .warn-box p { font-size: 13px; color: #555; line-height: 1.6; }
+  .warn-box .warn-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #e67e22; margin-bottom: 4px; }
+  .ok-box { background: #e8f5e9; border-left: 4px solid var(--accent-green); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .ok-box p { font-size: 13px; color: #333; line-height: 1.6; }
+  .note-box { background: #f3e5f5; border-left: 4px solid var(--accent-purple); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .note-box p { font-size: 13px; color: #444; line-height: 1.6; }
+  .note-box .note-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-purple); margin-bottom: 4px; }
+
+  /* STEP */
+  .step-list { list-style: none; padding: 0; margin-bottom: 16px; }
+  .step-list li { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
+  .step-badge { min-width: 28px; height: 28px; border-radius: 50%; background: var(--pssn-blue); color: white; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .step-content { font-size: 13.5px; color: #333; line-height: 1.7; }
+  .step-content strong { color: var(--pssn-blue); }
+  .step-content code { background: #f0f0f0; padding: 1px 6px; border-radius: 4px; font-size: 12px; font-family: 'Courier New', monospace; }
+
+  /* CODE BLOCK */
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 16px 18px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.7; margin: 10px 0 16px; overflow-x: auto; white-space: pre; }
+  .code-block .cmd { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .str { color: #fab387; }
+  .code-block .out { color: #89dceb; }
+  .code-block .warn { color: #f38ba8; }
+  .code-block .ok { color: #a6e3a1; }
+  .code-block .num { color: #f9e2af; }
+
+  /* TWO COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0 16px; }
+  .data-table th { background: var(--pssn-blue); color: white; padding: 10px 14px; text-align: left; font-size: 12px; }
+  .data-table td { padding: 9px 14px; border-bottom: 1px solid #e0e0e0; color: #444; line-height: 1.5; }
+  .data-table tr:nth-child(even) { background: #f8f9ff; }
+  .data-table td:first-child { font-weight: 700; color: var(--pssn-blue); }
+
+  /* CHECKLIST */
+  .checklist { list-style: none; padding: 0; margin: 10px 0 16px; }
+  .checklist li { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; font-size: 13.5px; color: #333; line-height: 1.5; }
+  .checklist li::before { content: '☐'; font-size: 16px; color: var(--pssn-blue); flex-shrink: 0; margin-top: 1px; }
+
+  /* FINDING TEMPLATE */
+  .finding-template { background: #fafafa; border: 2px dashed var(--pssn-blue); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .finding-template h4 { font-size: 14px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 14px; }
+  .field-row { display: grid; grid-template-columns: 160px 1fr; gap: 8px; margin-bottom: 8px; align-items: start; }
+  .field-label { font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; padding-top: 6px; }
+  .field-input { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; font-size: 13px; color: #888; font-style: italic; }
+
+  /* OBJECTIVE BOX */
+  .objective-box { background: linear-gradient(135deg,#e8f4fd,#f0f4ff); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; border: 1px solid #c5d8f0; }
+  .objective-box h4 { font-size: 13px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 8px; }
+  .objective-box li { font-size: 13px; color: #333; line-height: 1.7; }
+  .objective-box ul { padding-left: 20px; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: linear-gradient(to right, transparent, #ddd, transparent); margin: 30px 0; }
+
+  /* TAG */
+  .tag { display: inline-block; background: #e8eaf6; color: #3949ab; font-size: 11px; font-weight: 600; border-radius: 6px; padding: 3px 9px; margin: 2px; }
+  .tag.green { background: #e8f5e9; color: #2e7d32; }
+  .tag.red { background: #ffebee; color: #c62828; }
+  .tag.gold { background: #fff8e1; color: #e65100; }
+  .tag.purple { background: #f3e5f5; color: #6a1b9a; }
+  .tag.teal { background: #e0f7fa; color: #00695c; }
+
+  /* SEVERITY BADGE */
+  .sev-critical { background: #7b1fa2; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-high { background: #c62828; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-medium { background: #e65100; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-low { background: #f9a825; color: #333; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-info { background: #1565c0; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+
+  /* FOOTER */
+  .page-footer { background: var(--pssn-darkblue); color: rgba(255,255,255,0.6); text-align: center; padding: 20px; font-size: 12px; margin-top: 60px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="header-badge">RKS222 • Keamanan Perangkat Lunak • Semester 4</div>
+  <h1>Panduan Praktikum — Pertemuan 15</h1>
+  <p>Keamanan API: Autentikasi JWT, Otorisasi Objek & Pengujian Keamanan API</p>
+  <p>Referensi: OWASP API Security Top 10 (2023) · RFC 7519 (JWT) · PyJWT Docs</p>
+  <div class="header-meta">
+    <div class="meta-item">
+      <div class="label">Sub-CPMK</div>
+      <div class="value">263.1 & 263.2</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Durasi Praktikum</div>
+      <div class="value">150 menit</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Target</div>
+      <div class="value">Lab 1 + Lab 2 + Lab 3 + Lab 4</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Tools</div>
+      <div class="value">Flask · PyJWT · Flask-Limiter · Postman/curl</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Output</div>
+      <div class="value">REST API Aman + Laporan Pengujian</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- PRASYARAT -->
+  <div class="lab-card" style="margin-bottom:28px;">
+    <div class="lab-card-header" style="border-left-color:#2c3e50;background:#f8f9fa;">
+      <div class="lab-num" style="background:#2c3e50;">⚙</div>
+      <div>
+        <h2 style="font-size:16px;">Prasyarat & Setup Proyek REST API</h2>
+        <p>Membangun API "Orders" sederhana sebagai target praktikum</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="two-col">
+        <div>
+          <h3 class="sub-title">Tools yang Dibutuhkan</h3>
+          <table class="data-table">
+            <tr><th>Tool</th><th>Versi</th><th>Cara Install</th></tr>
+            <tr><td>Python 3</td><td>3.8+</td><td>python.org atau paket distro</td></tr>
+            <tr><td>Flask</td><td>Latest</td><td><code>pip install flask</code></td></tr>
+            <tr><td>PyJWT</td><td>Latest</td><td><code>pip install pyjwt</code></td></tr>
+            <tr><td>Flask-Limiter</td><td>Latest</td><td><code>pip install flask-limiter</code></td></tr>
+            <tr><td>bcrypt</td><td>Latest</td><td><code>pip install bcrypt</code></td></tr>
+            <tr><td>Postman</td><td>Latest</td><td>postman.com/downloads</td></tr>
+            <tr><td>jwt.io / jwt_tool</td><td>—</td><td>jwt.io (web) atau <code>pip install pyjwt-tool</code></td></tr>
+          </table>
+        </div>
+        <div>
+          <h3 class="sub-title">Skema Data Awal (init_api_db.py)</h3>
+          <div class="code-block"><span class="comment"># Tabel users: id, username, pass_hash, role</span>
+<span class="comment"># Tabel orders: id, owner_id, item, total</span>
+
+<span class="comment"># Contoh data dummy:</span>
+<span class="out">users: (1, 'alice', &lt;hash&gt;, 'user')
+       (2, 'bob',   &lt;hash&gt;, 'user')
+       (3, 'admin', &lt;hash&gt;, 'admin')
+
+orders: (1, owner_id=1, 'Laptop', 15000000)
+        (2, owner_id=2, 'Mouse',  150000)
+        (3, owner_id=1, 'Keyboard', 500000)</span></div>
+          <div class="warn-box">
+            <div class="warn-label">Penting!</div>
+            <p>Praktikum ini menyediakan kerangka <strong>api_vulnerable.py</strong> (sengaja tanpa otorisasi objek) yang akan diperbaiki menjadi <strong>api_secure.py</strong>.</p>
+          </div>
+        </div>
+      </div>
+      <h3 class="sub-title">Kerangka API Rentan — api_vulnerable.py</h3>
+      <div class="code-block"><span class="kw">from</span> flask <span class="kw">import</span> Flask, request, jsonify
+<span class="kw">import</span> sqlite3, bcrypt
+
+app = Flask(__name__)
+
+<span class="kw">def</span> get_db():
+    <span class="kw">return</span> sqlite3.connect(<span class="str">"api.db"</span>)
+
+<span class="kw">@app.route</span>(<span class="str">'/api/login'</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">def</span> login():
+    u = request.json.get(<span class="str">'username'</span>)
+    p = request.json.get(<span class="str">'password'</span>)
+    row = get_db().execute(
+        <span class="str">"SELECT id, pass_hash, role FROM users WHERE username=?"</span>, [u]
+    ).fetchone()
+    <span class="kw">if</span> row <span class="kw">and</span> bcrypt.checkpw(p.encode(), row[<span class="num">1</span>]):
+        <span class="comment"># RENTAN: token "buatan sendiri" tanpa signature, mudah dipalsukan</span>
+        fake_token = <span class="kw">f</span><span class="str">"{row[0]}:{row[2]}"</span>
+        <span class="kw">return</span> jsonify(token=fake_token)
+    <span class="kw">return</span> jsonify(error=<span class="str">"Login gagal"</span>), <span class="num">401</span>
+
+<span class="kw">@app.route</span>(<span class="str">'/api/orders/&lt;int:order_id&gt;'</span>)
+<span class="kw">def</span> get_order(order_id):
+    <span class="comment"># RENTAN: hanya cek header ada isinya, tidak diverifikasi & tidak cek kepemilikan</span>
+    <span class="kw">if not</span> request.headers.get(<span class="str">'Authorization'</span>):
+        <span class="kw">return</span> jsonify(error=<span class="str">"Unauthorized"</span>), <span class="num">401</span>
+    order = get_db().execute(
+        <span class="str">"SELECT * FROM orders WHERE id=?"</span>, [order_id]).fetchone()
+    <span class="kw">if not</span> order:
+        <span class="kw">return</span> jsonify(error=<span class="str">"Not found"</span>), <span class="num">404</span>
+    <span class="kw">return</span> jsonify(id=order[<span class="num">0</span>], owner_id=order[<span class="num">1</span>], item=order[<span class="num">2</span>], total=order[<span class="num">3</span>])
+
+<span class="kw">if</span> __name__ == <span class="str">'__main__'</span>:
+    app.run(debug=<span class="kw">True</span>, port=<span class="num">5000</span>)</div>
+    </div>
+  </div>
+
+  <!-- LAB 1: AUTENTIKASI JWT -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#e74c3c;background:#fff5f5;">
+      <div class="lab-num" style="background:#e74c3c;">1</div>
+      <div>
+        <h2>Lab 1 — Menerapkan Autentikasi JWT</h2>
+        <p>Mengganti token palsu dengan JWT yang ditandatangani secara kriptografis | Estimasi: 40 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 1</h4>
+        <ul>
+          <li>Membuktikan token "buatan sendiri" pada versi awal mudah dipalsukan (tanpa signature)</li>
+          <li>Menerapkan penerbitan JWT bertanda tangan (HS256) saat login berhasil</li>
+          <li>Membuat decorator <code>require_auth</code> untuk memverifikasi JWT pada endpoint terproteksi</li>
+          <li>Menguji bahwa token tanpa signature valid ditolak API</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Langkah 1.1 — Buktikan Kerentanan Token Palsu</h3>
+      <ul class="step-list">
+        <li><div class="step-badge">1</div><div class="step-content">Jalankan <code>api_vulnerable.py</code>, login sebagai <code>alice</code> via <code>POST /api/login</code></div></li>
+        <li><div class="step-badge">2</div><div class="step-content">Amati token yang dikembalikan — hanya berupa <code>"1:user"</code>, mudah ditebak/dipalsukan</div></li>
+        <li><div class="step-badge">3</div><div class="step-content">Coba kirim header <code>Authorization: 3:admin</code> secara manual (tanpa login sebagai admin) ke endpoint mana pun yang membutuhkan role admin</div></li>
+      </ul>
+      <div class="code-block"><span class="cmd">curl -X POST http://localhost:5000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"alice","password":"password123"}'</span>
+<span class="out">{"token": "1:user"}</span>
+
+<span class="comment"># Token bisa dipalsukan begitu saja tanpa login:</span>
+<span class="cmd">curl -H "Authorization: 3:admin" http://localhost:5000/api/admin/stats</span>
+<span class="warn"># Jika endpoint hanya mem-parsing string ini tanpa verifikasi kriptografis → BERHASIL!</span></div>
+
+      <h3 class="sub-title">Langkah 1.2 — Terbitkan JWT Bertanda Tangan</h3>
+      <div class="code-block"><span class="kw">import</span> jwt, datetime, os
+
+JWT_SECRET = os.environ[<span class="str">'JWT_SECRET'</span>]
+
+<span class="kw">@app.route</span>(<span class="str">'/api/login'</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">def</span> login():
+    u = request.json.get(<span class="str">'username'</span>, <span class="str">''</span>)
+    p = request.json.get(<span class="str">'password'</span>, <span class="str">''</span>)
+    row = get_db().execute(
+        <span class="str">"SELECT id, pass_hash, role FROM users WHERE username=?"</span>, [u]
+    ).fetchone()
+    <span class="kw">if</span> row <span class="kw">and</span> bcrypt.checkpw(p.encode(), row[<span class="num">1</span>]):
+        payload = {
+            <span class="str">'sub'</span>: row[<span class="num">0</span>], <span class="str">'role'</span>: row[<span class="num">2</span>],
+            <span class="str">'iat'</span>: datetime.datetime.utcnow(),
+            <span class="ok">'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=15)</span>
+        }
+        <span class="ok">token = jwt.encode(payload, JWT_SECRET, algorithm='HS256')</span>
+        <span class="kw">return</span> jsonify(access_token=token, expires_in=<span class="num">900</span>)
+    <span class="kw">return</span> jsonify(error=<span class="str">"Login gagal"</span>), <span class="num">401</span></div>
+
+      <h3 class="sub-title">Langkah 1.3 — Decorator Verifikasi Token</h3>
+      <div class="code-block"><span class="kw">from</span> functools <span class="kw">import</span> wraps
+
+<span class="kw">def</span> require_auth(f):
+    <span class="kw">@wraps</span>(f)
+    <span class="kw">def</span> decorated(*args, **kwargs):
+        auth = request.headers.get(<span class="str">'Authorization'</span>, <span class="str">''</span>)
+        <span class="kw">if not</span> auth.startswith(<span class="str">'Bearer '</span>):
+            <span class="kw">return</span> jsonify(error=<span class="str">"Token tidak ditemukan"</span>), <span class="num">401</span>
+        token = auth.replace(<span class="str">'Bearer '</span>, <span class="str">''</span>)
+        <span class="kw">try</span>:
+            <span class="ok">payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])</span>
+        <span class="kw">except</span> jwt.ExpiredSignatureError:
+            <span class="kw">return</span> jsonify(error=<span class="str">"Token kedaluwarsa"</span>), <span class="num">401</span>
+        <span class="kw">except</span> jwt.InvalidTokenError:
+            <span class="kw">return</span> jsonify(error=<span class="str">"Token tidak valid"</span>), <span class="num">401</span>
+        request.user = payload
+        <span class="kw">return</span> f(*args, **kwargs)
+    <span class="kw">return</span> decorated</div>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Tabel Verifikasi Lab 1</h3>
+      <table class="data-table">
+        <tr><th>Pengujian</th><th>Sebelum Fix</th><th>Sesudah Fix</th></tr>
+        <tr><td>Token palsu "3:admin" diterima?</td><td style="color:#c62828;">Ya</td><td style="color:#888;font-style:italic;">[ isi hasil Anda — seharusnya Tidak ]</td></tr>
+        <tr><td>Token asli dapat didekode & diverifikasi signature-nya?</td><td style="color:#c62828;">Tidak ada signature</td><td style="color:#888;font-style:italic;">[ isi hasil Anda ]</td></tr>
+      </table>
+
+      <div class="note-box">
+        <div class="note-label">Pertanyaan Refleksi Lab 1</div>
+        <p><strong>1.</strong> Mengapa token seperti <code>"1:user"</code> berbahaya meskipun formatnya terlihat rapi?<br>
+        <strong>2.</strong> Apa yang mencegah seseorang membuat JWT palsu dengan payload apa pun jika mereka tidak mengetahui <code>JWT_SECRET</code>?<br>
+        <strong>3.</strong> Mengapa waktu <code>exp</code> (expiration) wajib disertakan pada setiap JWT yang diterbitkan?</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 2: OTORISASI OBJEK & PERAN -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#2980b9;background:#f0f6fc;">
+      <div class="lab-num" style="background:#2980b9;">2</div>
+      <div>
+        <h2>Lab 2 — Otorisasi Objek (Anti-BOLA) & Kontrol Peran</h2>
+        <p>Menutup celah BOLA dan BFLA pada endpoint orders & admin | Estimasi: 40 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 2</h4>
+        <ul>
+          <li>Membuktikan endpoint <code>/api/orders/&lt;id&gt;</code> rentan BOLA pada versi awal</li>
+          <li>Menambahkan verifikasi kepemilikan (<code>owner_id</code>) sebelum mengembalikan data</li>
+          <li>Membuat decorator <code>require_role</code> untuk endpoint khusus admin (anti-BFLA)</li>
+          <li>Menguji ulang menggunakan token milik user berbeda</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Langkah 2.1 — Buktikan BOLA pada Versi Awal</h3>
+      <ul class="step-list">
+        <li><div class="step-badge">1</div><div class="step-content">Login sebagai <code>alice</code> (owner order id=1 dan 3), dapatkan token</div></li>
+        <li><div class="step-badge">2</div><div class="step-content">Gunakan token alice untuk mengakses <code>GET /api/orders/2</code> (milik <code>bob</code>)</div></li>
+        <li><div class="step-badge">3</div><div class="step-content">Amati bahwa data order milik bob tetap dapat diakses — inilah BOLA (API1:2023)</div></li>
+      </ul>
+
+      <h3 class="sub-title">Langkah 2.2 — Perbaiki dengan Verifikasi Kepemilikan</h3>
+      <div class="code-block"><span class="kw">@app.route</span>(<span class="str">'/api/orders/&lt;int:order_id&gt;'</span>)
+<span class="ok">@require_auth</span>
+<span class="ok">@limiter.limit("60 per minute")</span>
+<span class="kw">def</span> get_order(order_id):
+    order = get_db().execute(
+        <span class="str">"SELECT * FROM orders WHERE id=? AND owner_id=?"</span>,
+        [order_id, request.user[<span class="str">'sub'</span>]]
+    ).fetchone()
+    <span class="kw">if not</span> order:
+        <span class="ok"># 404 untuk KEDUA kasus: tidak ada / bukan milik user
+        return jsonify(error="Not found"), 404</span>
+    <span class="kw">return</span> jsonify(id=order[<span class="num">0</span>], item=order[<span class="num">2</span>], total=order[<span class="num">3</span>])</div>
+
+      <h3 class="sub-title">Langkah 2.3 — Kontrol Peran untuk Endpoint Admin (Anti-BFLA)</h3>
+      <div class="code-block"><span class="kw">def</span> require_role(role):
+    <span class="kw">def</span> decorator(f):
+        <span class="kw">@wraps</span>(f)
+        <span class="kw">def</span> decorated(*args, **kwargs):
+            <span class="kw">if</span> request.user.get(<span class="str">'role'</span>) != role:
+                <span class="kw">return</span> jsonify(error=<span class="str">"Forbidden"</span>), <span class="num">403</span>
+            <span class="kw">return</span> f(*args, **kwargs)
+        <span class="kw">return</span> decorated
+    <span class="kw">return</span> decorator
+
+<span class="kw">@app.route</span>(<span class="str">'/api/admin/stats'</span>)
+<span class="ok">@require_auth</span>
+<span class="ok">@require_role('admin')</span>
+<span class="kw">def</span> admin_stats():
+    total_orders = get_db().execute(<span class="str">"SELECT COUNT(*) FROM orders"</span>).fetchone()[<span class="num">0</span>]
+    <span class="kw">return</span> jsonify(total_orders=total_orders)</div>
+
+      <h3 class="sub-title">Langkah 2.4 — Uji Ulang dengan Postman/curl</h3>
+      <div class="code-block"><span class="comment"># Login sebagai alice, simpan access_token</span>
+<span class="cmd">TOKEN=$(curl -s -X POST http://localhost:5000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"alice","password":"..."}' | jq -r .access_token)</span>
+
+<span class="comment"># Coba akses order milik bob (id=2) — harus ditolak</span>
+<span class="cmd">curl -H "Authorization: Bearer $TOKEN" http://localhost:5000/api/orders/2</span>
+<span class="out">{"error": "Not found"}   ← 404, BOLA berhasil ditutup</span>
+
+<span class="comment"># Coba akses endpoint admin dengan token alice (role: user)</span>
+<span class="cmd">curl -H "Authorization: Bearer $TOKEN" http://localhost:5000/api/admin/stats</span>
+<span class="out">{"error": "Forbidden"}   ← 403, BFLA berhasil ditutup</span></div>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Tabel Verifikasi Lab 2</h3>
+      <table class="data-table">
+        <tr><th>Pengujian</th><th>Sebelum Fix</th><th>Sesudah Fix</th></tr>
+        <tr><td>Alice akses order Bob (BOLA)?</td><td style="color:#c62828;">Berhasil (bocor)</td><td style="color:#888;font-style:italic;">[ isi hasil Anda ]</td></tr>
+        <tr><td>User biasa akses endpoint admin (BFLA)?</td><td style="color:#c62828;">Berhasil (bocor)</td><td style="color:#888;font-style:italic;">[ isi hasil Anda ]</td></tr>
+      </table>
+
+      <div class="note-box">
+        <div class="note-label">Pertanyaan Refleksi Lab 2</div>
+        <p><strong>1.</strong> Mengapa respons untuk "order tidak ditemukan" dan "order bukan milik Anda" sengaja dibuat identik (404)?<br>
+        <strong>2.</strong> Apa perbedaan konseptual antara BOLA (API1) dan BFLA (API5)?<br>
+        <strong>3.</strong> Bagaimana pendekatan <code>require_role</code> ini dapat diperluas menjadi model RBAC dengan lebih dari dua peran (mis. user, staff, admin)?</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 3: PENGUJIAN KEAMANAN API -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#16a085;background:#f0fbf9;">
+      <div class="lab-num" style="background:#16a085;">3</div>
+      <div>
+        <h2>Lab 3 — Pengujian Sistematis Keamanan API</h2>
+        <p>Token tampering, expired token, rate limiting, dan data exposure | Estimasi: 40 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 3</h4>
+        <ul>
+          <li>Menguji ketahanan API terhadap token yang dimodifikasi (tampering)</li>
+          <li>Menguji penanganan token kedaluwarsa</li>
+          <li>Memverifikasi rate limiting aktif pada endpoint login & orders</li>
+          <li>Memeriksa response API tidak membocorkan field internal (pass_hash, dsb)</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Langkah 3.1 — Uji Token Tampering</h3>
+      <ul class="step-list">
+        <li><div class="step-badge">1</div><div class="step-content">Ambil access_token hasil login alice, buka <strong>jwt.io</strong>, tempel token untuk melihat payload</div></li>
+        <li><div class="step-badge">2</div><div class="step-content">Salin bagian header & payload, ubah <code>"role":"user"</code> menjadi <code>"role":"admin"</code>, encode ulang ke Base64URL</div></li>
+        <li><div class="step-badge">3</div><div class="step-content">Gabungkan kembali <code>header.payload</code> dengan <strong>signature LAMA</strong> (tidak ditandatangani ulang) menjadi token baru</div></li>
+        <li><div class="step-badge">4</div><div class="step-content">Kirim token hasil modifikasi ke <code>/api/admin/stats</code>, catat responsnya</div></li>
+      </ul>
+      <div class="code-block"><span class="cmd">curl -H "Authorization: Bearer &lt;token_yang_dimodifikasi&gt;" \
+  http://localhost:5000/api/admin/stats</span>
+<span class="out">{"error": "Token tidak valid"}</span>
+<span class="ok"># HASIL DIHARAPKAN: 401 — signature tidak cocok dengan payload baru</span></div>
+
+      <h3 class="sub-title">Langkah 3.2 — Uji Expired Token</h3>
+      <div class="code-block"><span class="comment"># Untuk pengujian cepat, ubah sementara masa berlaku token menjadi 5 detik</span>
+<span class="comment"># di kode: timedelta(seconds=5), lalu:</span>
+<span class="cmd">TOKEN=$(curl -s -X POST http://localhost:5000/api/login -d '...' | jq -r .access_token)
+sleep 6
+curl -H "Authorization: Bearer $TOKEN" http://localhost:5000/api/orders/1</span>
+<span class="out">{"error": "Token kedaluwarsa"}</span>
+<span class="ok"># Kembalikan nilai exp ke 15 menit setelah pengujian selesai</span></div>
+
+      <h3 class="sub-title">Langkah 3.3 — Uji Rate Limiting pada Login</h3>
+      <div class="code-block"><span class="cmd">for i in {1..7}; do
+  curl -s -o /dev/null -w "Percobaan $i: %{http_code}\n" \
+    -X POST http://localhost:5000/api/login \
+    -H "Content-Type: application/json" \
+    -d '{"username":"alice","password":"salah"}'
+done</span>
+<span class="out">Percobaan 1: 401
+Percobaan 2: 401
+...
+Percobaan 6: 429   ← rate limit aktif</span></div>
+
+      <h3 class="sub-title">Langkah 3.4 — Uji Excessive Data Exposure</h3>
+      <ul class="step-list">
+        <li><div class="step-badge">1</div><div class="step-content">Periksa response JSON dari <code>/api/orders/&lt;id&gt;</code> dan endpoint profil pengguna</div></li>
+        <li><div class="step-badge">2</div><div class="step-content">Pastikan tidak ada field <code>pass_hash</code>, kunci internal, atau data user lain yang ikut terkirim</div></li>
+      </ul>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Tabel Laporan Pengujian Lab 3</h3>
+      <table class="data-table">
+        <tr><th>Kategori Uji</th><th>OWASP API Top 10</th><th>Hasil</th><th>Catatan</th></tr>
+        <tr><td>Token Tampering</td><td>API2:2023</td><td style="color:#888;font-style:italic;">[ isi ]</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+        <tr><td>Expired Token</td><td>API2:2023</td><td style="color:#888;font-style:italic;">[ isi ]</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+        <tr><td>Rate Limiting Login</td><td>API4:2023</td><td style="color:#888;font-style:italic;">[ isi ]</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+        <tr><td>Excessive Data Exposure</td><td>API3:2023</td><td style="color:#888;font-style:italic;">[ isi ]</td><td style="color:#888;font-style:italic;">[ isi ]</td></tr>
+      </table>
+
+      <div class="note-box">
+        <div class="note-label">Pertanyaan Refleksi Lab 3</div>
+        <p><strong>1.</strong> Jika token tampering pada Langkah 3.1 ternyata BERHASIL (API menerima token), apa kemungkinan penyebabnya dari sisi implementasi?<br>
+        <strong>2.</strong> Mengapa pengujian rate limiting penting dilakukan khusus pada endpoint <code>/api/login</code>, bukan hanya endpoint data?<br>
+        <strong>3.</strong> Selain field <code>pass_hash</code>, field apa lagi yang berpotensi menjadi Excessive Data Exposure pada API "Orders" ini?</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 4: LAPORAN & PORTOFOLIO -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#8e44ad;background:#f5eef8;">
+      <div class="lab-num" style="background:#8e44ad;">4</div>
+      <div>
+        <h2>Lab 4 — Laporan Pengujian & Portofolio Keamanan API</h2>
+        <p>Menyusun laporan formal berdasarkan hasil Lab 1-3 | Estimasi: 30 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 4</h4>
+        <ul>
+          <li>Mendokumentasikan setiap mitigasi (autentikasi, otorisasi, pengujian) dengan bukti konkret</li>
+          <li>Mengaitkan setiap temuan dengan kategori resmi OWASP API Security Top 10</li>
+          <li>Menyusun koleksi Postman/skrip curl yang dapat digunakan ulang untuk regresi</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Format Laporan Mitigasi (Isi untuk Setiap Kategori)</h3>
+      <div class="finding-template">
+        <h4>📋 Template Laporan — Kategori A: Autentikasi & Otorisasi</h4>
+        <div class="field-row"><div class="field-label">Lokasi Kode</div><div class="field-input">Contoh: api_secure.py, fungsi get_order() baris 30-38</div></div>
+        <div class="field-row"><div class="field-label">Kerentanan Awal</div><div class="field-input">Jelaskan celah BOLA/BFLA yang terbukti pada Lab 2 Langkah 2.1</div></div>
+        <div class="field-row"><div class="field-label">Mitigasi Diterapkan</div><div class="field-input">Jelaskan pengecekan owner_id dan/atau role yang ditambahkan</div></div>
+        <div class="field-row"><div class="field-label">Kategori OWASP</div><div class="field-input">Contoh: API1:2023 BOLA, API5:2023 BFLA</div></div>
+        <div class="field-row"><div class="field-label">Bukti Pengujian</div><div class="field-input">Screenshot/log request-response sebelum & sesudah fix</div></div>
+      </div>
+      <div class="info-box">
+        <p><strong>Instruksi:</strong> Duplikasi template di atas untuk tiga kategori: <strong>A. Autentikasi & Otorisasi</strong> (Lab 1-2), <strong>B. Token API</strong> (Lab 1, penerbitan & verifikasi JWT), dan <strong>C. Pengujian Keamanan API</strong> (Lab 3, seluruh skenario uji).</p>
+      </div>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Checklist Penyelesaian Praktikum</h3>
+      <ul class="checklist">
+        <li>Lab 1: Kerentanan token palsu pada versi awal terbukti dan terdokumentasi</li>
+        <li>Lab 1: JWT dengan signature HS256 dan klaim exp diterapkan pada login</li>
+        <li>Lab 1: Decorator require_auth berhasil menolak token tanpa signature valid</li>
+        <li>Lab 2: Kerentanan BOLA pada endpoint orders terbukti sebelum fix</li>
+        <li>Lab 2: Verifikasi owner_id diterapkan, BOLA tertutup dan teruji</li>
+        <li>Lab 2: Decorator require_role diterapkan pada endpoint admin, BFLA tertutup</li>
+        <li>Lab 3: Uji token tampering dilakukan, token termodifikasi ditolak API</li>
+        <li>Lab 3: Uji expired token, rate limiting, dan excessive data exposure selesai dengan bukti</li>
+        <li>Lab 4: Laporan mitigasi 3 kategori (A-C) terisi lengkap dengan bukti pengujian</li>
+        <li>Lab 4: Koleksi Postman/skrip curl untuk regresi tersimpan dan dapat dijalankan ulang</li>
+        <li>Seluruh pertanyaan refleksi Lab 1-3 dijawab</li>
+      </ul>
+
+      <div class="note-box">
+        <div class="note-label">Pengumpulan</div>
+        <p>Kumpulkan ke LMS dalam bentuk <strong>arsip ZIP</strong> berisi: (1) source code <code>api_vulnerable.py</code> dan <code>api_secure.py</code>, (2) laporan mitigasi 3 kategori (PDF/DOCX), (3) koleksi Postman (file <code>.json</code>) atau skrip curl, dan (4) jawaban pertanyaan refleksi. Proyek ini menjadi bagian dari portofolio akumulatif yang akan direview pada UAS (Pertemuan 16).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFERENSI -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#2c3e50;background:#f8f9fa;">
+      <div class="lab-num" style="background:#2c3e50;">📚</div>
+      <div>
+        <h2>Referensi & Sumber Belajar</h2>
+        <p>Semua sumber dapat diakses gratis</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="two-col">
+        <div>
+          <h3 class="sub-title">Dokumentasi Resmi</h3>
+          <table class="data-table">
+            <tr><th>Sumber</th><th>URL</th></tr>
+            <tr><td>OWASP API Security Top 10 (2023)</td><td style="font-size:11.5px;">owasp.org/www-project-api-security</td></tr>
+            <tr><td>RFC 7519 — JSON Web Token</td><td style="font-size:11.5px;">datatracker.ietf.org/doc/html/rfc7519</td></tr>
+            <tr><td>PyJWT Docs</td><td style="font-size:11.5px;">pyjwt.readthedocs.io</td></tr>
+            <tr><td>jwt.io Debugger</td><td style="font-size:11.5px;">jwt.io</td></tr>
+            <tr><td>OWASP REST Security Cheat Sheet</td><td style="font-size:11.5px;">cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html</td></tr>
+            <tr><td>Postman Learning Center</td><td style="font-size:11.5px;">learning.postman.com</td></tr>
+          </table>
+        </div>
+        <div>
+          <h3 class="sub-title">Tags Materi</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
+            <span class="tag red">JWT</span>
+            <span class="tag">Autentikasi API</span>
+            <span class="tag green">Otorisasi Objek</span>
+            <span class="tag purple">BOLA</span>
+            <span class="tag purple">BFLA</span>
+            <span class="tag gold">Rate Limiting</span>
+            <span class="tag teal">OWASP API Top 10</span>
+            <span class="tag">Pengujian API</span>
+          </div>
+          <h3 class="sub-title">Mapping ke Sub-CPMK 263.1 & 263.2</h3>
+          <table class="data-table">
+            <tr><th>Lab</th><th>Indikator</th></tr>
+            <tr><td>Lab 1 — Autentikasi JWT</td><td>Indikator A + B (autentikasi, token API)</td></tr>
+            <tr><td>Lab 2 — Otorisasi Objek & Peran</td><td>Indikator A (otorisasi, Sub-CPMK 263.2)</td></tr>
+            <tr><td>Lab 3 — Pengujian Keamanan API</td><td>Indikator C + D (pengujian & evaluasi)</td></tr>
+            <tr><td>Lab 4 — Laporan & Portofolio</td><td>Indikator A-D (portofolio keamanan API utuh)</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .container -->
+
+<div class="page-footer">
+  RKS222 Keamanan Perangkat Lunak — Praktikum Pertemuan 15 | Sub-CPMK 263.1 & 263.2 | Program Studi D4 Rekayasa Keamanan Siber — Politeknik SSN | Semester Genap 2025/2026
+</div>
+
+</body>
+</html>

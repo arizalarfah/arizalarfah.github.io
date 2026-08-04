@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pertemuan 11 – Secure Coding Practices & DevSecOps Pipeline | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-purple: #8e44ad;
+    --accent-red: #e74c3c;
+    --accent-teal: #16a085;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-light); color: var(--text-dark); overflow: hidden; height: 100vh; width: 100vw; }
+  #slideshow { width: 100%; height: 100vh; position: relative; }
+  .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.45s ease; overflow-y: auto; }
+  .slide.active { opacity: 1; pointer-events: all; }
+  #navbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 999; background: var(--pssn-darkblue); display: flex; align-items: center; justify-content: space-between; padding: 10px 24px; gap: 12px; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); }
+  .nav-btn { background: var(--pssn-gold); color: var(--pssn-darkblue); border: none; border-radius: 8px; padding: 8px 22px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .nav-btn:hover { background: var(--pssn-lightgold); transform: translateY(-1px); }
+  .nav-btn:disabled { background: #555; color: #aaa; cursor: not-allowed; transform: none; }
+  #slide-counter { color: #aaa; font-size: 13px; min-width: 90px; text-align: center; }
+  #progress-bar { flex: 1; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+  #progress-fill { height: 100%; background: var(--pssn-gold); border-radius: 3px; transition: width 0.4s ease; }
+  #slide-title-bar { color: #ccc; font-size: 12px; flex: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .section-label { display: inline-block; background: var(--pssn-gold); color: var(--pssn-darkblue); font-weight: 800; font-size: 11px; letter-spacing: 1.5px; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; margin-bottom: 12px; }
+  .slide-header { background: var(--pssn-blue); padding: 28px 48px 22px; color: white; flex-shrink: 0; }
+  .slide-header h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .slide-header p { font-size: 14px; color: rgba(255,255,255,0.7); }
+  .slide-body { padding: 28px 48px 100px; flex: 1; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .four-col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+  .mt8{margin-top:8px;} .mt12{margin-top:12px;} .mt16{margin-top:16px;} .mt20{margin-top:20px;}
+
+  .card { background: #fff; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+  .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .card p, .card li { font-size: 13.5px; line-height: 1.7; color: #444; }
+  .card ul { padding-left: 18px; } .card ul li { margin-bottom: 4px; }
+
+  .cp-box { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid var(--pssn-blue); }
+  .cp-box h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 5px; }
+  .cp-box p { font-size: 14px; font-weight: 600; color: var(--pssn-blue); line-height: 1.5; }
+
+  .indikator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .indikator-card { background: #fff; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start; border-top: 3px solid; }
+  .ind-letter { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; color: white; }
+  .ind-text { font-size: 13px; color: #333; line-height: 1.5; font-weight: 500; }
+  .ind-bloom { font-size: 11px; color: #888; margin-top: 3px; }
+
+  #s0 { background: linear-gradient(135deg, #1a3a8f 0%, #0d2b6b 40%, #145a32 100%); justify-content: center; align-items: center; text-align: center; position: relative; padding: 40px; }
+  #s0::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E"); }
+  .cover-badge { background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold); color: var(--pssn-gold); border-radius: 20px; padding: 6px 18px; font-size: 13px; font-weight: 600; letter-spacing: 1px; margin-bottom: 24px; display: inline-block; }
+  .cover-title { color: white; font-size: 36px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .cover-subtitle { color: var(--pssn-lightgold); font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .cover-meta { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 36px; }
+  .cover-divider { width: 80px; height: 3px; background: var(--pssn-gold); border-radius: 2px; margin: 24px auto; }
+  .cover-pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .cover-pill { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; }
+  .cover-pill strong { color: var(--pssn-gold); }
+  .cover-inst { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 32px; }
+
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.6; margin: 10px 0; overflow-x: auto; }
+  .code-block .cmd { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .str { color: #fab387; }
+  .code-block .out { color: #89dceb; }
+  .code-block .warn { color: #f38ba8; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid var(--pssn-blue); border-radius: 8px; padding: 12px 16px; }
+  .info-box p, .info-box li { font-size: 12.5px; color: #333; line-height: 1.6; }
+  .tip-box { background: linear-gradient(135deg,#fff8e1,#fffde7); border-left: 4px solid var(--pssn-gold); border-radius: 8px; padding: 12px 16px; }
+  .tip-box .tip-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-orange); margin-bottom: 4px; }
+  .tip-box p, .tip-box li { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .warn-box { background: #ffebee; border-left: 4px solid var(--accent-red); border-radius: 8px; padding: 12px 16px; }
+  .warn-box .warn-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-red); margin-bottom: 4px; }
+  .warn-box p { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .ok-box { background: #e8f5e9; border-left: 4px solid var(--accent-green); border-radius: 8px; padding: 12px 16px; }
+  .ok-box p, .ok-box li { font-size: 12.5px; color: #333; line-height: 1.6; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag { background: #e8eaf6; color: #3949ab; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 4px 10px; }
+  .tag.green { background: #e8f5e9; color: #2e7d32; }
+  .tag.red { background: #ffebee; color: #c62828; }
+  .tag.gold { background: #fff8e1; color: #e65100; }
+  .tag.teal { background: #e0f7fa; color: #00695c; }
+  .tag.purple { background: #f3e5f5; color: #6a1b9a; }
+  .tag-red    { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fdedec; color: #c0392b; }
+  .tag-orange { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fef9e7; color: #d35400; }
+  .tag-blue   { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #e8f4fd; color: #1a4a6b; }
+  .tag-green  { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #eafaf1; color: #145a32; }
+  .tag-purple { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #f5eef8; color: #7d3c98; }
+
+  h3.section-h { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 18px; }
+  h3.section-h:first-child { margin-top: 0; }
+  .vuln-box { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); border-left: 5px solid; margin-bottom: 12px; }
+  .vuln-box h4 { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+  .vuln-box p, .vuln-box li { font-size: 12.5px; color: #444; line-height: 1.6; }
+  .vuln-box ul { padding-left: 16px; }
+
+  .pipeline-flow { display: flex; gap: 0; align-items: stretch; margin: 14px 0; }
+  .pipe-item { flex: 1; background: #fff; border-radius: 8px; padding: 16px 12px; text-align: center; box-shadow: var(--shadow); position: relative; }
+  .pipe-item:not(:last-child)::after { content: '→'; position: absolute; right: -16px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--pssn-gold); font-weight: 900; z-index: 1; }
+  .pipe-item + .pipe-item { margin-left: 22px; }
+  .pipe-num { width: 32px; height: 32px; border-radius: 50%; background: var(--pssn-blue); color: white; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+  .pipe-item h5 { font-size: 12px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 4px; }
+  .pipe-item p { font-size: 10.5px; color: #666; line-height: 1.4; }
+  .pipe-tool { font-size: 10px; font-weight: 700; background: var(--pssn-gold); color: var(--pssn-darkblue); border-radius: 4px; padding: 2px 6px; margin-top: 6px; display: inline-block; }
+
+  .scp-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .scp-item { background: #fff; border-radius: 8px; padding: 12px 14px; box-shadow: var(--shadow); border-left: 4px solid; }
+  .scp-item .scp-num { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #999; }
+  .scp-item h5 { font-size: 13px; font-weight: 700; color: var(--pssn-blue); margin: 3px 0; }
+  .scp-item p { font-size: 11.5px; color: #666; line-height: 1.4; }
+  .scp-item .owasp-map { font-size: 10px; font-weight: 700; color: #c0392b; margin-top: 4px; }
+
+  .samm-card { background: #fff; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border-top: 4px solid; }
+  .samm-card h4 { font-size: 14px; font-weight: 800; margin-bottom: 8px; }
+  .samm-card li { font-size: 12.5px; color: #444; line-height: 1.8; }
+  .samm-card ul { padding-left: 16px; }
+  .maturity-bar { display: flex; gap: 4px; margin-top: 10px; }
+  .mat-level { flex: 1; height: 8px; border-radius: 4px; }
+
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  .cmp-table th { background: var(--pssn-blue); color: white; padding: 8px 12px; text-align: left; font-size: 12px; }
+  .cmp-table td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; color: #444; line-height: 1.5; }
+  .cmp-table tr:nth-child(even) { background: #f8f9ff; }
+  .cmp-table td:first-child { font-weight: 700; color: var(--pssn-blue); }
+
+  .ref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ref-card { background: #fff; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border-top: 3px solid; }
+  .ref-card h4 { font-size: 13px; font-weight: 800; margin-bottom: 8px; }
+  .ref-card li { font-size: 12.5px; color: #444; line-height: 1.8; }
+  .ref-card ul { padding-left: 16px; }
+
+  .quiz-container { max-width: 720px; margin: 0 auto; }
+  .q-num { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--pssn-gold); margin-bottom: 6px; }
+  .q-text { font-size: 15px; font-weight: 600; color: var(--pssn-blue); margin-bottom: 14px; line-height: 1.5; }
+  .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  .q-option { background: #fff; border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; cursor: pointer; transition: all 0.2s; font-size: 13.5px; color: #333; font-weight: 500; text-align: left; }
+  .q-option:hover { border-color: var(--pssn-blue); background: #f0f4ff; }
+  .q-option.correct { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; font-weight: 700; }
+  .q-option.wrong { border-color: #ef5350; background: #ffebee; color: #c62828; }
+  .q-feedback { font-size: 13px; padding: 10px 14px; border-radius: 8px; margin-top: 8px; display: none; line-height: 1.6; }
+  .q-feedback.show { display: block; }
+  .q-feedback.ok { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
+  .q-feedback.ko { background: #ffebee; color: #c62828; border-left: 3px solid #ef5350; }
+  .quiz-score { text-align: center; background: var(--pssn-blue); color: white; border-radius: var(--radius); padding: 16px; margin-top: 16px; display: none; }
+  .quiz-score h3 { font-size: 22px; font-weight: 900; color: var(--pssn-gold); }
+  .quiz-score p { font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+  .quiz-nav { display: flex; gap: 10px; margin-top: 12px; justify-content: center; }
+  .quiz-btn { background: var(--pssn-blue); color: white; border: none; border-radius: 8px; padding: 10px 24px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+  .quiz-btn:hover { background: #1a3a8f; }
+
+  .case-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .case-vuln { background: #fff5f5; border: 2px solid #e74c3c; border-radius: 8px; padding: 14px 16px; }
+  .case-vuln h5 { color: #e74c3c; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+  .case-fix { background: #f0fff4; border: 2px solid #27ae60; border-radius: 8px; padding: 14px 16px; }
+  .case-fix h5 { color: #27ae60; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div id="slideshow">
+
+<!-- SLIDE 0: COVER -->
+<div class="slide active" id="s0" data-title="Cover">
+  <div style="position:relative;z-index:1;text-align:center;max-width:820px;margin:auto;">
+    <div class="cover-badge">RKS222 • Keamanan Perangkat Lunak • Semester 4</div>
+    <div class="cover-title">Secure Coding Practices<br>& DevSecOps Pipeline</div>
+    <div class="cover-subtitle">OWASP SCP Guide · SAMM v2.0 · DevSecOps Guideline 2023</div>
+    <div class="cover-meta">Sub-CPMK 263.3 &nbsp;|&nbsp; Pertemuan 11 &nbsp;|&nbsp; Bobot 15%</div>
+    <div class="cover-divider"></div>
+    <div class="cover-pills">
+      <div class="cover-pill"><strong>Topik:</strong> OWASP SCP — 14 Kategori</div>
+      <div class="cover-pill"><strong>Topik:</strong> OWASP SAMM v2.0</div>
+      <div class="cover-pill"><strong>Topik:</strong> DevSecOps Pipeline</div>
+      <div class="cover-pill"><strong>Tools:</strong> Semgrep · OWASP ZAP · GitHub Actions</div>
+    </div>
+    <div class="cover-inst">Program Studi Rekayasa Keamanan Siber — Politeknik SSN</div>
+  </div>
+</div>
+
+<!-- SLIDE 1: CAPAIAN PEMBELAJARAN -->
+<div class="slide" id="s1" data-title="Capaian Pembelajaran">
+  <div class="slide-header">
+    <div class="section-label">Capaian Pembelajaran</div>
+    <h2>Capaian Pembelajaran Pertemuan 11</h2>
+    <p>Sub-CPMK 263.3 | CPMK263 | CPL02 — RKS222, PSSN</p>
+  </div>
+  <div class="slide-body">
+    <div class="cp-box">
+      <h3>Sub-CPMK 263.3</h3>
+      <p>Mahasiswa mampu menerapkan prinsip Secure Coding Practices berdasarkan OWASP SCP Guide dan mengintegrasikan toolchain keamanan (SAST, SCA, DAST) ke dalam pipeline DevSecOps sesuai OWASP SAMM v2.0 untuk menghasilkan perangkat lunak yang aman secara sistematis.</p>
+    </div>
+    <div class="indikator-grid mt12">
+      <div class="indikator-card" style="border-top-color:#e74c3c;">
+        <div class="ind-letter" style="background:#e74c3c;">A</div>
+        <div>
+          <div class="ind-text">Mengidentifikasi 14 kategori OWASP Secure Coding Practices dan memetakannya ke kerentanan OWASP Top 10 2021 yang relevan</div>
+          <div class="ind-bloom">Bloom C3 — Menerapkan</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-top-color:#e67e22;">
+        <div class="ind-letter" style="background:#e67e22;">B</div>
+        <div>
+          <div class="ind-text">Menganalisis tahapan pipeline DevSecOps berdasarkan OWASP DevSecOps Guideline — mulai dari SAST, SCA, Secret Detection, hingga DAST</div>
+          <div class="ind-bloom">Bloom C4 — Menganalisis</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-top-color:#2980b9;">
+        <div class="ind-letter" style="background:#2980b9;">C</div>
+        <div>
+          <div class="ind-text">Mengevaluasi kode web rentan menggunakan SAST (Semgrep) dan DAST (OWASP ZAP), lalu merumuskan rekomendasi perbaikan berbasis standar OWASP</div>
+          <div class="ind-bloom">Bloom C5 — Mengevaluasi</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-top-color:#27ae60;">
+        <div class="ind-letter" style="background:#27ae60;">D</div>
+        <div>
+          <div class="ind-text">Mengintegrasikan security gate ke dalam CI/CD pipeline berdasarkan tingkat kematangan OWASP SAMM untuk mencegah deployment kode rentan</div>
+          <div class="ind-bloom">Bloom C3 — Menerapkan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: REVIEW & AGENDA -->
+<div class="slide" id="s2" data-title="Review P10 & Agenda P11">
+  <div class="slide-header">
+    <div class="section-label">Orientasi</div>
+    <h2>Review Pertemuan 10 & Agenda Hari Ini</h2>
+    <p>Dari deteksi kerentanan (attack-side) → pencegahan sistematis (defense-side)</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Review Pertemuan 10</h3>
+        <div style="background:#fdedec;border-left:4px solid #c0392b;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>CSRF:</strong> Cross-Site Request Forgery — CSRF token, SameSite cookie sebagai mitigasi
+        </div>
+        <div style="background:#fef9e7;border-left:4px solid #e67e22;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Command Injection & File Upload:</strong> OS command separator, webshell, RCE — simpan file di luar webroot
+        </div>
+        <div style="background:#e8f4fd;border-left:4px solid #2980b9;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>OWASP API Top 10 2023:</strong> BOLA, Mass Assignment, BFLA, Unrestricted Resource Consumption
+        </div>
+        <div style="background:#e8f5e9;border-left:4px solid #27ae60;border-radius:8px;padding:12px 16px;">
+          <strong>Security Headers:</strong> CSP, HSTS, X-Frame-Options, CORS policy
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Agenda Pertemuan 11</h3>
+        <div style="background:#f3e5f5;border-left:4px solid #8e44ad;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 1:</strong> OWASP Secure Coding Practices Guide — 14 kategori, mapping ke Top 10
+        </div>
+        <div style="background:#e0f7fa;border-left:4px solid #16a085;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 2:</strong> OWASP SAMM v2.0 — Software Assurance Maturity Model
+        </div>
+        <div style="background:#fef9e7;border-left:4px solid #e67e22;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+          <strong>Blok 3:</strong> DevSecOps Pipeline — SAST (Semgrep), SCA, Secret Detection, DAST (ZAP)
+        </div>
+        <div style="background:#e8f5e9;border-left:4px solid #27ae60;border-radius:8px;padding:12px 16px;">
+          <strong>Blok 4:</strong> CI/CD Security Gate — GitHub Actions + Studi Kasus
+        </div>
+      </div>
+    </div>
+    <div class="tip-box mt16">
+      <div class="tip-label">Pergeseran Perspektif</div>
+      <p>P9–P10 fokus pada <strong>menyerang</strong> (attacker's perspective). P11 membahas <strong>membangun software yang aman sejak awal</strong> (defender's perspective) — ini adalah inti dari DevSecOps dan Shift Left Security.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: MENGAPA SECURE CODING -->
+<div class="slide" id="s3" data-title="Mengapa Secure Coding?">
+  <div class="slide-header">
+    <div class="section-label">Motivasi</div>
+    <h2>Mengapa Secure Coding Practices Penting?</h2>
+    <p>Security debt, cost of fixing, dan dampak nyata kerentanan pada fase SDLC</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Biaya Perbaikan Bug Keamanan per Fase SDLC</h3>
+        <div class="card">
+          <table class="cmp-table">
+            <tr><th>Fase SDLC</th><th>Relatif Biaya Perbaikan</th></tr>
+            <tr><td>🎨 Desain (Requirements)</td><td style="color:#27ae60;font-weight:700;">1× (paling murah)</td></tr>
+            <tr><td>💻 Development (Coding)</td><td style="color:#f39c12;font-weight:700;">6× lebih mahal</td></tr>
+            <tr><td>🧪 Testing / QA</td><td style="color:#e67e22;font-weight:700;">15× lebih mahal</td></tr>
+            <tr><td>🚀 Production (Post-release)</td><td style="color:#e74c3c;font-weight:700;">100× lebih mahal</td></tr>
+          </table>
+          <p class="mt8" style="font-size:11.5px;color:#888;">Sumber: IBM Systems Sciences Institute / NIST Report on Software Security</p>
+        </div>
+        <div class="warn-box mt12">
+          <div class="warn-label">Security Debt</div>
+          <p>Kerentanan yang tidak diperbaiki sejak awal menumpuk menjadi "security debt" — setiap rilis baru memperburuk postur keamanan dan memperbesar biaya remediasi.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Dampak Nyata Kerentanan Kode</h3>
+        <div class="vuln-box" style="border-left-color:#e74c3c;">
+          <h4>🔴 Equifax Data Breach (2017)</h4>
+          <p>Rentan Apache Struts (CVE-2017-5638) yang tidak dipatch — 147 juta data pribadi bocor, kerugian US$700 juta. Akar masalah: SCA tidak dijalankan di pipeline.</p>
+        </div>
+        <div class="vuln-box" style="border-left-color:#e67e22;">
+          <h4>🟠 Log4Shell (2021) — CVE-2021-44228</h4>
+          <p>Kerentanan di library Log4j yang dipakai jutaan aplikasi. CVSS 10.0 — Remote Code Execution tanpa autentikasi. Akar masalah: dependency tidak dipantau (SCA tidak ada).</p>
+        </div>
+        <div class="vuln-box" style="border-left-color:#2980b9;">
+          <h4>🔵 SolarWinds Supply Chain Attack (2020)</h4>
+          <p>Malware disuntikkan ke build pipeline resmi — 18.000 organisasi terinfeksi. Akar masalah: tidak ada integritas CI/CD dan pemantauan pipeline.</p>
+        </div>
+        <div class="ok-box mt12">
+          <p><strong>Solusi:</strong> Ketiga insiden di atas dapat dimitigasi dengan Secure Coding Practices + DevSecOps pipeline yang tepat.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: OWASP SCP 14 KATEGORI -->
+<div class="slide" id="s4" data-title="OWASP SCP — 14 Kategori">
+  <div class="slide-header">
+    <div class="section-label">OWASP SCP Guide</div>
+    <h2>OWASP Secure Coding Practices — 14 Kategori</h2>
+    <p>Referensi: OWASP Secure Coding Practices Quick Reference Guide v3 | owasp.org/www-project-secure-coding-practices-quick-reference-guide</p>
+  </div>
+  <div class="slide-body">
+    <div class="scp-grid">
+      <div class="scp-item" style="border-left-color:#e74c3c;">
+        <div class="scp-num">SCP-01</div>
+        <h5>Input Validation</h5>
+        <p>Validasi semua input dari sumber tidak terpercaya</p>
+        <div class="owasp-map">→ A03 Injection, A10 SSRF</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#e67e22;">
+        <div class="scp-num">SCP-02</div>
+        <h5>Output Encoding</h5>
+        <p>Encode output sesuai konteks (HTML, JS, CSS, URL)</p>
+        <div class="owasp-map">→ A03 XSS</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#f39c12;">
+        <div class="scp-num">SCP-03</div>
+        <h5>Authentication & Password Mgmt</h5>
+        <p>Hashing kuat, MFA, account lockout, password policy</p>
+        <div class="owasp-map">→ A07 Identification Failures</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#27ae60;">
+        <div class="scp-num">SCP-04</div>
+        <h5>Session Management</h5>
+        <p>Token acak, HttpOnly, Secure, SameSite, expire</p>
+        <div class="owasp-map">→ A07 Auth Failures</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#16a085;">
+        <div class="scp-num">SCP-05</div>
+        <h5>Access Control</h5>
+        <p>Deny by default, RBAC, server-side enforcement</p>
+        <div class="owasp-map">→ A01 Broken Access Control</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#2980b9;">
+        <div class="scp-num">SCP-06</div>
+        <h5>Cryptographic Practices</h5>
+        <p>AES-256-GCM, RSA-2048+, hindari MD5/SHA-1</p>
+        <div class="owasp-map">→ A02 Cryptographic Failures</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#8e44ad;">
+        <div class="scp-num">SCP-07</div>
+        <h5>Error Handling & Logging</h5>
+        <p>Pesan error generik, log tanpa data sensitif</p>
+        <div class="owasp-map">→ A09 Logging Failures</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#c0392b;">
+        <div class="scp-num">SCP-08</div>
+        <h5>Data Protection</h5>
+        <p>Enkripsi at-rest & in-transit, klasifikasi data, PII</p>
+        <div class="owasp-map">→ A02 Cryptographic Failures</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#1abc9c;">
+        <div class="scp-num">SCP-09</div>
+        <h5>Communication Security</h5>
+        <p>TLS 1.2+, validasi sertifikat, HSTS, CORS ketat</p>
+        <div class="owasp-map">→ A05 Security Misconfiguration</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#d35400;">
+        <div class="scp-num">SCP-10</div>
+        <h5>System Configuration</h5>
+        <p>Least privilege, disable fitur tidak perlu, patch rutin</p>
+        <div class="owasp-map">→ A05 Security Misconfiguration</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#2c3e50;">
+        <div class="scp-num">SCP-11</div>
+        <h5>Database Security</h5>
+        <p>Parameterized query, least privilege DB user, audit</p>
+        <div class="owasp-map">→ A03 SQL Injection</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#7f8c8d;">
+        <div class="scp-num">SCP-12</div>
+        <h5>File Management</h5>
+        <p>Validasi MIME, simpan di luar webroot, rename acak</p>
+        <div class="owasp-map">→ A04 Insecure Design</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#5d6d7e;">
+        <div class="scp-num">SCP-13</div>
+        <h5>Memory Management</h5>
+        <p>Buffer bounds, dealokasi memori, hindari unsafe functions</p>
+        <div class="owasp-map">→ CWE-119, CWE-416</div>
+      </div>
+      <div class="scp-item" style="border-left-color:#6c3483;">
+        <div class="scp-num">SCP-14</div>
+        <h5>General Coding Practices</h5>
+        <p>Code review, dependency update, SBOM, no hardcoded secret</p>
+        <div class="owasp-map">→ A06 Vulnerable Components</div>
+      </div>
+    </div>
+    <div class="tip-box mt16">
+      <div class="tip-label">Rujukan Resmi</div>
+      <p>Download PDF lengkap di: <strong>owasp.org/www-project-secure-coding-practices-quick-reference-guide</strong> — tersedia dalam Bahasa Indonesia.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: SCP INPUT & OUTPUT -->
+<div class="slide" id="s5" data-title="SCP: Input Validation & Output Encoding">
+  <div class="slide-header">
+    <div class="section-label">SCP-01 & SCP-02</div>
+    <h2>Input Validation & Output Encoding</h2>
+    <p>Dua kategori paling kritis — mencegah Injection (A03) dan XSS | OWASP SCP Guide v3</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">SCP-01: Input Validation</h3>
+        <div class="card">
+          <ul>
+            <li>Validasi semua data dari sumber tidak terpercaya (form, URL, cookie, header, API)</li>
+            <li><strong>Whitelist approach</strong> — izinkan hanya yang diketahui valid (bukan blacklist)</li>
+            <li>Validasi: tipe data, panjang, format, rentang, dan karakter yang diizinkan</li>
+            <li>Tolak atau sanitasi input yang tidak memenuhi spesifikasi</li>
+            <li>Validasi dilakukan <strong>server-side</strong> — client-side mudah di-bypass</li>
+          </ul>
+        </div>
+        <div class="case-compare mt12">
+          <div class="case-vuln">
+            <h5>❌ Rentan (Blacklist)</h5>
+            <div class="code-block" style="font-size:11px;">
+<span class="comment">// Mudah di-bypass dengan encoding</span>
+<span class="kw">if</span> (input.contains(<span class="str">"'"</span>) ||
+    input.contains(<span class="str">"--"</span>)) {
+  reject();
+}
+</div>
+          </div>
+          <div class="case-fix">
+            <h5>✅ Aman (Whitelist)</h5>
+            <div class="code-block" style="font-size:11px;">
+<span class="comment">// Hanya izinkan huruf & angka</span>
+<span class="kw">if</span> (!input.matches(<span class="str">"^[a-zA-Z0-9]+$"</span>)) {
+  <span class="kw">throw</span> <span class="str">"Input tidak valid"</span>;
+}
+</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">SCP-02: Output Encoding</h3>
+        <div class="card">
+          <ul>
+            <li>Encode semua data yang dikembalikan ke browser sesuai <strong>konteks output</strong></li>
+            <li>Gunakan library encoding standar — jangan buat sendiri</li>
+            <li>Tipe encoding berbeda per konteks</li>
+          </ul>
+          <table class="cmp-table mt8">
+            <tr><th>Konteks Output</th><th>Encoding yang Digunakan</th></tr>
+            <tr><td>HTML body</td><td>HTML entity encoding (&amp;lt; &amp;amp;)</td></tr>
+            <tr><td>HTML attribute</td><td>Attribute encoding (hindari " dan ')</td></tr>
+            <tr><td>JavaScript</td><td>JS Unicode encoding (\uXXXX)</td></tr>
+            <tr><td>URL parameter</td><td>URL percent-encoding (%XX)</td></tr>
+            <tr><td>CSS value</td><td>CSS hex encoding (\XX)</td></tr>
+          </table>
+        </div>
+        <div class="case-compare mt12">
+          <div class="case-vuln">
+            <h5>❌ Rentan (XSS)</h5>
+            <div class="code-block" style="font-size:11px;">
+<span class="comment">// Input langsung ke HTML</span>
+echo <span class="str">"Halo, "</span> . $_GET[<span class="str">'name'</span>];
+<span class="comment">// Payload: &lt;script&gt;alert(1)&lt;/script&gt;</span>
+</div>
+          </div>
+          <div class="case-fix">
+            <h5>✅ Aman (htmlspecialchars)</h5>
+            <div class="code-block" style="font-size:11px;">
+<span class="comment">// PHP: HTML entity encoding</span>
+echo <span class="str">"Halo, "</span> . htmlspecialchars(
+  $_GET[<span class="str">'name'</span>],
+  ENT_QUOTES, <span class="str">'UTF-8'</span>
+);
+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: SCP AUTH & ACCESS -->
+<div class="slide" id="s6" data-title="SCP: Autentikasi, Session & Access Control">
+  <div class="slide-header">
+    <div class="section-label">SCP-03, 04, 05</div>
+    <h2>Authentication, Session Management & Access Control</h2>
+    <p>Mencegah A01 Broken Access Control dan A07 Identification & Authentication Failures | OWASP SCP Guide v3</p>
+  </div>
+  <div class="slide-body">
+    <div class="three-col">
+      <div>
+        <h3 class="section-h">SCP-03: Authentication</h3>
+        <div class="card">
+          <ul>
+            <li>Password hashing: <strong>bcrypt / Argon2</strong> (bukan MD5/SHA-1)</li>
+            <li>Implementasi <strong>Multi-Factor Authentication (MFA)</strong></li>
+            <li>Account lockout setelah N percobaan gagal (rate limiting)</li>
+            <li>Password strength enforcement — panjang minimum 12 karakter</li>
+            <li>Hindari "remember me" tanpa token aman</li>
+            <li>Pesan error generik: "Email atau password salah" (jangan spesifik)</li>
+          </ul>
+        </div>
+        <div class="case-compare mt10">
+          <div class="case-vuln"><h5>❌ MD5 (JANGAN)</h5>
+            <div class="code-block" style="font-size:10.5px;">$hash = md5($password);</div>
+          </div>
+          <div class="case-fix"><h5>✅ bcrypt</h5>
+            <div class="code-block" style="font-size:10.5px;">$hash = password_hash($password,<br>  PASSWORD_BCRYPT, ['cost'=>12]);</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">SCP-04: Session Management</h3>
+        <div class="card">
+          <ul>
+            <li>Generate session ID dengan <strong>CSPRNG</strong> (min. 128-bit entropy)</li>
+            <li>Cookie flags: <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite=Strict</code></li>
+            <li>Regenerate session ID setelah login (<em>session fixation prevention</em>)</li>
+            <li>Session timeout: idle max 15–30 menit, absolute max 8 jam</li>
+            <li>Invalidate session saat logout (server-side)</li>
+            <li>CSRF token: per-session atau per-request</li>
+          </ul>
+        </div>
+        <div class="info-box mt10">
+          <p><strong>Set-Cookie aman:</strong><br><code style="font-size:11px;">Set-Cookie: sessionid=xyz; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=1800</code></p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">SCP-05: Access Control</h3>
+        <div class="card">
+          <ul>
+            <li><strong>Deny by default</strong> — tolak akses kecuali secara eksplisit diizinkan</li>
+            <li>Implementasi <strong>RBAC</strong> (Role-Based Access Control) server-side</li>
+            <li>Jangan hanya sembunyikan elemen UI — enforce di server</li>
+            <li>Validasi hak akses pada setiap request, bukan hanya saat login</li>
+            <li>Principle of Least Privilege — user hanya dapat resource yang dibutuhkan</li>
+            <li>Log semua kegagalan access control</li>
+          </ul>
+        </div>
+        <div class="warn-box mt10">
+          <div class="warn-label">IDOR Prevention</div>
+          <p>Selalu verifikasi bahwa resource yang diakses (<code>/api/orders/123</code>) memang milik user yang sedang login — bukan hanya cek autentikasi.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: SCP CRYPTO & ERROR -->
+<div class="slide" id="s7" data-title="SCP: Kriptografi, Error Handling & Data Protection">
+  <div class="slide-header">
+    <div class="section-label">SCP-06, 07, 08</div>
+    <h2>Cryptographic Practices, Error Handling & Data Protection</h2>
+    <p>Mencegah A02 Cryptographic Failures dan A09 Security Logging Failures | OWASP SCP Guide v3</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">SCP-06: Cryptographic Practices</h3>
+        <table class="cmp-table">
+          <tr><th>Use Case</th><th>❌ Jangan</th><th>✅ Gunakan</th></tr>
+          <tr><td>Enkripsi simetris</td><td>DES, 3DES, AES-ECB</td><td>AES-256-GCM</td></tr>
+          <tr><td>Hash password</td><td>MD5, SHA-1, SHA-256</td><td>bcrypt, Argon2id</td></tr>
+          <tr><td>Tanda tangan digital</td><td>RSA-1024, DSA</td><td>RSA-2048+, ECDSA P-256</td></tr>
+          <tr><td>Key exchange</td><td>DH-1024, RSA key transport</td><td>ECDHE, X25519</td></tr>
+          <tr><td>Random number</td><td>Math.random(), rand()</td><td>CSPRNG (random_bytes)</td></tr>
+        </table>
+        <div class="warn-box mt12">
+          <div class="warn-label">Jangan Buat Kriptografi Sendiri</div>
+          <p>Selalu gunakan library kriptografi yang sudah teruji: OpenSSL, libsodium, atau Java Cryptography Architecture (JCA). Custom crypto hampir selalu memiliki kelemahan.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">SCP-07: Error Handling & Logging</h3>
+        <div class="case-compare">
+          <div class="case-vuln">
+            <h5>❌ Error Verbose (Bocorkan Info)</h5>
+            <div class="code-block" style="font-size:11px;">
+<span class="comment">// Stack trace terekspos ke user</span>
+Fatal: mysqli_connect(): Access denied
+  for user 'root'@'localhost'
+  at /var/www/html/db.php line 12
+</div>
+          </div>
+          <div class="case-fix">
+            <h5>✅ Error Generik + Log Internal</h5>
+            <div class="code-block" style="font-size:11px;">
+<span class="comment">// User hanya lihat pesan generik</span>
+<span class="kw">try</span> { connectDB(); }
+<span class="kw">catch</span> (e) {
+  logger.error(e); <span class="comment">// log detail internal</span>
+  showUser(<span class="str">"Terjadi kesalahan sistem"</span>);
+}
+</div>
+          </div>
+        </div>
+        <h3 class="section-h mt16">SCP-08: Data Protection</h3>
+        <div class="card">
+          <ul>
+            <li>Klasifikasikan data: Public, Internal, Confidential, Secret</li>
+            <li>Enkripsi data sensitif <strong>at-rest</strong> (database, file, backup)</li>
+            <li>Enkripsi data <strong>in-transit</strong> (TLS 1.2+ wajib)</li>
+            <li>Minimisasi data — hanya simpan yang benar-benar dibutuhkan</li>
+            <li>PII (Personally Identifiable Information) harus dienkripsi atau di-hash</li>
+            <li>Hapus data sensitif dari memori setelah tidak digunakan</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: SCP SISTEM & INFRASTRUKTUR -->
+<div class="slide" id="s8" data-title="SCP: Sistem, DB, & File Management">
+  <div class="slide-header">
+    <div class="section-label">SCP-09 s.d. 14</div>
+    <h2>Communication Security, System Config, DB Security & File Management</h2>
+    <p>Mitigasi A05 Security Misconfiguration, A06 Vulnerable Components | OWASP SCP Guide v3</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">SCP-09: Communication Security</h3>
+        <div class="card">
+          <ul>
+            <li>Wajibkan TLS 1.2+ untuk semua komunikasi — nonaktifkan TLS 1.0/1.1</li>
+            <li>Aktifkan <strong>HSTS</strong> dengan preload dan includeSubDomains</li>
+            <li>Validasi sertifikat server — jangan disable certificate validation</li>
+            <li>CORS policy ketat — hindari <code>Access-Control-Allow-Origin: *</code> untuk endpoint sensitif</li>
+          </ul>
+        </div>
+        <h3 class="section-h mt16">SCP-10: System Configuration</h3>
+        <div class="card">
+          <ul>
+            <li>Nonaktifkan fitur, service, dan port yang tidak digunakan</li>
+            <li>Hapus akun, password default, dan contoh aplikasi</li>
+            <li>Update dependency secara rutin — pantau CVE baru</li>
+            <li>Jalankan aplikasi dengan akun least privilege (bukan root)</li>
+            <li>Pisahkan environment dev/staging/production</li>
+            <li>Audit konfigurasi server secara berkala</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">SCP-11: Database Security</h3>
+        <div class="card">
+          <ul>
+            <li><strong>Parameterized query / Prepared Statement</strong> — tidak ada query string concatenation</li>
+            <li>DB user dengan least privilege — hanya izin yang diperlukan (SELECT, INSERT, tapi bukan DROP)</li>
+            <li>Enkripsi koneksi database (TLS/SSL)</li>
+            <li>Validasi dan sanitasi semua input sebelum query</li>
+            <li>Stored procedure untuk operasi kompleks</li>
+            <li>Aktifkan audit log database untuk operasi sensitif</li>
+          </ul>
+        </div>
+        <h3 class="section-h mt16">SCP-12: File Management</h3>
+        <div class="card">
+          <ul>
+            <li>Validasi tipe file dengan <strong>magic bytes</strong> (bukan hanya ekstensi atau Content-Type header)</li>
+            <li>Simpan file upload <strong>di luar document root</strong> — tidak bisa diakses langsung via URL</li>
+            <li>Rename file secara acak (UUID) — attacker tidak bisa menebak lokasi</li>
+            <li>Nonaktifkan eksekusi skrip di direktori upload (<code>php_flag engine off</code>)</li>
+            <li>Batasi tipe file, ukuran maksimal, dan jumlah upload per user</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: OWASP SAMM -->
+<div class="slide" id="s9" data-title="OWASP SAMM v2.0 — Maturity Model">
+  <div class="slide-header">
+    <div class="section-label">OWASP SAMM v2.0</div>
+    <h2>Software Assurance Maturity Model (SAMM) v2.0</h2>
+    <p>Kerangka kerja untuk mengukur dan meningkatkan kematangan keamanan pengembangan perangkat lunak | owaspsamm.org</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">5 Business Functions SAMM</h3>
+        <div style="display:grid;gap:10px;">
+          <div class="samm-card" style="border-top-color:#3498db;">
+            <h4>🏛️ Governance</h4>
+            <ul><li>Strategy & Metrics</li><li>Policy & Compliance</li><li>Education & Guidance</li></ul>
+          </div>
+          <div class="samm-card" style="border-top-color:#9b59b6;">
+            <h4>🎨 Design</h4>
+            <ul><li>Threat Assessment (Threat Modeling)</li><li>Security Requirements</li><li>Security Architecture</li></ul>
+          </div>
+          <div class="samm-card" style="border-top-color:#e67e22;">
+            <h4>💻 Implementation</h4>
+            <ul><li>Secure Build</li><li>Secure Deployment</li><li>Defect Management</li></ul>
+          </div>
+          <div class="samm-card" style="border-top-color:#27ae60;">
+            <h4>🔍 Verification</h4>
+            <ul><li>Architecture Assessment</li><li>Requirements-driven Testing</li><li>Security Testing (SAST/DAST)</li></ul>
+          </div>
+          <div class="samm-card" style="border-top-color:#e74c3c;">
+            <h4>⚙️ Operations</h4>
+            <ul><li>Incident Management</li><li>Environment Management</li><li>Operational Management</li></ul>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Maturity Levels per Practice</h3>
+        <div class="card">
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;">0</div>
+              <div><strong>Level 0 — Tidak Ada</strong><br><span style="font-size:12px;color:#666;">Praktik keamanan belum diterapkan sama sekali</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:#f39c12;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:white;">1</div>
+              <div><strong>Level 1 — Awal</strong><br><span style="font-size:12px;color:#666;">Praktik dasar, ad-hoc, bergantung individu</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:#3498db;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:white;">2</div>
+              <div><strong>Level 2 — Terstruktur</strong><br><span style="font-size:12px;color:#666;">Proses terdefinisi, didokumentasikan, konsisten</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:#27ae60;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:white;">3</div>
+              <div><strong>Level 3 — Teroptimasi</strong><br><span style="font-size:12px;color:#666;">Terukur, dioptimalkan, diintegrasikan ke seluruh organisasi</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="tip-box mt12">
+          <div class="tip-label">SAMM untuk DevSecOps</div>
+          <p>Dalam konteks kita, <strong>Verification Level 2</strong> sudah mencakup: SAST otomatis di pipeline, security testing requirement-based, dan code review checklist. Target awal yang realistis untuk organisasi kebanyakan.</p>
+        </div>
+        <div class="info-box mt12">
+          <p><strong>Penilaian mandiri:</strong> OWASP menyediakan SAMM Toolbox (spreadsheet) untuk self-assessment — gratis di owaspsamm.org/assessment</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: DEVSECOPS PIPELINE -->
+<div class="slide" id="s10" data-title="DevSecOps Pipeline — Shift Left">
+  <div class="slide-header">
+    <div class="section-label">OWASP DevSecOps Guideline 2023</div>
+    <h2>DevSecOps Pipeline — Konsep Shift Left</h2>
+    <p>Referensi: OWASP DevSecOps Guideline | owasp.org/www-project-devsecops-guideline</p>
+  </div>
+  <div class="slide-body">
+    <div class="tip-box" style="margin-bottom:20px;">
+      <div class="tip-label">Shift Left Security</div>
+      <p><strong>Shift Left</strong> berarti memindahkan aktivitas keamanan ke fase <em>lebih awal</em> dalam SDLC — dari testing di akhir ke saat coding dan bahkan perencanaan. Tujuan: temukan dan perbaiki kerentanan saat biayanya paling murah.</p>
+    </div>
+    <div class="pipeline-flow">
+      <div class="pipe-item">
+        <div class="pipe-num">1</div>
+        <h5>PLAN</h5>
+        <p>Security Requirements, Threat Modeling, STRIDE</p>
+        <span class="pipe-tool">SAMM Design</span>
+      </div>
+      <div class="pipe-item">
+        <div class="pipe-num">2</div>
+        <h5>CODE</h5>
+        <p>Secure Coding (SCP), IDE plugin, Pre-commit hook</p>
+        <span class="pipe-tool">Semgrep IDE</span>
+      </div>
+      <div class="pipe-item">
+        <div class="pipe-num">3</div>
+        <h5>BUILD</h5>
+        <p>SAST, SCA, Secret Detection — otomatis saat build</p>
+        <span class="pipe-tool">Semgrep · Dep-Check</span>
+      </div>
+      <div class="pipe-item">
+        <div class="pipe-num">4</div>
+        <h5>TEST</h5>
+        <p>DAST, IAST, Pentest pada staging environment</p>
+        <span class="pipe-tool">OWASP ZAP</span>
+      </div>
+      <div class="pipe-item">
+        <div class="pipe-num">5</div>
+        <h5>DEPLOY</h5>
+        <p>Security gate: block deploy jika ada temuan critical/high</p>
+        <span class="pipe-tool">GitHub Actions</span>
+      </div>
+    </div>
+    <div class="two-col mt16">
+      <div>
+        <h3 class="section-h">Perbedaan DevOps vs DevSecOps</h3>
+        <table class="cmp-table">
+          <tr><th>Aspek</th><th>DevOps</th><th>DevSecOps</th></tr>
+          <tr><td>Keamanan</td><td>Di akhir (afterthought)</td><td>Terintegrasi sejak awal</td></tr>
+          <tr><td>Security test</td><td>Manual, periodik</td><td>Otomatis, setiap commit</td></tr>
+          <tr><td>Tanggung jawab</td><td>Tim security saja</td><td>Semua developer</td></tr>
+          <tr><td>Feedback loop</td><td>Lambat (minggu/bulan)</td><td>Cepat (menit)</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3 class="section-h">Jenis Pengujian Keamanan Otomatis</h3>
+        <div class="card">
+          <table class="cmp-table">
+            <tr><th>Tipe</th><th>Singkatan</th><th>Cara Kerja</th></tr>
+            <tr><td>SAST</td><td>Static Analysis Security Testing</td><td>Analisis source code — tanpa menjalankan</td></tr>
+            <tr><td>DAST</td><td>Dynamic Analysis Security Testing</td><td>Uji aplikasi berjalan dari luar</td></tr>
+            <tr><td>SCA</td><td>Software Composition Analysis</td><td>Periksa dependency rentan</td></tr>
+            <tr><td>IAST</td><td>Interactive Analysis Security Testing</td><td>Kombinasi SAST+DAST — instrumentasi runtime</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: SAST SEMGREP -->
+<div class="slide" id="s11" data-title="SAST — Semgrep">
+  <div class="slide-header">
+    <div class="section-label">SAST</div>
+    <h2>Static Application Security Testing — Semgrep</h2>
+    <p>Analisis kode sumber tanpa menjalankan aplikasi | semgrep.dev | Mendukung 30+ bahasa pemrograman</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Cara Kerja Semgrep</h3>
+        <div class="card">
+          <ul>
+            <li>Menganalisis <strong>Abstract Syntax Tree (AST)</strong> kode sumber</li>
+            <li>Mencocokkan pola (rules) yang mendefinisikan kode rentan</li>
+            <li>Output: file, baris, severity, CWE mapping, dan saran perbaikan</li>
+            <li>Rules tersedia dari komunitas OWASP: <code>p/owasp-top-ten</code></li>
+            <li>Dapat dijalankan lokal, di CI/CD, atau via Semgrep AppSec Platform</li>
+          </ul>
+        </div>
+        <h3 class="section-h mt16">Perintah Dasar Semgrep</h3>
+        <div class="code-block">
+<span class="comment"># Install</span>
+<span class="cmd">pip install semgrep</span>
+
+<span class="comment"># Scan dengan rules OWASP Top 10</span>
+<span class="cmd">semgrep --config=p/owasp-top-ten ./src/</span>
+
+<span class="comment"># Scan dengan rules PHP security</span>
+<span class="cmd">semgrep --config=p/php-security ./src/</span>
+
+<span class="comment"># Output JSON untuk integrasi CI/CD</span>
+<span class="cmd">semgrep --config=p/owasp-top-ten \
+  --json -o results.json ./src/</span>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Contoh Output Semgrep — SQL Injection</h3>
+        <div class="code-block">
+<span class="out">severity: ERROR</span>
+<span class="out">rule: php.lang.security.injection</span>
+<span class="out">       .tainted-sql-string</span>
+<span class="out">path: src/login.php</span>
+<span class="out">line: 8</span>
+<span class="warn">
+  $query = "SELECT * FROM users
+            WHERE user='$_GET[user]'";</span>
+<span class="out">
+CWE: CWE-89 (SQL Injection)
+OWASP: A03:2021
+Message: User-controlled data in SQL query</span>
+        </div>
+        <h3 class="section-h mt16">Contoh Custom Rule Semgrep</h3>
+        <div class="code-block" style="font-size:11.5px;">
+<span class="comment"># rules/no-md5-password.yaml</span>
+<span class="kw">rules:</span>
+<span class="str">  - id: no-md5-password-hashing</span>
+<span class="str">    patterns:</span>
+<span class="str">      - pattern: md5(...)</span>
+<span class="str">    message: "Gunakan bcrypt/Argon2, bukan MD5"</span>
+<span class="str">    severity: ERROR</span>
+<span class="str">    languages: [php, python]</span>
+<span class="str">    metadata:</span>
+<span class="str">      cwe: CWE-916</span>
+<span class="str">      owasp: A02:2021</span>
+        </div>
+        <div class="tip-box mt12">
+          <div class="tip-label">Keterbatasan SAST</div>
+          <p>SAST dapat menghasilkan <strong>false positive</strong> (alarm palsu). Temuan harus diverifikasi developer sebelum diblock. Gunakan <code>--severity=ERROR</code> untuk hanya block temuan critical di CI/CD.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 12: SCA & SECRET DETECTION -->
+<div class="slide" id="s12" data-title="SCA & Secret Detection">
+  <div class="slide-header">
+    <div class="section-label">SCA & Secret Detection</div>
+    <h2>Software Composition Analysis & Secret Detection</h2>
+    <p>Menangani A06 Vulnerable & Outdated Components dan credential leakage di repository</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Software Composition Analysis (SCA)</h3>
+        <div class="card">
+          <p style="margin-bottom:10px;">SCA menganalisis dependency (library/package) yang digunakan aplikasi dan membandingkannya dengan database kerentanan (NVD, OSV).</p>
+          <ul>
+            <li>Tool: <strong>OWASP Dependency-Check</strong> (free, open-source)</li>
+            <li>Deteksi: CVE dalam library, versi yang rentan, dependency transitive</li>
+            <li>Output: laporan HTML/XML dengan CVSS score per dependency</li>
+          </ul>
+        </div>
+        <div class="code-block mt10">
+<span class="comment"># OWASP Dependency-Check (CLI)</span>
+<span class="cmd">dependency-check --project "myapp" \
+  --scan ./vendor \
+  --format HTML \
+  --out ./reports/</span>
+
+<span class="comment"># Atau via Docker</span>
+<span class="cmd">docker run --rm \
+  -v $(pwd):/src \
+  owasp/dependency-check \
+  --scan /src --format HTML</span>
+        </div>
+        <div class="warn-box mt12">
+          <div class="warn-label">Log4Shell — Pelajaran SCA</div>
+          <p>CVE-2021-44228 (Log4j) membuktikan pentingnya SCA: library yang tampak tidak berbahaya bisa memiliki kerentanan CVSS 10.0. SCA harus dijalankan setiap build.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Secret Detection dengan Gitleaks</h3>
+        <div class="card">
+          <p style="margin-bottom:10px;">Secret detection memindai repository untuk menemukan credential, API key, password, atau token yang tidak sengaja di-commit.</p>
+          <ul>
+            <li>Tool: <strong>Gitleaks</strong> — open-source, cepat, mendukung pre-commit hook</li>
+            <li>Deteksi: AWS keys, GitHub tokens, private keys, DB passwords, JWT secrets</li>
+            <li>Scan seluruh git history — bukan hanya commit terbaru</li>
+          </ul>
+        </div>
+        <div class="code-block mt10">
+<span class="comment"># Install dan scan repo</span>
+<span class="cmd">gitleaks detect --source . --verbose</span>
+
+<span class="comment"># Scan commit terbaru saja (CI/CD)</span>
+<span class="cmd">gitleaks detect --source . \
+  --log-opts="HEAD~1..HEAD"</span>
+
+<span class="comment"># Contoh output temuan:</span>
+<span class="warn">RuleID: generic-api-key
+File:   config/database.php
+Line:   12
+Secret: DB_PASSWORD=p@ssw0rd123
+Commit: a1b2c3d4</span>
+        </div>
+        <div class="tip-box mt12">
+          <div class="tip-label">Pre-commit Hook</div>
+          <p>Tambahkan Gitleaks sebagai pre-commit hook agar credential tidak pernah masuk ke repository. Gunakan <strong>.gitleaks.toml</strong> untuk kustomisasi aturan dan whitelist.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 13: DAST OWASP ZAP -->
+<div class="slide" id="s13" data-title="DAST — OWASP ZAP">
+  <div class="slide-header">
+    <div class="section-label">DAST</div>
+    <h2>Dynamic Application Security Testing — OWASP ZAP</h2>
+    <p>Menguji aplikasi web yang sedang berjalan dari perspektif attacker | zaproxy.org | Open-source, gratis</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Cara Kerja OWASP ZAP</h3>
+        <div class="card">
+          <ul>
+            <li>Bertindak sebagai <strong>proxy man-in-the-middle</strong> antara browser dan aplikasi</li>
+            <li><strong>Passive Scan</strong>: menganalisis traffic tanpa mengirim payload berbahaya</li>
+            <li><strong>Active Scan</strong>: mengirim payload uji ke setiap parameter yang ditemukan</li>
+            <li>Spider: crawl otomatis semua halaman/endpoint aplikasi</li>
+            <li>Integrasi API: bisa dikontrol via REST API atau command line untuk CI/CD</li>
+          </ul>
+        </div>
+        <h3 class="section-h mt16">Mode Scan ZAP</h3>
+        <div class="card">
+          <table class="cmp-table">
+            <tr><th>Mode</th><th>Deskripsi</th><th>Penggunaan</th></tr>
+            <tr><td>Safe</td><td>Tidak mengirim request berbahaya</td><td>Observasi traffic</td></tr>
+            <tr><td>Protected</td><td>Hanya scan target yang ditentukan</td><td>CI/CD testing</td></tr>
+            <tr><td>Standard</td><td>Scan normal dengan active scan</td><td>Pentest staging</td></tr>
+            <tr><td>Attack</td><td>Agresif, scan cepat</td><td>Lab/pentest</td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">ZAP CLI — Otomasi untuk CI/CD</h3>
+        <div class="code-block">
+<span class="comment"># ZAP Full Scan via Docker</span>
+<span class="cmd">docker run --rm -t \
+  ghcr.io/zaproxy/zaproxy:stable \
+  zap-full-scan.py \
+  -t http://staging.myapp.com \
+  -r zap-report.html</span>
+
+<span class="comment"># ZAP API Scan (REST/GraphQL)</span>
+<span class="cmd">docker run --rm -t \
+  ghcr.io/zaproxy/zaproxy:stable \
+  zap-api-scan.py \
+  -t http://api.myapp.com/openapi.json \
+  -f openapi \
+  -r api-report.html</span>
+        </div>
+        <h3 class="section-h mt16">Alert Level ZAP</h3>
+        <div style="display:grid;gap:8px;">
+          <div style="background:#fdedec;border-left:4px solid #e74c3c;border-radius:6px;padding:8px 12px;font-size:12.5px;"><strong style="color:#e74c3c;">🔴 High</strong> — SQL Injection, RCE, Auth Bypass. <em>Wajib diperbaiki sebelum release.</em></div>
+          <div style="background:#fef9e7;border-left:4px solid #e67e22;border-radius:6px;padding:8px 12px;font-size:12.5px;"><strong style="color:#e67e22;">🟠 Medium</strong> — XSS, CSRF, Missing Headers. <em>Perbaiki di sprint berikutnya.</em></div>
+          <div style="background:#fffde7;border-left:4px solid #f39c12;border-radius:6px;padding:8px 12px;font-size:12.5px;"><strong style="color:#f39c12;">🟡 Low</strong> — Cookie flags, path disclosure. <em>Perbaiki jika memungkinkan.</em></div>
+          <div style="background:#f5f5f5;border-left:4px solid #999;border-radius:6px;padding:8px 12px;font-size:12.5px;"><strong style="color:#666;">ℹ️ Informational</strong> — Informasi saja, bukan kerentanan.</div>
+        </div>
+        <div class="tip-box mt12">
+          <div class="tip-label">DAST vs SAST</div>
+          <p>DAST menemukan kerentanan yang hanya muncul saat runtime (logic flaws, race condition, konfigurasi server). Gunakan keduanya secara komplementer.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 14: CI/CD SECURITY GATE -->
+<div class="slide" id="s14" data-title="CI/CD Security Gate — GitHub Actions">
+  <div class="slide-header">
+    <div class="section-label">CI/CD Security Gate</div>
+    <h2>Integrasi Security Gate ke CI/CD Pipeline</h2>
+    <p>Contoh implementasi dengan GitHub Actions — mencegah merge/deploy kode yang mengandung kerentanan kritis</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Prinsip Security Gate</h3>
+        <div class="card">
+          <ul>
+            <li>Security gate memblokir pipeline jika ditemukan temuan di atas threshold tertentu</li>
+            <li>Threshold umum: block jika ada temuan <strong>Critical atau High</strong></li>
+            <li>Medium dan Low: warning, tidak block (dilaporkan ke developer)</li>
+            <li>Setiap job (SAST, SCA, DAST) adalah gate tersendiri</li>
+            <li>Deploy hanya bisa terjadi jika semua gate lulus</li>
+          </ul>
+        </div>
+        <div class="info-box mt12">
+          <p><strong>Alur GitHub Actions:</strong> Setiap push/PR → trigger workflow → SAST + SCA berjalan paralel → jika lulus, DAST dijalankan → jika semua lulus, deploy ke staging.</p>
+        </div>
+        <div class="warn-box mt12">
+          <div class="warn-label">Jangan Block Terlalu Ketat di Awal</div>
+          <p>Saat pertama kali menerapkan security gate, mulai dengan <em>warn-only mode</em> untuk semua temuan. Setelah tim terbiasa, tingkatkan ke block mode secara bertahap.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Contoh GitHub Actions — Security Pipeline</h3>
+        <div class="code-block" style="font-size:11px;">
+<span class="comment"># .github/workflows/security.yml</span>
+<span class="kw">name:</span> <span class="str">Security Pipeline</span>
+<span class="kw">on:</span> [push, pull_request]
+
+<span class="kw">jobs:</span>
+  <span class="kw">sast:</span>
+    <span class="kw">runs-on:</span> ubuntu-latest
+    <span class="kw">steps:</span>
+      - <span class="kw">uses:</span> actions/checkout@v4
+      - <span class="kw">name:</span> Run Semgrep SAST
+        <span class="kw">uses:</span> semgrep/semgrep-action@v1
+        <span class="kw">with:</span>
+          <span class="kw">config:</span> p/owasp-top-ten
+          <span class="kw">generateSarif:</span> <span class="str">"1"</span>
+
+  <span class="kw">sca:</span>
+    <span class="kw">runs-on:</span> ubuntu-latest
+    <span class="kw">steps:</span>
+      - <span class="kw">uses:</span> actions/checkout@v4
+      - <span class="kw">name:</span> OWASP Dependency Check
+        <span class="kw">uses:</span> dependency-check/Dependency-Check_Action@main
+        <span class="kw">with:</span>
+          <span class="kw">project:</span> <span class="str">"myapp"</span>
+          <span class="kw">path:</span> <span class="str">"."</span>
+          <span class="kw">format:</span> <span class="str">"HTML"</span>
+          <span class="kw">failBuildOnCVSS:</span> <span class="str">"7"</span>
+
+  <span class="kw">dast:</span>
+    <span class="kw">needs:</span> [sast, sca]
+    <span class="kw">runs-on:</span> ubuntu-latest
+    <span class="kw">steps:</span>
+      - <span class="kw">name:</span> ZAP Full Scan
+        <span class="kw">uses:</span> zaproxy/action-full-scan@v0.10.0
+        <span class="kw">with:</span>
+          <span class="kw">target:</span> <span class="str">"http://staging.myapp.com"</span>
+          <span class="kw">fail_action:</span> <span class="str">"true"</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 15: STUDI KASUS -->
+<div class="slide" id="s15" data-title="Studi Kasus — Vulnerable PHP ke Secure">
+  <div class="slide-header">
+    <div class="section-label">Studi Kasus</div>
+    <h2>Studi Kasus: Kode PHP Rentan → SAST Detection → Patch → DAST Verifikasi</h2>
+    <p>End-to-end workflow DevSecOps — dari kode rentan hingga terverifikasi aman</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Fase 1: Kode Rentan (login.php)</h3>
+        <div class="case-vuln">
+          <h5>❌ Kode Rentan — Multiple Vulnerabilities</h5>
+          <div class="code-block" style="font-size:11px;">
+<span class="comment">&lt;?php</span>
+<span class="comment">// SCP-01 VIOLATION: tidak ada input validation</span>
+$user = $_POST[<span class="str">'username'</span>];
+$pass = $_POST[<span class="str">'password'</span>];
+
+<span class="comment">// SCP-06 VIOLATION: MD5 password hashing</span>
+$hashed = md5($pass);
+
+<span class="comment">// SCP-11 VIOLATION: SQL string concatenation</span>
+$sql = <span class="str">"SELECT * FROM users WHERE
+  username='$user' AND
+  password='$hashed'"</span>;
+$result = mysqli_query($conn, $sql);
+
+<span class="comment">// SCP-07 VIOLATION: verbose error</span>
+<span class="kw">if</span> (!$result) {
+  die(mysqli_error($conn)); <span class="warn">// bocorkan info DB!</span>
+}
+          </div>
+        </div>
+        <h3 class="section-h mt12">Fase 2: Semgrep Deteksi</h3>
+        <div class="code-block" style="font-size:11px;">
+<span class="cmd">$ semgrep --config=p/owasp-top-ten login.php</span>
+
+<span class="warn">ERROR  login.php:10 | tainted-sql-string
+       SQL query built from user input → SQLi risk
+       CWE-89 | OWASP A03:2021
+
+ERROR  login.php:7  | md5-used-as-password-hash
+       MD5 is cryptographically broken
+       CWE-916 | OWASP A02:2021
+
+Found 2 findings. Exit code: 1 (BLOCKED)</span>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Fase 3: Patch (Secure Version)</h3>
+        <div class="case-fix">
+          <h5>✅ Kode Aman — OWASP SCP Compliant</h5>
+          <div class="code-block" style="font-size:11px;">
+<span class="comment">&lt;?php</span>
+<span class="comment">// SCP-01: Input validation (whitelist)</span>
+$user = trim($_POST[<span class="str">'username'</span>]);
+<span class="kw">if</span> (!preg_match(<span class="str">'/^[a-zA-Z0-9_]{3,20}$/'</span>, $user)) {
+  http_response_code(400); exit;
+}
+
+<span class="comment">// SCP-06: Ambil hash dari DB dulu, verify bcrypt</span>
+$stmt = $conn->prepare(
+  <span class="str">"SELECT password_hash FROM users
+   WHERE username = ?"</span>
+);
+$stmt->bind_param(<span class="str">"s"</span>, $user);
+$stmt->execute();
+$row = $stmt->get_result()->fetch_assoc();
+
+<span class="comment">// SCP-06: bcrypt verify (bukan MD5)</span>
+<span class="kw">if</span> (!$row || !password_verify($pass, $row[<span class="str">'password_hash'</span>])) {
+  <span class="comment">// SCP-07: pesan generik</span>
+  die(<span class="str">"Email atau password salah"</span>);
+}
+          </div>
+        </div>
+        <h3 class="section-h mt12">Fase 4: ZAP Verifikasi</h3>
+        <div class="code-block" style="font-size:11px;">
+<span class="cmd">$ zap-full-scan.py -t http://staging/login.php</span>
+
+<span class="out">Active Scan: SQL Injection Test ... PASS
+Active Scan: Auth Bypass Test   ... PASS
+Passive Scan: Cookie Flags      ... PASS (HttpOnly+Secure)
+
+Alerts: 0 High, 0 Medium
+Report saved: zap-report.html
+Exit code: 0 (PASSED ✓)</span>
+        </div>
+        <div class="ok-box mt12">
+          <p><strong>Pipeline result:</strong> SAST ✓ → SCA ✓ → DAST ✓ → Deploy ke staging diizinkan.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 16: QUIZ -->
+<div class="slide" id="s16" data-title="Kuis — Pertemuan 11">
+  <div class="slide-header">
+    <div class="section-label">Kuis</div>
+    <h2>Kuis Pertemuan 11 — Secure Coding & DevSecOps</h2>
+    <p>5 soal pilihan ganda · Sub-CPMK 263.3</p>
+  </div>
+  <div class="slide-body">
+    <div class="quiz-container">
+      <div id="q1">
+        <div class="q-num">Soal 1 dari 5</div>
+        <div class="q-text">Seorang developer menulis kode: <code>$sql = "SELECT * FROM users WHERE id=" . $_GET['id'];</code>. Berdasarkan OWASP Secure Coding Practices Guide, kategori SCP mana yang <strong>pertama kali</strong> harus diterapkan untuk mencegah kerentanan ini?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(1,'a')">a) SCP-01: Input Validation — validasi dan batasi input sebelum digunakan</button>
+          <button class="q-option" onclick="answer(1,'b')">b) SCP-07: Error Handling — sembunyikan error SQL dari user</button>
+          <button class="q-option" onclick="answer(1,'c')">c) SCP-10: System Configuration — nonaktifkan modul SQL server</button>
+          <button class="q-option" onclick="answer(1,'d')">d) SCP-08: Data Protection — enkripsi hasil query database</button>
+        </div>
+        <div id="q1-ok" class="q-feedback ok">Benar! SCP-01 (Input Validation) adalah pertahanan pertama — tolak atau sanitasi input <code>$_GET['id']</code> yang tidak valid. Selanjutnya, SCP-11 (Database Security) menambahkan prepared statement sebagai pertahanan kedua (defense-in-depth).</div>
+        <div id="q1-ko" class="q-feedback ko">Kurang tepat. Kerentanan ini adalah SQL Injection (A03). OWASP SCP menempatkan Input Validation (SCP-01) sebagai pertahanan pertama — validasi bahwa <code>id</code> hanya berisi angka sebelum diproses. Selanjutnya gunakan prepared statement (SCP-11).</div>
+      </div>
+
+      <div id="q2" style="display:none">
+        <div class="q-num">Soal 2 dari 5</div>
+        <div class="q-text">Tim pengembangan ingin mengukur kematangan keamanan mereka dan menetapkan target perbaikan. Mereka saat ini sudah melakukan code review manual tapi belum ada SAST otomatis. Berdasarkan OWASP SAMM v2.0, Business Function mana yang paling relevan, dan pada Practice apa mereka seharusnya fokus?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(2,'a')">a) Operations — Incident Management Level 2</button>
+          <button class="q-option" onclick="answer(2,'b')">b) Design — Security Architecture Level 1</button>
+          <button class="q-option" onclick="answer(2,'c')">c) Verification — Security Testing Level 2 (otomasi SAST)</button>
+          <button class="q-option" onclick="answer(2,'d')">d) Governance — Policy & Compliance Level 3</button>
+        </div>
+        <div id="q2-ok" class="q-feedback ok">Benar! Dalam OWASP SAMM, Business Function <strong>Verification</strong> mencakup Security Testing. Level 1 = testing ad-hoc/manual. Level 2 = pengujian otomatis terintegrasi ke CI/CD (SAST). Tim ini berada di Level 1 dan perlu naik ke Level 2 dengan mengotomasi SAST di pipeline.</div>
+        <div id="q2-ko" class="q-feedback ko">Kurang tepat. OWASP SAMM memiliki 5 Business Functions. Code review manual dan SAST masuk ke <strong>Verification — Security Testing</strong>. Level 2 pada practice ini mengharuskan pengujian keamanan otomatis di pipeline CI/CD — itulah yang harus menjadi target tim.</div>
+      </div>
+
+      <div id="q3" style="display:none">
+        <div class="q-num">Soal 3 dari 5</div>
+        <div class="q-text">Sebuah perusahaan menemukan bahwa library Apache Log4j versi 2.14.1 yang digunakan dalam aplikasinya memiliki CVE-2021-44228 (Log4Shell) dengan CVSS 10.0. Jenis pengujian keamanan otomatis mana yang <strong>paling tepat</strong> untuk mendeteksi masalah ini secara otomatis di pipeline CI/CD?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(3,'a')">a) DAST — Dynamic Analysis dengan OWASP ZAP</button>
+          <button class="q-option" onclick="answer(3,'b')">b) SCA — Software Composition Analysis dengan OWASP Dependency-Check</button>
+          <button class="q-option" onclick="answer(3,'c')">c) SAST — Static Analysis dengan Semgrep</button>
+          <button class="q-option" onclick="answer(3,'d')">d) IAST — Interactive Analysis Security Testing</button>
+        </div>
+        <div id="q3-ok" class="q-feedback ok">Benar! <strong>SCA (Software Composition Analysis)</strong> dirancang khusus untuk mendeteksi kerentanan pada dependency/library — termasuk Log4j. OWASP Dependency-Check membandingkan versi library dengan NVD (National Vulnerability Database) dan akan menandai Log4j 2.14.1 sebagai rentan (CVE-2021-44228).</div>
+        <div id="q3-ko" class="q-feedback ko">Kurang tepat. Kerentanan ini ada pada library (Log4j), bukan pada kode yang Anda tulis sendiri. <strong>SCA (Software Composition Analysis)</strong> adalah alat yang tepat — ia menganalisis semua dependency dan membandingkannya dengan database CVE. SAST hanya menganalisis source code Anda sendiri, bukan library.</div>
+      </div>
+
+      <div id="q4" style="display:none">
+        <div class="q-num">Soal 4 dari 5</div>
+        <div class="q-text">Dalam pipeline CI/CD menggunakan GitHub Actions, Semgrep (SAST) menemukan kerentanan SQL Injection (severity: ERROR) pada kode yang di-push. Apa yang seharusnya terjadi menurut prinsip DevSecOps security gate?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(4,'a')">a) Pipeline tetap berjalan dan deploy ke production, tapi laporan dikirim ke email developer</button>
+          <button class="q-option" onclick="answer(4,'b')">b) Pipeline berhenti (fail), PR tidak dapat di-merge, developer harus memperbaiki sebelum lanjut</button>
+          <button class="q-option" onclick="answer(4,'c')">c) Semgrep otomatis memperbaiki kode dan melanjutkan pipeline</button>
+          <button class="q-option" onclick="answer(4,'d')">d) Temuan disimpan di log, pipeline lanjut, perbaikan dijadwalkan di sprint berikutnya</button>
+        </div>
+        <div id="q4-ok" class="q-feedback ok">Benar! Security gate dengan severity ERROR/Critical harus <strong>menghentikan pipeline</strong> (exit code non-zero). Ini mencegah kode rentan masuk ke main branch atau production. Developer harus memperbaiki dan push ulang sebelum pipeline dapat lanjut — inilah inti konsep "fail fast" dalam DevSecOps.</div>
+        <div id="q4-ko" class="q-feedback ko">Kurang tepat. Security gate dirancang untuk <strong>menghentikan pipeline</strong> jika ditemukan kerentanan kritis — bukan hanya melaporkan. Membiarkan pipeline lanjut sama artinya dengan tidak memiliki security gate. Prinsip DevSecOps: kode rentan tidak boleh sampai ke production.</div>
+      </div>
+
+      <div id="q5" style="display:none">
+        <div class="q-num">Soal 5 dari 5</div>
+        <div class="q-text">Seorang developer secara tidak sengaja meng-commit file <code>config.php</code> yang berisi <code>$db_password = "admin123";</code> ke repository GitHub publik. Tool mana dan kapan idealnya masalah ini dapat terdeteksi sebelum sampai ke repository?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(5,'a')">a) OWASP ZAP saat DAST scanning di staging environment</button>
+          <button class="q-option" onclick="answer(5,'b')">b) OWASP Dependency-Check saat build di CI/CD pipeline</button>
+          <button class="q-option" onclick="answer(5,'c')">c) Gitleaks sebagai pre-commit hook — mendeteksi secret sebelum commit berhasil</button>
+          <button class="q-option" onclick="answer(5,'d')">d) Semgrep SAST saat push ke GitHub Actions</button>
+        </div>
+        <div id="q5-ok" class="q-feedback ok">Benar! <strong>Gitleaks sebagai pre-commit hook</strong> adalah solusi terbaik — ia mendeteksi credential hardcoded <em>sebelum commit terjadi</em>, sehingga secret tidak pernah masuk ke git history. Ini adalah implementasi Shift Left yang paling efektif untuk secret detection. Semgrep dapat juga mendeteksi hardcoded secret, tapi pre-commit hook lebih awal.</div>
+        <div id="q5-ko" class="q-feedback ko">Kurang tepat. Idealnya secret terdeteksi <em>sebelum</em> masuk ke repository. <strong>Gitleaks sebagai pre-commit hook</strong> menjalankan scan saat developer mengetik <code>git commit</code> — jika ditemukan secret, commit ditolak. Ini jauh lebih baik dari mendeteksi di CI/CD karena secret sudah masuk ke git history meski belum di-push.</div>
+      </div>
+
+      <div class="quiz-nav">
+        <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none">← Sebelumnya</button>
+        <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none">Berikutnya →</button>
+      </div>
+      <div class="quiz-score" id="quiz-score">
+        <h3><span id="score-display">0</span> / 5 Benar</h3>
+        <p>Kuis Pertemuan 11 — Secure Coding Practices & DevSecOps Pipeline</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 17: REFERENSI & PENUTUP -->
+<div class="slide" id="s17" data-title="Referensi & Penutup">
+  <div class="slide-header">
+    <div class="section-label">Referensi & Penutup</div>
+    <h2>Referensi Utama & Ringkasan Pertemuan 11</h2>
+    <p>Semua referensi dapat diakses gratis di owasp.org</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Referensi Utama (OWASP)</h3>
+        <div class="ref-grid" style="grid-template-columns:1fr;">
+          <div class="ref-card" style="border-top-color:#e74c3c;">
+            <h4>🔴 OWASP Secure Coding Practices Guide v3</h4>
+            <ul>
+              <li>14 kategori checklist praktis</li>
+              <li>Tersedia dalam Bahasa Indonesia</li>
+              <li><em>owasp.org/www-project-secure-coding-practices-quick-reference-guide</em></li>
+            </ul>
+          </div>
+          <div class="ref-card" style="border-top-color:#3498db;">
+            <h4>🔵 OWASP SAMM v2.0</h4>
+            <ul>
+              <li>Framework penilaian kematangan keamanan</li>
+              <li>Self-assessment toolbox gratis (spreadsheet)</li>
+              <li><em>owaspsamm.org</em></li>
+            </ul>
+          </div>
+          <div class="ref-card" style="border-top-color:#27ae60;">
+            <h4>🟢 OWASP DevSecOps Guideline 2023</h4>
+            <ul>
+              <li>Panduan lengkap integrasi keamanan ke CI/CD</li>
+              <li>Tools comparison: SAST, DAST, SCA</li>
+              <li><em>owasp.org/www-project-devsecops-guideline</em></li>
+            </ul>
+          </div>
+          <div class="ref-card" style="border-top-color:#8e44ad;">
+            <h4>🟣 Tools Referensi</h4>
+            <ul>
+              <li><strong>Semgrep:</strong> semgrep.dev — rules OWASP di <em>semgrep.dev/p/owasp-top-ten</em></li>
+              <li><strong>OWASP ZAP:</strong> zaproxy.org — full scan, API scan</li>
+              <li><strong>Dependency-Check:</strong> jeremylong.github.io/DependencyCheck</li>
+              <li><strong>Gitleaks:</strong> gitleaks.io — secret detection</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Ringkasan Pertemuan 11</h3>
+        <div style="display:grid;gap:10px;">
+          <div class="ok-box">
+            <p><strong>SCP-01–14:</strong> 14 kategori OWASP SCP mencakup semua aspek keamanan kode — dari input validation hingga memory management. Setiap kategori memetakan ke kerentanan OWASP Top 10.</p>
+          </div>
+          <div class="ok-box">
+            <p><strong>OWASP SAMM v2.0:</strong> 5 Business Functions (Governance, Design, Implementation, Verification, Operations) dengan 3 Maturity Level. Gunakan sebagai roadmap pematangan keamanan organisasi.</p>
+          </div>
+          <div class="ok-box">
+            <p><strong>Shift Left:</strong> Temukan kerentanan di fase awal SDLC — biaya perbaikan 100× lebih murah daripada di production.</p>
+          </div>
+          <div class="ok-box">
+            <p><strong>DevSecOps Toolchain:</strong> SAST (Semgrep) → SCA (Dependency-Check) → Secret Detection (Gitleaks) → DAST (ZAP) → CI/CD Gate (GitHub Actions).</p>
+          </div>
+        </div>
+        <div class="tip-box mt16">
+          <div class="tip-label">Pertemuan Berikutnya (P12)</div>
+          <p>Praktikum mandiri: jalankan pipeline DevSecOps terhadap aplikasi DVWA. Lihat <strong>week_11_praktik.html</strong> untuk panduan step-by-step Lab 1 (Semgrep), Lab 2 (ZAP), dan Lab 3 (Laporan Temuan).</p>
+        </div>
+        <div class="tag-row mt12">
+          <span class="tag">OWASP SCP</span>
+          <span class="tag green">SAMM v2.0</span>
+          <span class="tag teal">DevSecOps</span>
+          <span class="tag gold">Shift Left</span>
+          <span class="tag purple">Semgrep</span>
+          <span class="tag red">OWASP ZAP</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end #slideshow -->
+
+<!-- NAVBAR -->
+<div id="navbar">
+  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>← Sebelumnya</button>
+  <div id="slide-title-bar">Cover</div>
+  <div id="progress-bar"><div id="progress-fill" style="width:5.56%"></div></div>
+  <div id="slide-counter">1 / 18</div>
+  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Berikutnya →</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let cur = 0;
+  const total = slides.length;
+  function showSlide(n) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(n, total - 1));
+    slides[cur].classList.add('active');
+    slides[cur].scrollTop = 0;
+    document.getElementById('btn-prev').disabled = cur === 0;
+    document.getElementById('btn-next').disabled = cur === total - 1;
+    document.getElementById('slide-counter').textContent = (cur+1) + ' / ' + total;
+    document.getElementById('progress-fill').style.width = ((cur+1)/total*100) + '%';
+    document.getElementById('slide-title-bar').textContent = slides[cur].dataset.title || '';
+  }
+  function changeSlide(d) { showSlide(cur + d); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  const correctAnswers = { 1:'a', 2:'c', 3:'b', 4:'b', 5:'c' };
+  const answered = {};
+  let qCur = 1;
+  const totalQ = 5;
+  let score = 0;
+
+  function answer(q, choice) {
+    if (answered[q]) return;
+    answered[q] = choice;
+    const options = document.querySelectorAll('#q' + q + ' .q-option');
+    const letters = ['a','b','c','d'];
+    options.forEach((btn, i) => {
+      btn.disabled = true;
+      if (letters[i] === correctAnswers[q]) btn.classList.add('correct');
+      else if (letters[i] === choice)       btn.classList.add('wrong');
+    });
+    const isOk = choice === correctAnswers[q];
+    if (isOk) score++;
+    document.getElementById('q' + q + (isOk ? '-ok' : '-ko')).classList.add('show');
+    document.getElementById('next-btn').style.display = 'inline-block';
+    if (q > 1) document.getElementById('prev-btn').style.display = 'inline-block';
+    if (q === totalQ) document.getElementById('next-btn').textContent = 'Lihat Skor →';
+  }
+
+  function nextQ() {
+    if (qCur === totalQ) {
+      document.getElementById('q' + qCur).style.display = 'none';
+      document.getElementById('score-display').textContent = score + ' / ' + totalQ;
+      document.getElementById('quiz-score').style.display = 'block';
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('prev-btn').style.display = 'none';
+      return;
+    }
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur++;
+    document.getElementById('q' + qCur).style.display = 'block';
+    document.getElementById('next-btn').style.display = answered[qCur] ? 'inline-block' : 'none';
+    document.getElementById('prev-btn').style.display = qCur > 1 ? 'inline-block' : 'none';
+  }
+
+  function prevQ() {
+    if (qCur <= 1) return;
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur--;
+    document.getElementById('q' + qCur).style.display = 'block';
+    document.getElementById('next-btn').style.display = 'inline-block';
+    document.getElementById('prev-btn').style.display = qCur > 1 ? 'inline-block' : 'none';
+  }
+</script>
+</body>
+</html>

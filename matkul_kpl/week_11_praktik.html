@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praktikum Pertemuan 11 – DevSecOps Pipeline | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-red: #e74c3c;
+    --accent-blue: #2980b9;
+    --accent-purple: #8e44ad;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-light); color: var(--text-dark); }
+
+  /* HEADER */
+  .page-header { background: linear-gradient(135deg, #0d2b6b 0%, #145a32 100%); color: white; padding: 36px 60px 28px; }
+  .header-badge { display: inline-block; background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold); color: var(--pssn-gold); border-radius: 20px; padding: 4px 16px; font-size: 12px; font-weight: 600; letter-spacing: 1px; margin-bottom: 16px; }
+  .page-header h1 { font-size: 30px; font-weight: 800; margin-bottom: 8px; }
+  .page-header p { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+  .header-meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+  .meta-item { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 18px; }
+  .meta-item .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.6); }
+  .meta-item .value { font-size: 13px; font-weight: 700; color: var(--pssn-lightgold); margin-top: 2px; }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 36px 24px 80px; }
+  .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--pssn-gold); margin-bottom: 8px; }
+  h2.lab-title { font-size: 22px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 6px; }
+  h3.sub-title { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 20px; }
+  h3.sub-title:first-child { margin-top: 0; }
+
+  /* LAB CARD */
+  .lab-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 36px; overflow: hidden; }
+  .lab-card-header { padding: 20px 28px; border-left: 6px solid; display: flex; align-items: center; gap: 16px; }
+  .lab-num { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; color: white; flex-shrink: 0; }
+  .lab-card-header h2 { font-size: 18px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 2px; }
+  .lab-card-header p { font-size: 13px; color: #666; }
+  .lab-body { padding: 24px 28px; }
+
+  /* INFO BOXES */
+  .info-box { background: #e3f2fd; border-left: 4px solid var(--accent-blue); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .info-box p, .info-box li { font-size: 13px; color: #333; line-height: 1.6; }
+  .info-box ul { padding-left: 18px; }
+  .warn-box { background: #fff8e1; border-left: 4px solid #f39c12; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .warn-box p { font-size: 13px; color: #555; line-height: 1.6; }
+  .warn-box .warn-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #e67e22; margin-bottom: 4px; }
+  .ok-box { background: #e8f5e9; border-left: 4px solid var(--accent-green); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .ok-box p { font-size: 13px; color: #333; line-height: 1.6; }
+  .note-box { background: #f3e5f5; border-left: 4px solid var(--accent-purple); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .note-box p { font-size: 13px; color: #444; line-height: 1.6; }
+  .note-box .note-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-purple); margin-bottom: 4px; }
+
+  /* STEP */
+  .step-list { list-style: none; padding: 0; margin-bottom: 16px; }
+  .step-list li { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
+  .step-badge { min-width: 28px; height: 28px; border-radius: 50%; background: var(--pssn-blue); color: white; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .step-content { font-size: 13.5px; color: #333; line-height: 1.7; }
+  .step-content strong { color: var(--pssn-blue); }
+  .step-content code { background: #f0f0f0; padding: 1px 6px; border-radius: 4px; font-size: 12px; font-family: 'Courier New', monospace; }
+
+  /* CODE BLOCK */
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 16px 18px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.7; margin: 10px 0 16px; overflow-x: auto; white-space: pre; }
+  .code-block .cmd { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .str { color: #fab387; }
+  .code-block .out { color: #89dceb; }
+  .code-block .warn { color: #f38ba8; }
+  .code-block .ok { color: #a6e3a1; }
+
+  /* TWO COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0 16px; }
+  .data-table th { background: var(--pssn-blue); color: white; padding: 10px 14px; text-align: left; font-size: 12px; }
+  .data-table td { padding: 9px 14px; border-bottom: 1px solid #e0e0e0; color: #444; line-height: 1.5; }
+  .data-table tr:nth-child(even) { background: #f8f9ff; }
+  .data-table td:first-child { font-weight: 700; color: var(--pssn-blue); }
+
+  /* CHECKLIST */
+  .checklist { list-style: none; padding: 0; margin: 10px 0 16px; }
+  .checklist li { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; font-size: 13.5px; color: #333; line-height: 1.5; }
+  .checklist li::before { content: '☐'; font-size: 16px; color: var(--pssn-blue); flex-shrink: 0; margin-top: 1px; }
+
+  /* FINDING TEMPLATE */
+  .finding-template { background: #fafafa; border: 2px dashed var(--pssn-blue); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .finding-template h4 { font-size: 14px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 14px; }
+  .field-row { display: grid; grid-template-columns: 160px 1fr; gap: 8px; margin-bottom: 8px; align-items: start; }
+  .field-label { font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; padding-top: 6px; }
+  .field-input { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; font-size: 13px; color: #888; font-style: italic; }
+
+  /* OBJECTIVE BOX */
+  .objective-box { background: linear-gradient(135deg,#e8f4fd,#f0f4ff); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; border: 1px solid #c5d8f0; }
+  .objective-box h4 { font-size: 13px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 8px; }
+  .objective-box li { font-size: 13px; color: #333; line-height: 1.7; }
+  .objective-box ul { padding-left: 20px; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: linear-gradient(to right, transparent, #ddd, transparent); margin: 30px 0; }
+
+  /* TAG */
+  .tag { display: inline-block; background: #e8eaf6; color: #3949ab; font-size: 11px; font-weight: 600; border-radius: 6px; padding: 3px 9px; margin: 2px; }
+  .tag.green { background: #e8f5e9; color: #2e7d32; }
+  .tag.red { background: #ffebee; color: #c62828; }
+  .tag.gold { background: #fff8e1; color: #e65100; }
+  .tag.purple { background: #f3e5f5; color: #6a1b9a; }
+
+  /* SEVERITY BADGE */
+  .sev-critical { background: #7b1fa2; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-high { background: #c62828; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-medium { background: #e65100; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-low { background: #f9a825; color: #333; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .sev-info { background: #1565c0; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+
+  /* FOOTER */
+  .page-footer { background: var(--pssn-darkblue); color: rgba(255,255,255,0.6); text-align: center; padding: 20px; font-size: 12px; margin-top: 60px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="header-badge">RKS222 • Keamanan Perangkat Lunak • Semester 4</div>
+  <h1>Panduan Praktikum — Pertemuan 11</h1>
+  <p>Secure Coding Practices & DevSecOps Pipeline</p>
+  <p>Referensi: OWASP DevSecOps Guideline 2023 · Semgrep · OWASP ZAP</p>
+  <div class="header-meta">
+    <div class="meta-item">
+      <div class="label">Sub-CPMK</div>
+      <div class="value">263.3</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Durasi Praktikum</div>
+      <div class="value">150 menit</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Target</div>
+      <div class="value">Lab 1 + Lab 2 + Lab 3</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Tools</div>
+      <div class="value">Semgrep · OWASP ZAP · DVWA</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">Output</div>
+      <div class="value">Laporan Temuan Keamanan</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- PRASYARAT -->
+  <div class="lab-card" style="margin-bottom:28px;">
+    <div class="lab-card-header" style="border-left-color:#2c3e50;background:#f8f9fa;">
+      <div class="lab-num" style="background:#2c3e50;">⚙</div>
+      <div>
+        <h2 style="font-size:16px;">Prasyarat & Setup Lingkungan</h2>
+        <p>Siapkan semua tools sebelum memulai lab</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="two-col">
+        <div>
+          <h3 class="sub-title">Tools yang Dibutuhkan</h3>
+          <table class="data-table">
+            <tr><th>Tool</th><th>Versi</th><th>Cara Install</th></tr>
+            <tr><td>Python 3</td><td>3.8+</td><td>python.org atau paket distro</td></tr>
+            <tr><td>Semgrep</td><td>Latest</td><td><code>pip install semgrep</code></td></tr>
+            <tr><td>OWASP ZAP</td><td>2.15+</td><td>zaproxy.org/download</td></tr>
+            <tr><td>Docker</td><td>Latest</td><td>docker.com (opsional)</td></tr>
+            <tr><td>DVWA</td><td>Latest</td><td>GitHub: digininja/DVWA</td></tr>
+            <tr><td>PHP + Apache/MySQL</td><td>PHP 8+</td><td>XAMPP / Docker</td></tr>
+            <tr><td>Git</td><td>2.x</td><td>git-scm.com</td></tr>
+          </table>
+        </div>
+        <div>
+          <h3 class="sub-title">Setup DVWA (Target Aplikasi)</h3>
+          <div class="code-block"><span class="comment"># Opsi 1: Docker (Paling Mudah)</span>
+<span class="cmd">docker pull ghcr.io/digininja/dvwa:latest</span>
+<span class="cmd">docker run -d -p 8080:80 \
+  ghcr.io/digininja/dvwa</span>
+
+<span class="comment"># Akses: http://localhost:8080</span>
+<span class="comment"># Login default: admin / password</span>
+<span class="comment"># Setup: klik "Create / Reset Database"</span>
+
+<span class="comment"># Opsi 2: XAMPP (Windows)</span>
+<span class="comment"># 1. Install XAMPP, copy DVWA ke htdocs/dvwa</span>
+<span class="comment"># 2. Copy config.inc.php.dist → config.inc.php</span>
+<span class="comment"># 3. Akses: http://localhost/dvwa/setup.php</span></div>
+          <div class="warn-box">
+            <div class="warn-label">Penting!</div>
+            <p>Set <strong>DVWA Security Level ke "Low"</strong> di menu DVWA Security agar kerentanan dapat dideteksi oleh scanner. Jangan jalankan DVWA di server publik.</p>
+          </div>
+          <div class="ok-box">
+            <p><strong>Verifikasi setup berhasil:</strong> Buka browser → <code>http://localhost:8080</code> → Login → Setup/Reset Database → Tampil "Setup successful".</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 1: SAST SEMGREP -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#e74c3c;background:#fff5f5;">
+      <div class="lab-num" style="background:#e74c3c;">1</div>
+      <div>
+        <h2>Lab 1 — SAST dengan Semgrep</h2>
+        <p>Static Application Security Testing pada source code DVWA | Estimasi: 50 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 1</h4>
+        <ul>
+          <li>Menginstal dan menjalankan Semgrep dengan rules OWASP Top 10</li>
+          <li>Menganalisis output Semgrep dan memetakan temuan ke OWASP SCP kategori yang sesuai</li>
+          <li>Menulis custom rule Semgrep untuk mendeteksi penggunaan MD5 sebagai password hash</li>
+          <li>Memahami perbedaan severity: ERROR vs WARNING vs INFO</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Langkah 1.1 — Install Semgrep</h3>
+      <ul class="step-list">
+        <li>
+          <div class="step-badge">1</div>
+          <div class="step-content">Pastikan Python 3.8+ sudah terinstal: <code>python --version</code></div>
+        </li>
+        <li>
+          <div class="step-badge">2</div>
+          <div class="step-content">Install Semgrep melalui pip: jalankan perintah di bawah ini di terminal</div>
+        </li>
+        <li>
+          <div class="step-badge">3</div>
+          <div class="step-content">Verifikasi instalasi dengan melihat versi Semgrep</div>
+        </li>
+      </ul>
+      <div class="code-block"><span class="comment"># Install Semgrep</span>
+<span class="cmd">pip install semgrep</span>
+
+<span class="comment"># Verifikasi</span>
+<span class="cmd">semgrep --version</span>
+<span class="out">Semgrep 1.x.x</span></div>
+
+      <h3 class="sub-title">Langkah 1.2 — Download Source Code DVWA</h3>
+      <ul class="step-list">
+        <li>
+          <div class="step-badge">1</div>
+          <div class="step-content">Clone repository DVWA ke direktori lokal Anda</div>
+        </li>
+        <li>
+          <div class="step-badge">2</div>
+          <div class="step-content">Navigasi ke folder hasil clone — folder ini akan menjadi target scan Semgrep</div>
+        </li>
+      </ul>
+      <div class="code-block"><span class="cmd">git clone https://github.com/digininja/DVWA.git</span>
+<span class="cmd">cd DVWA</span>
+<span class="cmd">ls</span>
+<span class="out">about.php  config  dvwa  index.php  README.md  security.php  ...</span></div>
+
+      <h3 class="sub-title">Langkah 1.3 — Scan dengan Rules OWASP Top 10</h3>
+      <ul class="step-list">
+        <li>
+          <div class="step-badge">1</div>
+          <div class="step-content">Jalankan Semgrep dengan konfigurasi rules OWASP Top 10 untuk PHP</div>
+        </li>
+        <li>
+          <div class="step-badge">2</div>
+          <div class="step-content">Semgrep akan mengunduh rules dari registry dan menjalankan scan — tunggu hingga selesai (1–2 menit)</div>
+        </li>
+        <li>
+          <div class="step-badge">3</div>
+          <div class="step-content">Perhatikan output: nama file, nomor baris, rule ID, severity, dan pesan</div>
+        </li>
+      </ul>
+      <div class="code-block"><span class="comment"># Scan dengan rules OWASP Top 10</span>
+<span class="cmd">semgrep --config=p/owasp-top-ten ./</span>
+
+<span class="comment"># Atau spesifik untuk PHP security</span>
+<span class="cmd">semgrep --config=p/php-security ./</span>
+
+<span class="comment"># Contoh output yang diharapkan:</span>
+<span class="warn">
+  vulnerabilities/sqli.php
+     8┆ $query = "SELECT * FROM users WHERE user='$user'";
+          ...</span>
+<span class="out">
+  Rule: php.lang.security.injection.tainted-sql-string
+  Severity: ERROR
+  CWE: CWE-89 (SQL Injection)
+  OWASP: A03:2021
+
+  login.php
+    12┆ $pass = md5($password);</span>
+<span class="warn">
+  Rule: php.lang.security.weak-crypto.md5-used-as-password-hash
+  Severity: WARNING
+  CWE: CWE-916
+  OWASP: A02:2021</span>
+<span class="out">
+Ran 45 rules on 31 files: 12 findings.</span></div>
+
+      <h3 class="sub-title">Langkah 1.4 — Ekspor Hasil ke JSON</h3>
+      <div class="code-block"><span class="comment"># Export hasil ke JSON untuk dokumentasi</span>
+<span class="cmd">semgrep --config=p/owasp-top-ten \
+  --json -o semgrep-results.json ./</span>
+
+<span class="comment"># Lihat ringkasan</span>
+<span class="cmd">cat semgrep-results.json | python -m json.tool | head -50</span></div>
+
+      <h3 class="sub-title">Langkah 1.5 — Buat Custom Rule Semgrep</h3>
+      <div class="info-box">
+        <p>Custom rule memungkinkan Anda mendeteksi pola kode spesifik yang mungkin tidak dicakup rules bawaan. Buat rule untuk mendeteksi penggunaan fungsi <code>mysql_query()</code> yang sudah deprecated (rentan SQLi).</p>
+      </div>
+      <ul class="step-list">
+        <li>
+          <div class="step-badge">1</div>
+          <div class="step-content">Buat file <code>custom-rules/no-mysql-deprecated.yaml</code> dengan isi berikut:</div>
+        </li>
+      </ul>
+      <div class="code-block"><span class="comment"># custom-rules/no-mysql-deprecated.yaml</span>
+<span class="kw">rules:</span>
+  - <span class="kw">id:</span> no-deprecated-mysql-functions
+    <span class="kw">patterns:</span>
+      - <span class="kw">pattern-either:</span>
+          - <span class="kw">pattern:</span> mysql_query(...)
+          - <span class="kw">pattern:</span> mysql_connect(...)
+          - <span class="kw">pattern:</span> mysql_real_escape_string(...)
+    <span class="kw">message:</span> <span class="str">"Fungsi mysql_* sudah deprecated dan rentan SQLi.
+             Gunakan MySQLi dengan prepared statement."</span>
+    <span class="kw">severity:</span> ERROR
+    <span class="kw">languages:</span> [php]
+    <span class="kw">metadata:</span>
+      <span class="kw">cwe:</span> <span class="str">CWE-89</span>
+      <span class="kw">owasp:</span> <span class="str">A03:2021</span>
+      <span class="kw">references:</span>
+        - <span class="str">https://owasp.org/www-project-top-ten</span></div>
+      <ul class="step-list">
+        <li>
+          <div class="step-badge">2</div>
+          <div class="step-content">Jalankan scan dengan custom rule:</div>
+        </li>
+      </ul>
+      <div class="code-block"><span class="cmd">semgrep --config=custom-rules/ ./</span></div>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Tabel Dokumentasi Temuan Lab 1</h3>
+      <p style="font-size:13px;color:#555;margin-bottom:12px;">Isi tabel berikut berdasarkan output Semgrep yang Anda peroleh. Pilih minimal <strong>3 temuan</strong> dengan severity berbeda.</p>
+      <table class="data-table">
+        <tr>
+          <th>No</th>
+          <th>File & Baris</th>
+          <th>Rule ID (Semgrep)</th>
+          <th>Severity</th>
+          <th>Kategori OWASP</th>
+          <th>SCP Kategori</th>
+          <th>Kode Rentan</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td style="color:#888;font-style:italic;">vulnerabilities/sqli.php:8</td>
+          <td style="color:#888;font-style:italic;">tainted-sql-string</td>
+          <td><span class="sev-high">HIGH</span></td>
+          <td style="color:#888;font-style:italic;">A03:2021</td>
+          <td style="color:#888;font-style:italic;">SCP-01, SCP-11</td>
+          <td style="color:#888;font-style:italic;">mysql_query("SELECT....$_GET[id]")</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td style="color:#ccc;font-style:italic;">[ isi dari output ]</td>
+          <td style="color:#ccc;font-style:italic;">[ isi dari output ]</td>
+          <td>—</td>
+          <td style="color:#ccc;font-style:italic;">[ isi dari output ]</td>
+          <td style="color:#ccc;font-style:italic;">[ isi dari output ]</td>
+          <td style="color:#ccc;font-style:italic;">[ isi dari output ]</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td style="color:#ccc;font-style:italic;">[ isi dari output ]</td>
+          <td style="color:#ccc;font-style:italic;">[ isi dari output ]</td>
+          <td>—</td>
+          <td style="color:#ccc;font-style:italic;">[ isi dari output ]</td>
+          <td style="color:#ccc;font-style:italic;">[ isi dari output ]</td>
+          <td style="color:#ccc;font-style:italic;">[ isi dari output ]</td>
+        </tr>
+      </table>
+
+      <div class="note-box">
+        <div class="note-label">Pertanyaan Refleksi Lab 1</div>
+        <p><strong>1.</strong> Apakah ada temuan yang menurut Anda adalah <em>false positive</em>? Jelaskan alasannya.<br>
+        <strong>2.</strong> SAST menemukan kerentanan di kode sumber. Apakah semua kerentanan SAST pasti dapat dieksploitasi di runtime? Mengapa?<br>
+        <strong>3.</strong> Mengapa whitelist approach (SCP-01) lebih baik dari blacklist untuk Input Validation?</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 2: DAST OWASP ZAP -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#27ae60;background:#f0fff4;">
+      <div class="lab-num" style="background:#27ae60;">2</div>
+      <div>
+        <h2>Lab 2 — DAST dengan OWASP ZAP</h2>
+        <p>Dynamic Application Security Testing terhadap DVWA yang sedang berjalan | Estimasi: 60 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 2</h4>
+        <ul>
+          <li>Mengkonfigurasi OWASP ZAP sebagai proxy dan melakukan spider terhadap DVWA</li>
+          <li>Menjalankan Active Scan dan menganalisis alert yang dihasilkan</li>
+          <li>Membandingkan temuan ZAP (DAST) dengan temuan Semgrep (SAST) dari Lab 1</li>
+          <li>Mengekspor laporan ZAP dalam format HTML</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Langkah 2.1 — Setup OWASP ZAP</h3>
+      <div class="two-col">
+        <div>
+          <ul class="step-list">
+            <li>
+              <div class="step-badge">1</div>
+              <div class="step-content">Download dan install OWASP ZAP dari <strong>zaproxy.org/download</strong></div>
+            </li>
+            <li>
+              <div class="step-badge">2</div>
+              <div class="step-content">Buka ZAP → pilih <strong>"Manual Explore"</strong> di Quick Start tab</div>
+            </li>
+            <li>
+              <div class="step-badge">3</div>
+              <div class="step-content">Pastikan DVWA berjalan di <code>http://localhost:8080</code></div>
+            </li>
+            <li>
+              <div class="step-badge">4</div>
+              <div class="step-content">Di ZAP: masuk ke <strong>Tools → Options → Local Proxies</strong> → catat port proxy (default: 8090)</div>
+            </li>
+            <li>
+              <div class="step-badge">5</div>
+              <div class="step-content">Konfigurasi browser untuk menggunakan proxy ZAP: <strong>127.0.0.1:8090</strong></div>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <div class="info-box">
+            <p><strong>Konfigurasi Browser (Firefox):</strong><br>
+            Settings → Network Settings → Manual Proxy<br>
+            HTTP Proxy: 127.0.0.1 | Port: 8090<br>
+            Centang "Use this proxy server for all protocols"</p>
+          </div>
+          <div class="warn-box">
+            <div class="warn-label">Untuk HTTPS</div>
+            <p>Jika DVWA menggunakan HTTPS, import ZAP Root CA Certificate ke browser: ZAP → Tools → Options → Dynamic SSL Certificates → Save → Import ke browser.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sub-title">Langkah 2.2 — Authenticated Spider (Crawl dengan Login)</h3>
+      <ul class="step-list">
+        <li>
+          <div class="step-badge">1</div>
+          <div class="step-content">Di browser (dengan proxy ZAP aktif), login ke DVWA: <code>http://localhost:8080/login.php</code> menggunakan <strong>admin / password</strong></div>
+        </li>
+        <li>
+          <div class="step-badge">2</div>
+          <div class="step-content">Navigasi ke beberapa halaman DVWA (SQL Injection, XSS, File Upload) agar ZAP merekam endpoint</div>
+        </li>
+        <li>
+          <div class="step-badge">3</div>
+          <div class="step-content">Di ZAP, klik kanan pada <code>http://localhost:8080</code> di panel Sites → <strong>Attack → Spider</strong> → Start Scan</div>
+        </li>
+        <li>
+          <div class="step-badge">4</div>
+          <div class="step-content">Tunggu spider selesai (lihat tab Spider) — perhatikan daftar URL yang ditemukan</div>
+        </li>
+      </ul>
+
+      <h3 class="sub-title">Langkah 2.3 — Active Scan</h3>
+      <ul class="step-list">
+        <li>
+          <div class="step-badge">1</div>
+          <div class="step-content">Di panel Sites, klik kanan <code>http://localhost:8080</code> → <strong>Attack → Active Scan</strong></div>
+        </li>
+        <li>
+          <div class="step-badge">2</div>
+          <div class="step-content">Pilih Policy: <strong>"Default Policy"</strong> → klik Start Scan</div>
+        </li>
+        <li>
+          <div class="step-badge">3</div>
+          <div class="step-content">Tunggu active scan selesai (5–15 menit tergantung jumlah endpoint). Monitor progres di tab Active Scan</div>
+        </li>
+        <li>
+          <div class="step-badge">4</div>
+          <div class="step-content">Setelah selesai, lihat hasil di tab <strong>Alerts</strong> — klik setiap alert untuk detail</div>
+        </li>
+      </ul>
+      <div class="warn-box">
+        <div class="warn-label">Catatan Active Scan</div>
+        <p>Active scan mengirimkan payload berbahaya ke aplikasi target. <strong>Hanya jalankan di lingkungan lab/staging</strong> yang Anda miliki — tidak pernah di aplikasi production atau tanpa izin tertulis.</p>
+      </div>
+
+      <h3 class="sub-title">Langkah 2.4 — Alternatif: ZAP CLI via Docker</h3>
+      <p style="font-size:13px;color:#555;margin-bottom:10px;">Jika ingin menjalankan ZAP secara headless (tanpa GUI) atau untuk simulasi CI/CD:</p>
+      <div class="code-block"><span class="comment"># ZAP Full Scan via Docker (headless)</span>
+<span class="comment"># Pastikan DVWA berjalan di host machine</span>
+<span class="cmd">docker run --rm -t \
+  --network host \
+  ghcr.io/zaproxy/zaproxy:stable \
+  zap-full-scan.py \
+  -t http://localhost:8080 \
+  -r zap-report.html \
+  -l WARN</span>
+
+<span class="comment"># Laporan tersimpan di /zap/wrk/ di dalam container</span>
+<span class="comment"># Untuk menyalin ke host:</span>
+<span class="cmd">docker run --rm -t \
+  -v $(pwd):/zap/wrk/ \
+  --network host \
+  ghcr.io/zaproxy/zaproxy:stable \
+  zap-full-scan.py \
+  -t http://localhost:8080 \
+  -r zap-report.html</span>
+<span class="out">
+PASS: [...] Application Error Disclosure
+WARN-NEW: SQL Injection [40018] ...
+WARN-NEW: Cross Site Scripting (Reflected) [40012] ...
+FAIL-NEW: 0     FAIL-INPROG: 0  WARN-NEW: 8  WARN-INPROG: 0
+PASS: 38   IGNORE: 0  INFO: 2</span></div>
+
+      <h3 class="sub-title">Langkah 2.5 — Ekspor Laporan ZAP</h3>
+      <ul class="step-list">
+        <li>
+          <div class="step-badge">1</div>
+          <div class="step-content">Di ZAP GUI: menu <strong>Report → Generate Report</strong></div>
+        </li>
+        <li>
+          <div class="step-badge">2</div>
+          <div class="step-content">Pilih format <strong>HTML</strong>, tentukan lokasi penyimpanan file</div>
+        </li>
+        <li>
+          <div class="step-badge">3</div>
+          <div class="step-content">Buka file HTML hasil di browser — perhatikan ringkasan alert per severity</div>
+        </li>
+      </ul>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Tabel Analisis Alert ZAP</h3>
+      <p style="font-size:13px;color:#555;margin-bottom:12px;">Isi tabel berdasarkan hasil scan ZAP. Pilih minimal <strong>3 alert</strong> dengan severity berbeda.</p>
+      <table class="data-table">
+        <tr>
+          <th>No</th>
+          <th>Nama Alert ZAP</th>
+          <th>Severity</th>
+          <th>URL/Endpoint</th>
+          <th>Parameter</th>
+          <th>OWASP Kategori</th>
+          <th>Solusi Singkat</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td style="color:#888;font-style:italic;">SQL Injection</td>
+          <td><span class="sev-high">HIGH</span></td>
+          <td style="color:#888;font-style:italic;">/vulnerabilities/sqli/?id=</td>
+          <td style="color:#888;font-style:italic;">id</td>
+          <td style="color:#888;font-style:italic;">A03:2021</td>
+          <td style="color:#888;font-style:italic;">Gunakan prepared statement</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td style="color:#ccc;font-style:italic;">[ dari laporan ZAP ]</td>
+          <td>—</td>
+          <td style="color:#ccc;font-style:italic;">[ isi ]</td>
+          <td style="color:#ccc;font-style:italic;">[ isi ]</td>
+          <td style="color:#ccc;font-style:italic;">[ isi ]</td>
+          <td style="color:#ccc;font-style:italic;">[ isi ]</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td style="color:#ccc;font-style:italic;">[ dari laporan ZAP ]</td>
+          <td>—</td>
+          <td style="color:#ccc;font-style:italic;">[ isi ]</td>
+          <td style="color:#ccc;font-style:italic;">[ isi ]</td>
+          <td style="color:#ccc;font-style:italic;">[ isi ]</td>
+          <td style="color:#ccc;font-style:italic;">[ isi ]</td>
+        </tr>
+      </table>
+
+      <h3 class="sub-title">Perbandingan SAST vs DAST</h3>
+      <table class="data-table">
+        <tr>
+          <th>Kerentanan</th>
+          <th>Ditemukan Semgrep (SAST)?</th>
+          <th>Ditemukan ZAP (DAST)?</th>
+          <th>Analisis</th>
+        </tr>
+        <tr>
+          <td>SQL Injection</td>
+          <td style="color:#27ae60;">✓ Ya</td>
+          <td style="color:#27ae60;">✓ Ya</td>
+          <td style="font-size:12px;">Keduanya mendeteksi — SAST di source code, DAST dengan payload runtime</td>
+        </tr>
+        <tr>
+          <td>Missing Security Header</td>
+          <td style="color:#e74c3c;">✗ Tidak</td>
+          <td style="color:#27ae60;">✓ Ya (ZAP saja)</td>
+          <td style="font-size:12px;color:#888;font-style:italic;">Isi berdasarkan hasil Anda</td>
+        </tr>
+        <tr>
+          <td>[ temuan lain ]</td>
+          <td style="color:#ccc;">—</td>
+          <td style="color:#ccc;">—</td>
+          <td style="color:#ccc;font-style:italic;">[ isi ]</td>
+        </tr>
+      </table>
+
+      <div class="note-box">
+        <div class="note-label">Pertanyaan Refleksi Lab 2</div>
+        <p><strong>1.</strong> Temukan satu kerentanan yang hanya dapat dideteksi oleh DAST (ZAP) tetapi tidak oleh SAST (Semgrep). Jelaskan mengapa demikian.<br>
+        <strong>2.</strong> Apakah ZAP Active Scan menemukan semua kerentanan yang ada di DVWA? Apa keterbatasan DAST?<br>
+        <strong>3.</strong> Dalam konteks DevSecOps pipeline, kapan SAST dijalankan dan kapan DAST dijalankan? Mengapa urutan ini penting?</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAB 3: DOKUMENTASI TEMUAN -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#8e44ad;background:#f5eef8;">
+      <div class="lab-num" style="background:#8e44ad;">3</div>
+      <div>
+        <h2>Lab 3 — Dokumentasi Temuan Keamanan</h2>
+        <p>Menyusun laporan temuan profesional berdasarkan hasil Lab 1 & Lab 2 | Estimasi: 40 menit</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="objective-box">
+        <h4>🎯 Tujuan Lab 3</h4>
+        <ul>
+          <li>Memilih 2 temuan terbaik dari Lab 1 dan Lab 2 (total 4 temuan) dan mendokumentasikannya secara profesional</li>
+          <li>Mengisi template laporan temuan sesuai format standar yang mencakup: deskripsi, bukti, dampak, CVSS awal, dan rekomendasi</li>
+          <li>Menulis Executive Summary singkat yang merangkum postur keamanan DVWA</li>
+          <li>Menghubungkan temuan dengan OWASP SCP kategori yang seharusnya diterapkan</li>
+        </ul>
+      </div>
+
+      <h3 class="sub-title">Format Laporan Temuan (Per Finding)</h3>
+      <p style="font-size:13px;color:#555;margin-bottom:14px;">Isi satu template berikut untuk setiap temuan yang Anda pilih. Duplikasi template ini untuk setiap finding.</p>
+
+      <div class="finding-template">
+        <h4>📋 Template Laporan Temuan — Finding #1</h4>
+        <div class="field-row">
+          <div class="field-label">Judul Temuan</div>
+          <div class="field-input">Contoh: SQL Injection pada Parameter 'id' Halaman Login</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Sumber Deteksi</div>
+          <div class="field-input">Semgrep (SAST) / OWASP ZAP (DAST) / Keduanya</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Kategori OWASP</div>
+          <div class="field-input">Contoh: A03:2021 — Injection</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">SCP yang Dilanggar</div>
+          <div class="field-input">Contoh: SCP-01 (Input Validation), SCP-11 (Database Security)</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">CWE</div>
+          <div class="field-input">Contoh: CWE-89 — Improper Neutralization of Special Elements used in an SQL Command</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Severity</div>
+          <div class="field-input">Critical / High / Medium / Low / Informational</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">URL / File</div>
+          <div class="field-input">Contoh: http://localhost:8080/vulnerabilities/sqli/?id= | sqli.php baris 8</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Deskripsi</div>
+          <div class="field-input">Jelaskan kerentanan dalam 2–3 kalimat: apa yang rentan, bagaimana hal itu terjadi, mengapa berbahaya</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Bukti (Evidence)</div>
+          <div class="field-input">Payload yang digunakan / output Semgrep / screenshot ZAP Alert. Contoh: Payload ' OR '1'='1 menghasilkan seluruh data user</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Dampak (Impact)</div>
+          <div class="field-input">Jelaskan konsekuensi jika dieksploitasi: data breach, akses tidak sah, RCE, dll.</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">CVSS v3.1 (estimasi)</div>
+          <div class="field-input">Contoh: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N → Skor: 9.1 (Critical)</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Rekomendasi</div>
+          <div class="field-input">Langkah konkret perbaikan merujuk OWASP SCP. Contoh: (1) Ganti query ke prepared statement (SCP-11), (2) Validasi input hanya angka (SCP-01), (3) Aktifkan WAF untuk layer tambahan</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Referensi</div>
+          <div class="field-input">OWASP Top 10 A03:2021, CWE-89, OWASP SCP-01/11, semgrep rule ID</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <p><strong>Instruksi:</strong> Salin template di atas sebanyak 4 kali (untuk 4 finding). Pilih <strong>2 temuan dari Lab 1 (Semgrep)</strong> dan <strong>2 temuan dari Lab 2 (ZAP)</strong>. Prioritaskan temuan dengan severity tertinggi.</p>
+      </div>
+
+      <h3 class="sub-title">Executive Summary</h3>
+      <p style="font-size:13px;color:#555;margin-bottom:12px;">Tulis Executive Summary singkat (maksimum 200 kata) yang menjawab pertanyaan berikut:</p>
+      <div class="checklist">
+        <li>Berapa total temuan berdasarkan severity (Critical, High, Medium, Low, Info)?</li>
+        <li>Tool apa yang digunakan dan kapan (SAST vs DAST)?</li>
+        <li>Apa kerentanan paling kritis yang ditemukan dan apa risikonya?</li>
+        <li>Apa rekomendasi prioritas pertama yang harus segera diperbaiki?</li>
+        <li>Kesimpulan postur keamanan aplikasi DVWA secara keseluruhan</li>
+      </div>
+
+      <div class="finding-template">
+        <h4>📝 Executive Summary — [Nama Anda] | [Tanggal]</h4>
+        <div class="field-row" style="align-items:start;">
+          <div class="field-label">Ringkasan Temuan</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="background:#fdedec;border-radius:6px;padding:8px 14px;text-align:center;">
+              <div style="font-size:22px;font-weight:900;color:#e74c3c;">?</div>
+              <div style="font-size:11px;font-weight:700;color:#e74c3c;">CRITICAL</div>
+            </div>
+            <div style="background:#fff5f5;border-radius:6px;padding:8px 14px;text-align:center;">
+              <div style="font-size:22px;font-weight:900;color:#c0392b;">?</div>
+              <div style="font-size:11px;font-weight:700;color:#c0392b;">HIGH</div>
+            </div>
+            <div style="background:#fef9e7;border-radius:6px;padding:8px 14px;text-align:center;">
+              <div style="font-size:22px;font-weight:900;color:#e67e22;">?</div>
+              <div style="font-size:11px;font-weight:700;color:#e67e22;">MEDIUM</div>
+            </div>
+            <div style="background:#fffde7;border-radius:6px;padding:8px 14px;text-align:center;">
+              <div style="font-size:22px;font-weight:900;color:#f39c12;">?</div>
+              <div style="font-size:11px;font-weight:700;color:#f39c12;">LOW</div>
+            </div>
+          </div>
+        </div>
+        <div class="field-row" style="margin-top:12px;">
+          <div class="field-label">Narasi Executive Summary</div>
+          <div class="field-input" style="min-height:80px;">Tulis narasi executive summary di sini (maksimum 200 kata)...</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Rekomendasi Prioritas</div>
+          <div class="field-input">1. [Temuan paling kritis dan langkah perbaikan segera]<br>2. [Temuan kedua dan langkah perbaikan]<br>3. [Aktivitas preventif: Implementasi DevSecOps pipeline...]</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <h3 class="sub-title">Checklist Penyelesaian Praktikum</h3>
+      <ul class="checklist">
+        <li>Lab 1: Semgrep berhasil diinstal dan dijalankan terhadap source code DVWA</li>
+        <li>Lab 1: Output Semgrep terdokumentasi (minimal 3 finding di tabel)</li>
+        <li>Lab 1: Custom rule YAML berhasil dibuat dan dijalankan</li>
+        <li>Lab 1: Pertanyaan refleksi Lab 1 dijawab</li>
+        <li>Lab 2: DVWA berjalan dan dapat diakses di browser</li>
+        <li>Lab 2: ZAP berhasil melakukan spider dan active scan terhadap DVWA</li>
+        <li>Lab 2: Laporan ZAP HTML berhasil diekspor</li>
+        <li>Lab 2: Tabel analisis alert ZAP terisi (minimal 3 alert)</li>
+        <li>Lab 2: Tabel perbandingan SAST vs DAST terisi</li>
+        <li>Lab 2: Pertanyaan refleksi Lab 2 dijawab</li>
+        <li>Lab 3: 4 template finding terisi lengkap (2 dari SAST + 2 dari DAST)</li>
+        <li>Lab 3: Executive Summary ditulis (maksimum 200 kata)</li>
+        <li>Lab 3: Setiap finding mencantumkan rekomendasi berbasis OWASP SCP</li>
+      </ul>
+
+      <div class="note-box">
+        <div class="note-label">Pengumpulan</div>
+        <p>Kumpulkan ke LMS dalam format <strong>PDF</strong> yang berisi: (1) semua tabel temuan dari Lab 1 & Lab 2, (2) 4 template finding Lab 3, (3) Executive Summary, dan (4) jawaban pertanyaan refleksi. Sertakan juga file <code>semgrep-results.json</code> dan <code>zap-report.html</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFERENSI -->
+  <div class="lab-card">
+    <div class="lab-card-header" style="border-left-color:#2c3e50;background:#f8f9fa;">
+      <div class="lab-num" style="background:#2c3e50;">📚</div>
+      <div>
+        <h2>Referensi & Sumber Belajar</h2>
+        <p>Semua sumber dapat diakses gratis</p>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="two-col">
+        <div>
+          <h3 class="sub-title">Dokumentasi Resmi</h3>
+          <table class="data-table">
+            <tr><th>Sumber</th><th>URL</th></tr>
+            <tr><td>OWASP SCP Guide v3</td><td style="font-size:11.5px;">owasp.org/www-project-secure-coding-practices-quick-reference-guide</td></tr>
+            <tr><td>OWASP DevSecOps Guideline</td><td style="font-size:11.5px;">owasp.org/www-project-devsecops-guideline</td></tr>
+            <tr><td>Semgrep Docs</td><td style="font-size:11.5px;">semgrep.dev/docs</td></tr>
+            <tr><td>Semgrep Rules Registry</td><td style="font-size:11.5px;">semgrep.dev/r</td></tr>
+            <tr><td>OWASP ZAP User Guide</td><td style="font-size:11.5px;">zaproxy.org/docs</td></tr>
+            <tr><td>DVWA Documentation</td><td style="font-size:11.5px;">github.com/digininja/DVWA</td></tr>
+            <tr><td>OWASP Dependency-Check</td><td style="font-size:11.5px;">jeremylong.github.io/DependencyCheck</td></tr>
+            <tr><td>Gitleaks</td><td style="font-size:11.5px;">github.com/gitleaks/gitleaks</td></tr>
+          </table>
+        </div>
+        <div>
+          <h3 class="sub-title">Tags Materi</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
+            <span class="tag">OWASP SCP</span>
+            <span class="tag green">Semgrep SAST</span>
+            <span class="tag red">OWASP ZAP DAST</span>
+            <span class="tag purple">DevSecOps</span>
+            <span class="tag">Shift Left</span>
+            <span class="tag gold">CI/CD Security Gate</span>
+            <span class="tag green">SCA</span>
+            <span class="tag">Secret Detection</span>
+            <span class="tag red">DVWA</span>
+            <span class="tag purple">OWASP SAMM</span>
+          </div>
+          <h3 class="sub-title">Mapping ke Sub-CPMK 263.3</h3>
+          <table class="data-table">
+            <tr><th>Lab</th><th>Indikator</th></tr>
+            <tr><td>Lab 1 — Semgrep</td><td>Indikator A (SCP mapping) + Indikator C (evaluasi kode)</td></tr>
+            <tr><td>Lab 2 — OWASP ZAP</td><td>Indikator B (DevSecOps pipeline) + Indikator C (evaluasi)</td></tr>
+            <tr><td>Lab 3 — Laporan</td><td>Indikator B + Indikator D (security gate implementation)</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .container -->
+
+<div class="page-footer">
+  RKS222 Keamanan Perangkat Lunak — Praktikum Pertemuan 11 | Sub-CPMK 263.3 | Program Studi D4 Rekayasa Keamanan Siber — Politeknik SSN | Semester Genap 2025/2026
+</div>
+
+</body>
+</html>

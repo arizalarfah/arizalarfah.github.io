@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pertemuan 6 – Pengujian Injeksi & Autentikasi Mobile | RKS222 PSSN</title>
+<style>
+  :root {
+    --pssn-blue: #0d2b6b;
+    --pssn-darkblue: #081a45;
+    --pssn-gold: #e8a020;
+    --pssn-lightgold: #ffd166;
+    --bg-light: #f0f4f8;
+    --text-dark: #1a1a2e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --accent-green: #27ae60;
+    --accent-orange: #e67e22;
+    --accent-purple: #8e44ad;
+    --accent-red: #e74c3c;
+    --accent-teal: #16a085;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-light); color: var(--text-dark); overflow: hidden; height: 100vh; width: 100vw; }
+  #slideshow { width: 100%; height: 100vh; position: relative; }
+  .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.45s ease; overflow-y: auto; }
+  .slide.active { opacity: 1; pointer-events: all; }
+  #navbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 999; background: var(--pssn-darkblue); display: flex; align-items: center; justify-content: space-between; padding: 10px 24px; gap: 12px; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); }
+  .nav-btn { background: var(--pssn-gold); color: var(--pssn-darkblue); border: none; border-radius: 8px; padding: 8px 22px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .nav-btn:hover { background: var(--pssn-lightgold); transform: translateY(-1px); }
+  .nav-btn:disabled { background: #555; color: #aaa; cursor: not-allowed; transform: none; }
+  #slide-counter { color: #aaa; font-size: 13px; min-width: 90px; text-align: center; }
+  #progress-bar { flex: 1; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+  #progress-fill { height: 100%; background: var(--pssn-gold); border-radius: 3px; transition: width 0.4s ease; }
+  #slide-title-bar { color: #ccc; font-size: 12px; flex: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .section-label { display: inline-block; background: var(--pssn-gold); color: var(--pssn-darkblue); font-weight: 800; font-size: 11px; letter-spacing: 1.5px; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; margin-bottom: 12px; }
+  .slide-header { background: var(--pssn-blue); padding: 28px 48px 22px; color: white; flex-shrink: 0; }
+  .slide-header h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .slide-header p { font-size: 14px; color: rgba(255,255,255,0.7); }
+  .slide-body { padding: 28px 48px 100px; flex: 1; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .mt8{margin-top:8px;} .mt12{margin-top:12px;} .mt16{margin-top:16px;} .mt20{margin-top:20px;}
+
+  .card { background: #fff; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+  .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .card p, .card li { font-size: 13.5px; line-height: 1.7; color: #444; }
+  .card ul { padding-left: 18px; } .card ul li { margin-bottom: 4px; }
+
+  .cp-box { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid var(--pssn-blue); }
+  .cp-box h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 5px; }
+  .cp-box p { font-size: 14px; font-weight: 600; color: var(--pssn-blue); line-height: 1.5; }
+
+  .indikator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .indikator-card { background: #fff; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start; border-top: 3px solid; }
+  .ind-letter { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; color: white; }
+  .ind-text { font-size: 13px; color: #333; line-height: 1.5; font-weight: 500; }
+  .ind-bloom { font-size: 11px; color: #888; margin-top: 3px; }
+
+  #s0 { background: linear-gradient(135deg, #0d2b6b 0%, #1a3a8f 45%, #7b1fa2 100%); justify-content: center; align-items: center; text-align: center; position: relative; padding: 40px; }
+  #s0::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E"); }
+  .cover-badge { background: rgba(232,160,32,0.2); border: 1px solid var(--pssn-gold); color: var(--pssn-gold); border-radius: 20px; padding: 6px 18px; font-size: 13px; font-weight: 600; letter-spacing: 1px; margin-bottom: 24px; display: inline-block; }
+  .cover-title { color: white; font-size: 36px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .cover-subtitle { color: var(--pssn-lightgold); font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .cover-meta { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 36px; }
+  .cover-divider { width: 80px; height: 3px; background: var(--pssn-gold); border-radius: 2px; margin: 24px auto; }
+  .cover-pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .cover-pill { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; }
+  .cover-pill strong { color: var(--pssn-gold); }
+  .cover-inst { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 32px; }
+
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.6; margin: 10px 0; overflow-x: auto; }
+  .code-block .cmd { color: #a6e3a1; }
+  .code-block .comment { color: #6c7086; font-style: italic; }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .str { color: #fab387; }
+  .code-block .out { color: #89dceb; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid var(--pssn-blue); border-radius: 8px; padding: 12px 16px; }
+  .info-box p, .info-box li { font-size: 12.5px; color: #333; line-height: 1.6; }
+  .tip-box { background: linear-gradient(135deg,#fff8e1,#fffde7); border-left: 4px solid var(--pssn-gold); border-radius: 8px; padding: 12px 16px; }
+  .tip-box .tip-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-orange); margin-bottom: 4px; }
+  .tip-box p, .tip-box li { font-size: 12.5px; color: #555; line-height: 1.6; }
+  .warn-box { background: #ffebee; border-left: 4px solid var(--accent-red); border-radius: 8px; padding: 12px 16px; }
+  .warn-box .warn-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-red); margin-bottom: 4px; }
+  .warn-box p { font-size: 12.5px; color: #555; line-height: 1.6; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag { background: #e8eaf6; color: #3949ab; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 4px 10px; }
+  .tag.green { background: #e8f5e9; color: #2e7d32; }
+  .tag.red { background: #ffebee; color: #c62828; }
+  .tag.gold { background: #fff8e1; color: #e65100; }
+  .tag.teal { background: #e0f7fa; color: #00695c; }
+  .tag.purple { background: #f3e5f5; color: #6a1b9a; }
+  .tag-red    { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fdedec; color: #c0392b; }
+  .tag-orange { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #fef9e7; color: #d35400; }
+  .tag-blue   { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #e8f4fd; color: #1a4a6b; }
+  .tag-green  { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #eafaf1; color: #145a32; }
+  .tag-purple { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #f5eef8; color: #7d3c98; }
+
+  .step-flow { display: flex; gap: 0; align-items: stretch; margin: 14px 0; }
+  .step-item { flex: 1; min-width: 90px; background: #fff; border-radius: 8px; padding: 14px 10px; text-align: center; box-shadow: var(--shadow); position: relative; }
+  .step-item:not(:last-child)::after { content: '→'; position: absolute; right: -16px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--pssn-gold); font-weight: 900; z-index: 1; }
+  .step-item + .step-item { margin-left: 22px; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--pssn-blue); color: white; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+  .step-item h5 { font-size: 12px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 4px; }
+  .step-item p { font-size: 11px; color: #666; line-height: 1.4; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; }
+  .sum-card { background: #fff; border-radius: 10px; padding: 14px 12px; box-shadow: var(--shadow); text-align: center; border-top: 3px solid; }
+  .sum-card .sum-icon { font-size: 26px; margin-bottom: 6px; }
+  .sum-card h5 { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .sum-card p { font-size: 11px; color: #666; line-height: 1.4; }
+  .key-points { background: #fff; border-radius: var(--radius); padding: 18px 22px; box-shadow: var(--shadow); }
+  .key-points h4 { font-size: 14px; font-weight: 800; color: var(--pssn-blue); margin-bottom: 12px; }
+  .kp-item { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+  .kp-check { width: 22px; height: 22px; background: var(--accent-green); border-radius: 50%; color: white; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .kp-text { font-size: 13px; color: #333; line-height: 1.5; }
+
+  .task-card { background: #fff; border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 14px; border-left: 5px solid; }
+  .task-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+  .task-card p, .task-card li { font-size: 13.5px; color: #444; line-height: 1.7; }
+  .task-card ul { padding-left: 18px; margin-top: 6px; }
+  .task-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .task-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+  .tb-red{background:#ffebee;color:#c62828;} .tb-blue{background:#e3f2fd;color:#1565c0;}
+  .tb-green{background:#e8f5e9;color:#2e7d32;} .tb-gold{background:#fff8e1;color:#e65100;}
+  .tb-teal{background:#e0f7fa;color:#00695c;}
+
+  .quiz-container { max-width: 720px; margin: 0 auto; }
+  .q-num { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--pssn-gold); margin-bottom: 6px; }
+  .q-text { font-size: 15px; font-weight: 600; color: var(--pssn-blue); margin-bottom: 14px; line-height: 1.5; }
+  .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  .q-option { background: #fff; border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; cursor: pointer; transition: all 0.2s; font-size: 13.5px; color: #333; font-weight: 500; text-align: left; }
+  .q-option:hover { border-color: var(--pssn-blue); background: #f0f4ff; }
+  .q-option.correct { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; font-weight: 700; }
+  .q-option.wrong { border-color: #ef5350; background: #ffebee; color: #c62828; }
+  .q-feedback { font-size: 13px; padding: 10px 14px; border-radius: 8px; margin-top: 8px; display: none; line-height: 1.6; }
+  .q-feedback.show { display: block; }
+  .q-feedback.ok { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
+  .q-feedback.ko { background: #ffebee; color: #c62828; border-left: 3px solid #ef5350; }
+  .quiz-score { text-align: center; background: var(--pssn-blue); color: white; border-radius: var(--radius); padding: 16px; margin-top: 16px; display: none; }
+  .quiz-score h3 { font-size: 22px; font-weight: 900; color: var(--pssn-gold); }
+  .quiz-score p { font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+  .quiz-nav { display: flex; gap: 10px; margin-top: 12px; justify-content: center; }
+  .quiz-btn { background: var(--pssn-blue); color: white; border: none; border-radius: 8px; padding: 10px 24px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+  .quiz-btn:hover { background: #1a3a8f; }
+
+  .ref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ref-card { background: #fff; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border-top: 3px solid; }
+  .ref-card h4 { font-size: 13px; font-weight: 800; margin-bottom: 8px; }
+  .ref-card li { font-size: 12.5px; color: #444; line-height: 1.8; }
+  .ref-card ul { padding-left: 16px; }
+
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  .cmp-table th { background: var(--pssn-blue); color: white; padding: 8px 12px; text-align: left; font-size: 12px; }
+  .cmp-table td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; color: #444; line-height: 1.5; }
+  .cmp-table tr:nth-child(even) { background: #f8f9ff; }
+  .cmp-table td:first-child { font-weight: 700; color: var(--pssn-blue); }
+
+  h3.section-h { font-size: 16px; font-weight: 700; color: var(--pssn-blue); margin-bottom: 12px; margin-top: 18px; }
+  h3.section-h:first-child { margin-top: 0; }
+  .info-box.blue   { background: #e8f4fd; border-left: 4px solid #2980b9; color: #1a4a6b; }
+  .info-box.green  { background: #eafaf1; border-left: 4px solid #27ae60; color: #145a32; }
+  .info-box.orange { background: #fef9e7; border-left: 4px solid #f39c12; color: #7d6608; }
+  .info-box.red    { background: #fdedec; border-left: 4px solid #e74c3c; color: #7b241c; }
+  .vuln-box { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); border-left: 5px solid; margin-bottom: 12px; }
+  .vuln-box h4 { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+  .vuln-box p, .vuln-box li { font-size: 12.5px; color: #444; line-height: 1.6; }
+  .vuln-box ul { padding-left: 16px; }
+  .tool-card { background: #fff; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border-top: 3px solid; }
+  .tool-card h4 { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+  .tool-card p { font-size: 12.5px; color: #555; line-height: 1.5; }
+  .tool-card .tool-type { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div id="slideshow">
+
+<!-- SLIDE 0: COVER -->
+<div class="slide active" id="s0" data-title="Cover">
+  <div style="position:relative;z-index:1;text-align:center;max-width:820px;margin:auto;">
+    <div class="cover-badge">RKS222 • Keamanan Perangkat Lunak • Semester 4</div>
+    <div class="cover-title">Pengujian Injeksi &<br>Autentikasi Mobile</div>
+    <div class="cover-subtitle">Keamanan Aplikasi Bergerak — Injeksi, Auth, & Data Tersimpan</div>
+    <div class="cover-meta">Sub-CPMK 262.1 & 262.2 &nbsp;|&nbsp; Pertemuan 6 &nbsp;|&nbsp; Bobot 15%</div>
+    <div class="cover-divider"></div>
+    <div class="cover-pills">
+      <div class="cover-pill"><strong>Topik:</strong> Mobile Injection (SQLi, Intent)</div>
+      <div class="cover-pill"><strong>Topik:</strong> Broken Authentication (OWASP M3)</div>
+      <div class="cover-pill"><strong>Topik:</strong> Insecure Data Storage (OWASP M2)</div>
+      <div class="cover-pill"><strong>Tools:</strong> MobSF · Drozer · ADB · Frida</div>
+    </div>
+    <div class="cover-inst">Program Studi Rekayasa Keamanan Siber — Politeknik SSN</div>
+  </div>
+</div>
+
+<!-- SLIDE 1: CAPAIAN PEMBELAJARAN -->
+<div class="slide" id="s1" data-title="Capaian Pembelajaran">
+  <div class="slide-header">
+    <div class="section-label">Capaian Pembelajaran</div>
+    <h2>Capaian Pembelajaran Pertemuan 6</h2>
+    <p>Sub-CPMK 262.1 & 262.2 | CPMK262 | CPL02 — RKS222, PSSN</p>
+  </div>
+  <div class="slide-body">
+    <div class="cp-box">
+      <h3>Sub-CPMK 262.1</h3>
+      <p>Mahasiswa mampu mengonfigurasi dan menjalankan perangkat uji kerawanan pada aplikasi mobile, khususnya untuk pengujian injeksi, autentikasi, dan penyimpanan data tidak aman.</p>
+    </div>
+    <div class="cp-box">
+      <h3>Sub-CPMK 262.2</h3>
+      <p>Mahasiswa mampu menganalisis hasil pengujian mobile, mengidentifikasi temuan kerawanan injeksi dan autentikasi, serta mendokumentasikan temuan awal dalam format laporan teknis.</p>
+    </div>
+    <div class="indikator-grid mt12">
+      <div class="indikator-card" style="border-top-color:#e74c3c;">
+        <div class="ind-letter" style="background:#e74c3c;">A</div>
+        <div>
+          <div class="ind-text">Menjelaskan jenis injeksi pada aplikasi mobile (SQL, Intent, Content Provider)</div>
+          <div class="ind-bloom">Bloom C2 — Memahami</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-top-color:#e67e22;">
+        <div class="ind-letter" style="background:#e67e22;">B</div>
+        <div>
+          <div class="ind-text">Menjalankan pengujian SQL Injection dan Intent Injection menggunakan Drozer/ADB</div>
+          <div class="ind-bloom">Bloom C3 — Menerapkan</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-top-color:#8e44ad;">
+        <div class="ind-letter" style="background:#8e44ad;">C</div>
+        <div>
+          <div class="ind-text">Mengidentifikasi kelemahan autentikasi & penyimpanan data sensitif pada aplikasi Android</div>
+          <div class="ind-bloom">Bloom C4 — Menganalisis</div>
+        </div>
+      </div>
+      <div class="indikator-card" style="border-top-color:#16a085;">
+        <div class="ind-letter" style="background:#16a085;">D</div>
+        <div>
+          <div class="ind-text">Mendokumentasikan temuan pengujian mobile dalam format laporan temuan awal</div>
+          <div class="ind-bloom">Bloom C5 — Mengevaluasi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: PETA MATERI & KONTEKS -->
+<div class="slide" id="s2" data-title="Peta Materi & Konteks">
+  <div class="slide-header">
+    <div class="section-label">Orientasi</div>
+    <h2>Peta Materi & Konteks Pertemuan 6</h2>
+    <p>Koneksi dengan materi sebelumnya dan OWASP Mobile Top 10</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Perjalanan Kita (Mg 1–6)</h3>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="background:#e8f4fd;border-left:4px solid #2980b9;border-radius:8px;padding:10px 14px;">
+            <span class="tag-blue">Mg 1–2</span> <strong>Kerawanan & Ancaman PL</strong> — jenis bug, STRIDE, kerawanan dasar
+          </div>
+          <div style="background:#eafaf1;border-left:4px solid #27ae60;border-radius:8px;padding:10px 14px;">
+            <span class="tag-green">Mg 3</span> <strong>Mitigasi</strong> — input validation, secure coding, SDLC
+          </div>
+          <div style="background:#fef9e7;border-left:4px solid #f39c12;border-radius:8px;padding:10px 14px;">
+            <span class="tag-orange">Mg 4–5</span> <strong>Pengujian & Risk Rating</strong> — DAST/SAST, OWASP WSTG, Risk Score
+          </div>
+          <div style="background:#fdedec;border-left:4px solid #e74c3c;border-radius:8px;padding:10px 14px;">
+            <span class="tag-red">Mg 6</span> <strong>Mobile Security Testing</strong> — Injeksi, Auth, Data Storage
+          </div>
+        </div>
+        <div class="info-box mt12">
+          <p><strong>Fokus Hari Ini:</strong> Berpindah dari aplikasi web ke <strong>aplikasi mobile (Android)</strong>. Kerawanan serupa namun dengan permukaan serangan berbeda — APK, IPC, SQLite lokal, Keystore.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">OWASP Mobile Top 10 (2024)</h3>
+        <table class="cmp-table">
+          <thead><tr><th>ID</th><th>Kategori</th><th>Mg</th></tr></thead>
+          <tbody>
+            <tr><td>M1</td><td>Improper Credential Usage</td><td><span class="tag-red">Mg 6</span></td></tr>
+            <tr><td>M2</td><td>Inadequate Supply Chain Security</td><td>—</td></tr>
+            <tr><td>M3</td><td>Insecure Authentication/Authorization</td><td><span class="tag-red">Mg 6-7</span></td></tr>
+            <tr><td>M4</td><td>Insufficient Input/Output Validation</td><td><span class="tag-red">Mg 6</span></td></tr>
+            <tr><td>M5</td><td>Insecure Communication</td><td>—</td></tr>
+            <tr><td>M6</td><td>Inadequate Privacy Controls</td><td>—</td></tr>
+            <tr><td>M7</td><td>Insufficient Binary Protections</td><td>—</td></tr>
+            <tr><td>M8</td><td>Security Misconfiguration</td><td>—</td></tr>
+            <tr><td>M9</td><td>Insecure Data Storage</td><td><span class="tag-red">Mg 6</span></td></tr>
+            <tr><td>M10</td><td>Insufficient Cryptography</td><td><span class="tag-orange">Mg 7</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: INJEKSI PADA APLIKASI MOBILE -->
+<div class="slide" id="s3" data-title="Injeksi pada Aplikasi Mobile">
+  <div class="slide-header">
+    <div class="section-label">Blok 1 — Injeksi</div>
+    <h2>Injeksi pada Aplikasi Mobile</h2>
+    <p>OWASP Mobile M4 — Insufficient Input/Output Validation | CWE-89, CWE-94</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Jenis Injeksi pada Mobile</h3>
+        <div class="vuln-box" style="border-left-color:#c0392b;">
+          <h4 style="color:#c0392b;">1. SQL Injection (SQLite)</h4>
+          <p>Aplikasi Android umumnya menggunakan SQLite sebagai database lokal. Query yang dibangun dengan konkatenasi string rentan terhadap SQLi.</p>
+          <div class="tag-row">
+            <span class="tag red">Severity: HIGH</span>
+            <span class="tag-blue">CWE-89</span>
+          </div>
+        </div>
+        <div class="vuln-box" style="border-left-color:#e67e22;">
+          <h4 style="color:#e67e22;">2. Intent Injection</h4>
+          <p>Activity/Service yang diekspor tanpa validasi dapat menerima Intent dari aplikasi jahat, memicu aksi tak terduga atau membocorkan data.</p>
+          <div class="tag-row">
+            <span class="tag gold">Severity: MEDIUM</span>
+            <span class="tag-orange">CWE-94</span>
+          </div>
+        </div>
+        <div class="vuln-box" style="border-left-color:#8e44ad;">
+          <h4 style="color:#8e44ad;">3. Content Provider Injection</h4>
+          <p>Content Provider yang salah dikonfigurasi (exported=true tanpa permission) memungkinkan query berbahaya ke database melalui URI.</p>
+          <div class="tag-row">
+            <span class="tag purple">Severity: HIGH</span>
+            <span class="tag-purple">CWE-610</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Pola Kode Rentan vs Aman</h3>
+        <div class="warn-box mb12">
+          <div class="warn-label">Kode Rentan — SQL Injection</div>
+          <p>Konkatenasi langsung input user ke query SQL</p>
+        </div>
+        <div class="code-block">
+<span class="comment">// RENTAN — jangan gunakan ini</span>
+<span class="kw">String</span> query = <span class="str">"SELECT * FROM users WHERE "</span>
+    + <span class="str">"username='"</span> + username + <span class="str">"'"</span>;
+db.rawQuery(query, <span class="kw">null</span>);
+        </div>
+        <div class="tip-box mt12">
+          <div class="tip-label">Kode Aman — Parameterized Query</div>
+        </div>
+        <div class="code-block">
+<span class="comment">// AMAN — gunakan parameterized query</span>
+<span class="kw">String</span> query = <span class="str">"SELECT * FROM users WHERE username=?"</span>;
+db.rawQuery(query, <span class="kw">new</span> <span class="kw">String</span>[]{username});
+        </div>
+        <div class="info-box mt12">
+          <p><strong>Kunci Mitigasi:</strong> Selalu gunakan <code>?</code> placeholder dan <code>selectionArgs[]</code> pada query SQLite Android. Terapkan juga validasi input dan prinsip least privilege pada Content Provider.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: PENGUJIAN SQL INJECTION MOBILE -->
+<div class="slide" id="s4" data-title="Pengujian SQL Injection Mobile">
+  <div class="slide-header">
+    <div class="section-label">Blok 1 — Pengujian SQLi</div>
+    <h2>Pengujian SQL Injection pada Aplikasi Android</h2>
+    <p>Metodologi dan teknik menggunakan ADB, Drozer, dan analisis statis</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Alur Pengujian SQLi Mobile</h3>
+        <div class="step-flow" style="flex-direction:column;gap:8px;">
+          <div style="background:#fff;border-radius:8px;padding:12px 16px;box-shadow:var(--shadow);border-left:4px solid #2980b9;display:flex;gap:10px;align-items:center;">
+            <div class="step-num">1</div>
+            <div><h5 style="font-size:13px;font-weight:700;">Recon — Identifikasi Attack Surface</h5><p style="font-size:12px;color:#666;">Decompile APK (jadx/apktool), temukan penggunaan rawQuery, execSQL</p></div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:12px 16px;box-shadow:var(--shadow);border-left:4px solid #e67e22;display:flex;gap:10px;align-items:center;">
+            <div class="step-num" style="background:#e67e22;">2</div>
+            <div><h5 style="font-size:13px;font-weight:700;">Identifikasi Content Provider</h5><p style="font-size:12px;color:#666;">Cari exported=true di AndroidManifest.xml</p></div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:12px 16px;box-shadow:var(--shadow);border-left:4px solid #c0392b;display:flex;gap:10px;align-items:center;">
+            <div class="step-num" style="background:#c0392b;">3</div>
+            <div><h5 style="font-size:13px;font-weight:700;">Uji dengan Drozer / ADB</h5><p style="font-size:12px;color:#666;">Query langsung ke Content Provider dengan payload SQLi</p></div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:12px 16px;box-shadow:var(--shadow);border-left:4px solid #27ae60;display:flex;gap:10px;align-items:center;">
+            <div class="step-num" style="background:#27ae60;">4</div>
+            <div><h5 style="font-size:13px;font-weight:700;">Dokumentasi Temuan</h5><p style="font-size:12px;color:#666;">Catat URI, payload, hasil, severity (OWASP Risk Rating)</p></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Contoh Pengujian dengan Drozer</h3>
+        <div class="code-block">
+<span class="comment"># Temukan semua Content Providers</span>
+<span class="cmd">dz> run app.provider.finduri com.target.app</span>
+<span class="out">content://com.target.app.provider/users
+content://com.target.app.provider/notes</span>
+
+<span class="comment"># Query normal</span>
+<span class="cmd">dz> run app.provider.query</span>
+<span class="cmd">   content://com.target.app.provider/users</span>
+<span class="cmd">   --selection "1=1"</span>
+<span class="out">| id | username | password_hash |
+| 1  | admin    | 5f4dcc3b5aa... |</span>
+
+<span class="comment"># Uji SQLi — UNION-based</span>
+<span class="cmd">dz> run app.provider.query</span>
+<span class="cmd">   content://com.target.app.provider/users</span>
+<span class="cmd">   --selection "1=1) UNION SELECT ..."</span>
+        </div>
+        <div class="warn-box mt12">
+          <div class="warn-label">Etika Pengujian</div>
+          <p>Hanya lakukan pengujian pada aplikasi milik sendiri atau yang telah mendapat izin tertulis. Gunakan emulator/device khusus pengujian, bukan device produksi.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: INTENT INJECTION & DEEP LINK -->
+<div class="slide" id="s5" data-title="Intent Injection & Deep Link Exploitation">
+  <div class="slide-header">
+    <div class="section-label">Blok 1 — Intent & IPC</div>
+    <h2>Intent Injection & Eksploitasi Deep Link</h2>
+    <p>Kerawanan pada mekanisme IPC Android — Activity, Service, Broadcast Receiver</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Permukaan Serangan IPC Android</h3>
+        <div class="card mb12" style="border-left:4px solid #e74c3c;">
+          <h3 style="color:#c0392b;">Exported Activity</h3>
+          <p>Activity dengan <code>android:exported="true"</code> tanpa permission check dapat dipanggil langsung oleh aplikasi lain. Penyerang bisa melompati autentikasi atau memicu aksi sensitif.</p>
+          <div class="code-block" style="margin-top:8px;">
+<span class="comment"># Kirim Intent ke exported Activity</span>
+<span class="cmd">adb shell am start -n \</span>
+<span class="cmd">  com.target.app/.AdminActivity \</span>
+<span class="cmd">  -e "action" "deleteAllData"</span>
+          </div>
+        </div>
+        <div class="card" style="border-left:4px solid #e67e22;">
+          <h3 style="color:#d35400;">Deep Link Hijacking</h3>
+          <p>URL scheme yang tidak divalidasi dapat disalahgunakan. Misalnya <code>myapp://transfer?amount=1000&to=attacker</code> jika parameter tidak diverifikasi ulang.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Pengujian Exported Components</h3>
+        <div class="code-block">
+<span class="comment"># Cari exported components dengan Drozer</span>
+<span class="cmd">dz> run app.package.attacksurface com.target.app</span>
+<span class="out">Attack Surface:
+  5 activities exported
+  2 broadcast receivers exported
+  1 content provider exported</span>
+
+<span class="comment"># Cek Activity yang bisa diakses tanpa auth</span>
+<span class="cmd">dz> run app.activity.start</span>
+<span class="cmd">   --component com.target.app</span>
+<span class="cmd">   .TransferActivity</span>
+<span class="cmd">   --extra string toAccount "attacker123"</span>
+        </div>
+        <h3 class="section-h mt16">Checklist AndroidManifest.xml</h3>
+        <table class="cmp-table">
+          <thead><tr><th>Elemen</th><th>Flag Berbahaya</th><th>Risiko</th></tr></thead>
+          <tbody>
+            <tr><td>Activity</td><td>exported=true tanpa permission</td><td><span class="tag-red">HIGH</span></td></tr>
+            <tr><td>Service</td><td>exported=true + no auth check</td><td><span class="tag-red">HIGH</span></td></tr>
+            <tr><td>Receiver</td><td>exported=true + implicit action</td><td><span class="tag-orange">MED</span></td></tr>
+            <tr><td>Provider</td><td>exported=true + no readPermission</td><td><span class="tag-red">HIGH</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: BROKEN AUTHENTICATION MOBILE -->
+<div class="slide" id="s6" data-title="Broken Authentication Mobile">
+  <div class="slide-header">
+    <div class="section-label">Blok 2 — Autentikasi</div>
+    <h2>Broken Authentication pada Aplikasi Mobile</h2>
+    <p>OWASP Mobile M3 — Insecure Authentication | CWE-287, CWE-798</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Pola Kelemahan Autentikasi Mobile</h3>
+        <div class="vuln-box" style="border-left-color:#c0392b;">
+          <h4 style="color:#c0392b;">Hardcoded Credentials (M1)</h4>
+          <p>API key, password, atau token yang ditulis langsung dalam source code APK — mudah diekstrak via decompile (jadx).</p>
+          <div class="code-block" style="margin-top:6px;font-size:11px;">
+<span class="comment">// Ditemukan di decompile jadx:</span>
+<span class="kw">private</span> <span class="kw">static final</span> String API_KEY = <span class="str">"sk_live_abc123..."</span>;
+<span class="kw">private</span> <span class="kw">static final</span> String DB_PASS = <span class="str">"admin@1234"</span>;
+          </div>
+        </div>
+        <div class="vuln-box mt8" style="border-left-color:#e67e22;">
+          <h4 style="color:#d35400;">Weak Session Management</h4>
+          <ul>
+            <li>Token sesi tidak kedaluwarsa (no expiry)</li>
+            <li>Token disimpan di SharedPreferences tanpa enkripsi</li>
+            <li>Token sama digunakan ulang setelah logout</li>
+            <li>Token prediktabel (sequential ID, timestamp)</li>
+          </ul>
+        </div>
+        <div class="vuln-box mt8" style="border-left-color:#8e44ad;">
+          <h4 style="color:#7d3c98;">Biometric Bypass</h4>
+          <p>Implementasi biometrik yang tidak memvalidasi result server-side — penyerang bisa memodifikasi return value via Frida.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Pengujian Autentikasi Mobile</h3>
+        <div class="card mb12">
+          <h3>1. Analisis Statis (APK)</h3>
+          <ul>
+            <li>Decompile APK dengan <strong>jadx-gui</strong></li>
+            <li>Cari: <code>password</code>, <code>secret</code>, <code>apikey</code>, <code>token</code></li>
+            <li>Periksa <code>BuildConfig</code> dan <code>strings.xml</code></li>
+            <li>Analisis network calls untuk parameter auth</li>
+          </ul>
+        </div>
+        <div class="card mb12">
+          <h3>2. Analisis Dinamis (Runtime)</h3>
+          <ul>
+            <li>Intercept traffic dengan <strong>Burp Suite + proxy</strong></li>
+            <li>Manipulasi token/session di request</li>
+            <li>Hook fungsi auth dengan <strong>Frida</strong></li>
+            <li>Cek SharedPreferences: <code>adb shell cat /data/data/pkg/shared_prefs/</code></li>
+          </ul>
+        </div>
+        <div class="tip-box">
+          <div class="tip-label">MSTG Test Cases</div>
+          <p><strong>MSTG-AUTH-1:</strong> Verify password policy enforcement<br>
+          <strong>MSTG-AUTH-2:</strong> Verify session tokens are invalidated on logout<br>
+          <strong>MSTG-AUTH-3:</strong> Verify biometric auth uses server-side verification</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: INSECURE DATA STORAGE -->
+<div class="slide" id="s7" data-title="Insecure Data Storage (OWASP M9)">
+  <div class="slide-header">
+    <div class="section-label">Blok 2 — Data Storage</div>
+    <h2>Insecure Data Storage pada Android</h2>
+    <p>OWASP Mobile M9 / M2 — Data sensitif tersimpan tanpa proteksi memadai | CWE-312</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Lokasi Penyimpanan Rentan</h3>
+        <table class="cmp-table">
+          <thead><tr><th>Lokasi</th><th>Masalah Umum</th><th>Risk</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>SharedPreferences</td>
+              <td>Plaintext token, password hash, PII</td>
+              <td><span class="tag-red">HIGH</span></td>
+            </tr>
+            <tr>
+              <td>SQLite Database</td>
+              <td>Data tidak terenkripsi, world-readable</td>
+              <td><span class="tag-red">HIGH</span></td>
+            </tr>
+            <tr>
+              <td>External Storage</td>
+              <td>File di /sdcard/ dapat dibaca semua app</td>
+              <td><span class="tag-red">HIGH</span></td>
+            </tr>
+            <tr>
+              <td>Logcat / Logs</td>
+              <td>Data sensitif dicetak ke log debug</td>
+              <td><span class="tag-orange">MED</span></td>
+            </tr>
+            <tr>
+              <td>Clipboard</td>
+              <td>Password di-copy masuk clipboard</td>
+              <td><span class="tag-orange">MED</span></td>
+            </tr>
+            <tr>
+              <td>Backup</td>
+              <td>allowBackup=true tanpa enkripsi</td>
+              <td><span class="tag-orange">MED</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 class="section-h">Teknik Pemeriksaan Data Storage</h3>
+        <div class="code-block">
+<span class="comment"># Periksa SharedPreferences via ADB</span>
+<span class="cmd">adb shell run-as com.target.app \</span>
+<span class="cmd">  cat shared_prefs/app_prefs.xml</span>
+<span class="out">&lt;string name="auth_token"&gt;eyJhb...&lt;/string&gt;
+&lt;string name="user_password"&gt;P@ss123&lt;/string&gt;</span>
+
+<span class="comment"># Dump SQLite database</span>
+<span class="cmd">adb shell run-as com.target.app \</span>
+<span class="cmd">  sqlite3 databases/userdata.db \</span>
+<span class="cmd">  ".dump"</span>
+
+<span class="comment"># Cek log sensitif</span>
+<span class="cmd">adb logcat | grep -i "password\|token\|secret"</span>
+        </div>
+        <div class="info-box mt12">
+          <p><strong>Solusi:</strong> Gunakan Android Keystore System untuk menyimpan kunci kriptografi. Enkripsi database dengan SQLCipher. Hindari menyimpan data sensitif di SharedPreferences plaintext. Set <code>android:allowBackup="false"</code> untuk data sensitif.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: TOOLS PENGUJIAN MOBILE -->
+<div class="slide" id="s8" data-title="Tools Pengujian Keamanan Mobile">
+  <div class="slide-header">
+    <div class="section-label">Tools & Setup</div>
+    <h2>Tools Pengujian Keamanan Aplikasi Mobile</h2>
+    <p>Ekosistem alat untuk analisis statis, dinamis, dan runtime pada Android</p>
+  </div>
+  <div class="slide-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="tool-card" style="border-top-color:#e74c3c;">
+        <div class="tool-type" style="color:#c0392b;">Analisis Statis (SAST)</div>
+        <h4>MobSF (Mobile Security Framework)</h4>
+        <p>Framework all-in-one untuk analisis statis & dinamis APK/IPA. Menghasilkan laporan otomatis mencakup manifest, kode, library, dan kerentanan umum. Tersedia via web UI di <code>localhost:8000</code>.</p>
+        <div class="tag-row mt8">
+          <span class="tag green">Open Source</span>
+          <span class="tag">Python</span>
+          <span class="tag teal">SAST+DAST</span>
+        </div>
+      </div>
+      <div class="tool-card" style="border-top-color:#e67e22;">
+        <div class="tool-type" style="color:#d35400;">Analisis Dinamis (DAST)</div>
+        <h4>Drozer</h4>
+        <p>Framework pengujian keamanan Android via IPC. Memungkinkan interaksi langsung dengan Content Provider, Activity, Service, dan Broadcast Receiver dari luar aplikasi. Ideal untuk pengujian attack surface.</p>
+        <div class="tag-row mt8">
+          <span class="tag green">Open Source</span>
+          <span class="tag">Python</span>
+          <span class="tag red">IPC Testing</span>
+        </div>
+      </div>
+      <div class="tool-card" style="border-top-color:#8e44ad;">
+        <div class="tool-type" style="color:#7d3c98;">Runtime Manipulation</div>
+        <h4>Frida</h4>
+        <p>Dynamic instrumentation toolkit. Memungkinkan hooking fungsi pada runtime — bypass SSL pinning, manipulasi return value, intercept method calls. Sangat powerful untuk bypass security control.</p>
+        <div class="tag-row mt8">
+          <span class="tag green">Open Source</span>
+          <span class="tag">JavaScript</span>
+          <span class="tag purple">Hooking</span>
+        </div>
+      </div>
+      <div class="tool-card" style="border-top-color:#16a085;">
+        <div class="tool-type" style="color:#0e6655;">Decompiler & Shell</div>
+        <h4>Jadx + ADB Shell</h4>
+        <p><strong>Jadx</strong> — decompile APK ke kode Java/Kotlin yang dapat dibaca. Sangat baik untuk mencari hardcoded secrets dan logika auth. <strong>ADB</strong> — Android Debug Bridge untuk akses filesystem, log, dan eksekusi perintah pada device/emulator.</p>
+        <div class="tag-row mt8">
+          <span class="tag green">Open Source</span>
+          <span class="tag teal">Static Analysis</span>
+          <span class="tag">CLI</span>
+        </div>
+      </div>
+    </div>
+    <div class="tip-box mt16">
+      <div class="tip-label">Setup Lab</div>
+      <p>Gunakan <strong>Android Studio Emulator</strong> (API 28–33, Google APIs) atau device fisik dengan USB Debugging aktif. Install <strong>DIVA Android</strong> (Damn Insecure and Vulnerable App) sebagai target latihan.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: METODOLOGI MSTG -->
+<div class="slide" id="s9" data-title="Metodologi MSTG">
+  <div class="slide-header">
+    <div class="section-label">Metodologi</div>
+    <h2>OWASP Mobile Security Testing Guide (MSTG)</h2>
+    <p>Panduan metodologi pengujian keamanan aplikasi mobile yang komprehensif dan diakui industri</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Kategori Test Case MSTG</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #c0392b;">
+            <div style="font-size:10px;font-weight:700;color:#c0392b;letter-spacing:1px;">MSTG-STORAGE</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Data Storage & Privacy</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #1abc9c;">
+            <div style="font-size:10px;font-weight:700;color:#148f77;letter-spacing:1px;">MSTG-CRYPTO</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Cryptography</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #e74c3c;">
+            <div style="font-size:10px;font-weight:700;color:#c0392b;letter-spacing:1px;">MSTG-AUTH</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Authentication & Session</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #2980b9;">
+            <div style="font-size:10px;font-weight:700;color:#2471a3;letter-spacing:1px;">MSTG-NETWORK</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Network Communication</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #e67e22;">
+            <div style="font-size:10px;font-weight:700;color:#d35400;letter-spacing:1px;">MSTG-PLATFORM</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Platform Interaction</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #8e44ad;">
+            <div style="font-size:10px;font-weight:700;color:#7d3c98;letter-spacing:1px;">MSTG-CODE</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Code Quality & Build</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #27ae60;">
+            <div style="font-size:10px;font-weight:700;color:#1e8449;letter-spacing:1px;">MSTG-RESILIENCE</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Resilience (Anti-Tamper)</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:3px solid #7f8c8d;">
+            <div style="font-size:10px;font-weight:700;color:#7f8c8d;letter-spacing:1px;">MSTG-ARCH</div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px;">Architecture & Design</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Test Cases Relevan Hari Ini</h3>
+        <table class="cmp-table">
+          <thead><tr><th>Test ID</th><th>Deskripsi</th></tr></thead>
+          <tbody>
+            <tr><td>MSTG-STORAGE-1</td><td>No sensitive data in system credential storage</td></tr>
+            <tr><td>MSTG-STORAGE-2</td><td>No sensitive data in world-accessible files</td></tr>
+            <tr><td>MSTG-STORAGE-3</td><td>No sensitive data written to application logs</td></tr>
+            <tr><td>MSTG-AUTH-1</td><td>App enforces strong password policy</td></tr>
+            <tr><td>MSTG-AUTH-2</td><td>Stateful sessions are invalidated after logout</td></tr>
+            <tr><td>MSTG-PLATFORM-1</td><td>App only requests necessary permissions</td></tr>
+            <tr><td>MSTG-PLATFORM-2</td><td>All IPC properly protected with permissions</td></tr>
+            <tr><td>MSTG-CODE-4</td><td>App doesn't export sensitive functionality via custom URL schemes</td></tr>
+          </tbody>
+        </table>
+        <div class="info-box mt12">
+          <p><strong>MASVS Level:</strong> MSTG menggunakan dua level — <strong>L1</strong> (Standard Security) dan <strong>L2</strong> (Defense-in-Depth). Untuk aplikasi perbankan/keuangan, gunakan L2.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: STUDI KASUS -->
+<div class="slide" id="s10" data-title="Studi Kasus: Pengujian Aplikasi Mobile Banking">
+  <div class="slide-header">
+    <div class="section-label">Studi Kasus</div>
+    <h2>Studi Kasus: Pengujian Keamanan Aplikasi Mobile Banking</h2>
+    <p>Skenario simulasi — MobilePay App v2.1 (Android) | Authorized Testing</p>
+  </div>
+  <div class="slide-body">
+    <div style="background:linear-gradient(135deg,#1a3a8f,#0d2b6b);color:white;border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;">
+      <h3 style="font-size:16px;font-weight:800;">Target: MobilePay App v2.1</h3>
+      <p style="font-size:13px;opacity:0.9;margin-top:3px;">Aplikasi perbankan mobile Android. Terdapat fitur transfer, cek saldo, dan riwayat transaksi. Dilakukan pengujian penetrasi terotorisasi (authorized pentest).</p>
+    </div>
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Temuan dari Analisis Statis (MobSF)</h3>
+        <table class="cmp-table">
+          <thead><tr><th>Temuan</th><th>Lokasi</th><th>Severity</th></tr></thead>
+          <tbody>
+            <tr><td>Hardcoded API Key</td><td>BuildConfig.java</td><td><span class="tag-red">CRITICAL</span></td></tr>
+            <tr><td>Exported Activity tanpa auth</td><td>AndroidManifest</td><td><span class="tag-red">HIGH</span></td></tr>
+            <tr><td>Sensitive data di SharedPrefs</td><td>AuthManager.java</td><td><span class="tag-red">HIGH</span></td></tr>
+            <tr><td>SQLi via rawQuery()</td><td>UserDAO.java:47</td><td><span class="tag-red">HIGH</span></td></tr>
+            <tr><td>allowBackup=true</td><td>AndroidManifest</td><td><span class="tag-orange">MEDIUM</span></td></tr>
+            <tr><td>Logging credential di debug</td><td>LoginActivity.java</td><td><span class="tag-orange">MEDIUM</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 class="section-h">Analisis Risiko (OWASP Risk Rating)</h3>
+        <div class="card mb8" style="border-left:4px solid #c0392b;">
+          <h3 style="color:#c0392b;font-size:13px;">Hardcoded API Key — CRITICAL</h3>
+          <p style="font-size:12px;"><strong>Likelihood:</strong> HIGH (8.5) — mudah diekstrak via jadx<br>
+          <strong>Impact:</strong> HIGH (9.0) — full API access, data breach<br>
+          <strong>Risk Score:</strong> 8.75 — <span class="tag-red">CRITICAL</span><br>
+          <strong>Response:</strong> Fix Segera (24 jam), rotasi semua credentials</p>
+        </div>
+        <div class="card mb8" style="border-left:4px solid #e74c3c;">
+          <h3 style="color:#c0392b;font-size:13px;">SQL Injection — HIGH</h3>
+          <p style="font-size:12px;"><strong>Likelihood:</strong> MEDIUM (6.0) — perlu akses lokal<br>
+          <strong>Impact:</strong> HIGH (8.0) — akses seluruh data transaksi<br>
+          <strong>Risk Score:</strong> 7.0 — <span class="tag-red">HIGH</span><br>
+          <strong>Response:</strong> Fix (1 minggu), parameterized query</p>
+        </div>
+        <div class="card" style="border-left:4px solid #e67e22;">
+          <h3 style="color:#d35400;font-size:13px;">Exported Activity — HIGH</h3>
+          <p style="font-size:12px;"><strong>Likelihood:</strong> HIGH (7.0) — eksploitasi mudah via ADB<br>
+          <strong>Impact:</strong> MEDIUM (6.0) — bypass flow transfer<br>
+          <strong>Risk Score:</strong> 6.5 — <span class="tag-orange">HIGH</span><br>
+          <strong>Response:</strong> Fix (1 minggu), tambah permission check</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: LAB PRAKTIKUM -->
+<div class="slide" id="s11" data-title="Lab Praktikum — Pengujian Injeksi & Auth Mobile">
+  <div class="slide-header">
+    <div class="section-label">Praktikum</div>
+    <h2>Lab Praktikum — Pengujian Injeksi & Autentikasi Mobile</h2>
+    <p>Target: DIVA Android (Damn Insecure and Vulnerable App) | Durasi: 90 menit</p>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <h3 class="section-h">Setup Environment</h3>
+        <div class="step-flow" style="flex-direction:column;gap:8px;">
+          <div style="background:#fff;border-radius:8px;padding:10px 14px;box-shadow:var(--shadow);display:flex;gap:10px;">
+            <div class="step-num">1</div>
+            <div>
+              <h5 style="font-size:13px;">Install Tools</h5>
+              <p style="font-size:12px;color:#666;">Android Studio + Emulator API 28, ADB, Jadx-GUI, Drozer, MobSF (Docker)</p>
+            </div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 14px;box-shadow:var(--shadow);display:flex;gap:10px;">
+            <div class="step-num" style="background:#e67e22;">2</div>
+            <div>
+              <h5 style="font-size:13px;">Setup Emulator</h5>
+              <p style="font-size:12px;color:#666;">Buka Android Emulator API 28. Pastikan ADB terhubung: <code>adb devices</code></p>
+            </div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 14px;box-shadow:var(--shadow);display:flex;gap:10px;">
+            <div class="step-num" style="background:#c0392b;">3</div>
+            <div>
+              <h5 style="font-size:13px;">Install DIVA APK</h5>
+              <p style="font-size:12px;color:#666;"><code>adb install DivaApplication.apk</code></p>
+            </div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 14px;box-shadow:var(--shadow);display:flex;gap:10px;">
+            <div class="step-num" style="background:#27ae60;">4</div>
+            <div>
+              <h5 style="font-size:13px;">Upload ke MobSF</h5>
+              <p style="font-size:12px;color:#666;">Buka <code>localhost:8000</code> → Upload APK → Analisis laporan</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-h">Tugas Lab (Masing-masing Mahasiswa)</h3>
+        <div class="task-card" style="border-left-color:#c0392b;">
+          <div class="task-meta">
+            <span class="task-badge tb-red">Lab 6A</span>
+            <span class="task-badge tb-blue">SQL Injection</span>
+          </div>
+          <h4>Eksploitasi SQL Injection di DIVA</h4>
+          <p>Buka challenge "Insecure Data Storage — Part 1, 2, 3, 4" dan "Input Validation Issues — Part 1". Dokumentasikan setiap kerentanan yang ditemukan dengan screenshot + analisis.</p>
+        </div>
+        <div class="task-card mt8" style="border-left-color:#8e44ad;">
+          <div class="task-meta">
+            <span class="task-badge tb-red">Lab 6B</span>
+            <span class="task-badge tb-blue">Auth & Storage</span>
+          </div>
+          <h4>Analisis Penyimpanan Tidak Aman</h4>
+          <p>Gunakan ADB untuk mengekstrak SharedPreferences dan database DIVA. Identifikasi data sensitif yang tersimpan tanpa enkripsi. Catat lokasi file dan isi data yang terekspos.</p>
+        </div>
+        <div class="info-box mt12">
+          <p><strong>Output:</strong> Screenshot per temuan + risk rating singkat (Likelihood, Impact, Severity) sesuai OWASP Risk Rating Methodology (Pertemuan 5).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 12: RANGKUMAN -->
+<div class="slide" id="s12" data-title="Rangkuman Pertemuan 6">
+  <div class="slide-header">
+    <div class="section-label">Rangkuman</div>
+    <h2>Rangkuman Pertemuan 6</h2>
+    <p>Pengujian Injeksi & Autentikasi pada Aplikasi Mobile — Sub-CPMK 262.1 & 262.2</p>
+  </div>
+  <div class="slide-body">
+    <div class="summary-grid">
+      <div class="sum-card" style="border-top-color:#c0392b;">
+        <div class="sum-icon">💉</div>
+        <h5>Injeksi Mobile</h5>
+        <p>SQLi via SQLite, Intent Injection, Content Provider — semua dari input validation yang buruk</p>
+      </div>
+      <div class="sum-card" style="border-top-color:#e67e22;">
+        <div class="sum-icon">🔐</div>
+        <h5>Broken Auth</h5>
+        <p>Hardcoded creds, weak session, biometric bypass — OWASP Mobile M1 & M3</p>
+      </div>
+      <div class="sum-card" style="border-top-color:#8e44ad;">
+        <div class="sum-icon">💾</div>
+        <h5>Insecure Storage</h5>
+        <p>SharedPrefs, SQLite, logs, backup — data sensitif tanpa enkripsi (M9)</p>
+      </div>
+      <div class="sum-card" style="border-top-color:#16a085;">
+        <div class="sum-icon">🔧</div>
+        <h5>Tools</h5>
+        <p>MobSF, Drozer, ADB, Jadx — analisis statis & dinamis aplikasi Android</p>
+      </div>
+    </div>
+    <div class="key-points">
+      <h4>Poin Kunci yang Harus Dikuasai (Sub-CPMK 262.1 & 262.2)</h4>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Injeksi pada mobile berbeda dari web: target adalah SQLite lokal, IPC (Intent, Content Provider), bukan HTTP server langsung</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Gunakan parameterized query (<code>?</code> placeholder) dan validasi input untuk mencegah SQLi di Android</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Data sensitif TIDAK boleh disimpan di SharedPreferences plaintext, external storage, atau logcat</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">MSTG menyediakan test case spesifik: MSTG-STORAGE, MSTG-AUTH, MSTG-PLATFORM untuk panduan pengujian</div>
+      </div>
+      <div class="kp-item">
+        <div class="kp-check">✓</div>
+        <div class="kp-text">Workflow: MobSF (analisis statis) → Drozer (attack surface IPC) → ADB (filesystem) → Frida (runtime)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 13: TUGAS MAHASISWA -->
+<div class="slide" id="s13" data-title="Tugas Mahasiswa">
+  <div class="slide-header">
+    <div class="section-label">Penugasan</div>
+    <h2>Tugas Mahasiswa Pertemuan 6</h2>
+    <p>Sub-CPMK 262.1 & 262.2 | Dikumpulkan H-1 sebelum Pertemuan 7 via LMS</p>
+  </div>
+  <div class="slide-body">
+    <div class="task-card" style="border-left-color:#c0392b;">
+      <div class="task-meta">
+        <span class="task-badge tb-red">Tugas Individu</span>
+        <span class="task-badge tb-blue">Sub-CPMK 262.1</span>
+        <span class="task-badge tb-gold">Bobot 30%</span>
+      </div>
+      <h4>Analisis Keamanan Aplikasi DIVA Android</h4>
+      <ul>
+        <li>Install dan jalankan MobSF pada DIVA Android APK</li>
+        <li>Identifikasi minimal <strong>5 kerentanan</strong> dari kategori: injeksi, autentikasi, atau penyimpanan tidak aman</li>
+        <li>Untuk setiap temuan: catat nama kerentanan, lokasi kode/file, screenshot bukti</li>
+        <li>Hitung risk score menggunakan OWASP Risk Rating Methodology (Mg 5)</li>
+        <li>Format: PDF 3–5 halaman, nama_NIM_tugas6.pdf</li>
+      </ul>
+    </div>
+    <div class="task-card mt12" style="border-left-color:#e67e22;">
+      <div class="task-meta">
+        <span class="task-badge tb-gold">Tugas Kelompok</span>
+        <span class="task-badge tb-blue">Sub-CPMK 262.1 & 262.2</span>
+        <span class="task-badge tb-teal">Bobot 40%</span>
+      </div>
+      <h4>Mini Laporan Pengujian Mobile (Draf Awal)</h4>
+      <ul>
+        <li>Kelompok dari Pertemuan 2 (Threat Modeling). Target: aplikasi Android pilihan kelompok</li>
+        <li>Susun draf laporan pengujian: Executive Summary, Attack Surface, Temuan (min 3), OWASP Risk Rating per temuan</li>
+        <li>Laporan ini akan dilengkapi di Pertemuan 7 (tambah bagian Kriptografi & Otorisasi + Rekomendasi)</li>
+        <li>Format: Google Docs / Word, submit link atau PDF ke LMS</li>
+      </ul>
+    </div>
+    <div class="info-box mt12">
+      <p><strong>Deadline:</strong> Dikumpulkan via LMS poltekssn.co.id sebelum Pertemuan 7. Tugas kelompok presentasi singkat 5 menit di awal Pertemuan 7.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 14: KUIS INTERAKTIF -->
+<div class="slide" id="s14" data-title="Kuis Interaktif">
+  <div class="slide-header">
+    <div class="section-label">Evaluasi</div>
+    <h2>Kuis Interaktif — Pertemuan 6</h2>
+    <p>5 soal pilihan ganda · Sub-CPMK 262.1</p>
+  </div>
+  <div class="slide-body">
+    <div class="quiz-container">
+
+      <div id="q1">
+        <div class="q-num">Soal 1 dari 5</div>
+        <div class="q-text">Database lokal yang paling umum digunakan pada aplikasi Android dan rentan terhadap SQL Injection jika tidak menggunakan parameterized query adalah…</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(1,'a')">A. PostgreSQL</button>
+          <button class="q-option" onclick="answer(1,'b')">B. SQLite</button>
+          <button class="q-option" onclick="answer(1,'c')">C. MySQL</button>
+          <button class="q-option" onclick="answer(1,'d')">D. MongoDB</button>
+        </div>
+        <div id="q1-ok" class="q-feedback ok">Benar! SQLite adalah database embedded yang digunakan secara lokal di Android. Kerentanan muncul saat menggunakan rawQuery() dengan konkatenasi string langsung.</div>
+        <div id="q1-ko" class="q-feedback ko">Kurang tepat. Jawaban yang benar adalah SQLite — database lokal embedded yang digunakan di hampir semua aplikasi Android.</div>
+      </div>
+
+      <div id="q2" style="display:none">
+        <div class="q-num">Soal 2 dari 5</div>
+        <div class="q-text">Kategori OWASP Mobile Top 10 yang mencakup kelemahan autentikasi seperti hardcoded credentials dan biometric bypass adalah…</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(2,'a')">A. M9 — Insecure Data Storage</button>
+          <button class="q-option" onclick="answer(2,'b')">B. M10 — Insufficient Cryptography</button>
+          <button class="q-option" onclick="answer(2,'c')">C. M3 — Insecure Authentication/Authorization</button>
+          <button class="q-option" onclick="answer(2,'d')">D. M4 — Insufficient Input Validation</button>
+        </div>
+        <div id="q2-ok" class="q-feedback ok">Benar! M3 mencakup kelemahan autentikasi termasuk hardcoded credentials (overlap M1), session yang tidak kedaluwarsa, dan biometric bypass.</div>
+        <div id="q2-ko" class="q-feedback ko">Kurang tepat. Jawaban yang benar adalah M3 — Insecure Authentication/Authorization, yang mencakup berbagai kelemahan mekanisme autentikasi.</div>
+      </div>
+
+      <div id="q3" style="display:none">
+        <div class="q-num">Soal 3 dari 5</div>
+        <div class="q-text">Tool yang tepat untuk menguji attack surface Android melalui IPC (Content Provider, Activity, Service) secara dinamis adalah…</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(3,'a')">A. Drozer</button>
+          <button class="q-option" onclick="answer(3,'b')">B. Burp Suite</button>
+          <button class="q-option" onclick="answer(3,'c')">C. Nmap</button>
+          <button class="q-option" onclick="answer(3,'d')">D. Wireshark</button>
+        </div>
+        <div id="q3-ok" class="q-feedback ok">Benar! Drozer adalah framework khusus untuk menguji komponen Android via IPC — bisa query Content Provider, mengirim Intent ke Activity/Service, dan menemukan exported components yang rentan.</div>
+        <div id="q3-ko" class="q-feedback ko">Kurang tepat. Drozer adalah tool yang tepat untuk IPC testing di Android. Burp Suite digunakan untuk intercepting HTTP traffic, bukan IPC.</div>
+      </div>
+
+      <div id="q4" style="display:none">
+        <div class="q-num">Soal 4 dari 5</div>
+        <div class="q-text">Penyimpanan data sensitif manakah yang PALING BERBAHAYA karena dapat diakses oleh semua aplikasi lain yang memiliki permission READ_EXTERNAL_STORAGE?</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(4,'a')">A. Android Keystore</button>
+          <button class="q-option" onclick="answer(4,'b')">B. Internal Storage (/data/data/)</button>
+          <button class="q-option" onclick="answer(4,'c')">C. Encrypted SharedPreferences</button>
+          <button class="q-option" onclick="answer(4,'d')">D. External Storage (/sdcard/)</button>
+        </div>
+        <div id="q4-ok" class="q-feedback ok">Benar! External Storage (/sdcard/) bisa diakses oleh aplikasi lain dengan permission READ_EXTERNAL_STORAGE. Tidak boleh menyimpan data sensitif di sana tanpa enkripsi tambahan.</div>
+        <div id="q4-ko" class="q-feedback ko">Kurang tepat. External Storage (/sdcard/) adalah yang paling berbahaya karena accessible oleh aplikasi lain. Android Keystore justru paling aman.</div>
+      </div>
+
+      <div id="q5" style="display:none">
+        <div class="q-num">Soal 5 dari 5</div>
+        <div class="q-text">Kategori MSTG yang mencakup test case untuk memeriksa keamanan penyimpanan data lokal (SharedPreferences, SQLite, External Storage) adalah…</div>
+        <div class="q-options">
+          <button class="q-option" onclick="answer(5,'a')">A. MSTG-AUTH</button>
+          <button class="q-option" onclick="answer(5,'b')">B. MSTG-STORAGE</button>
+          <button class="q-option" onclick="answer(5,'c')">C. MSTG-NETWORK</button>
+          <button class="q-option" onclick="answer(5,'d')">D. MSTG-PLATFORM</button>
+        </div>
+        <div id="q5-ok" class="q-feedback ok">Benar! MSTG-STORAGE mencakup semua test case terkait penyimpanan data — SharedPreferences, database, external storage, logs, dan backup.</div>
+        <div id="q5-ko" class="q-feedback ko">Kurang tepat. MSTG-STORAGE adalah kategori yang tepat untuk pengujian keamanan penyimpanan data lokal di aplikasi mobile.</div>
+      </div>
+
+      <div class="quiz-score" id="quiz-score">
+        <h3><span id="score-display"></span></h3>
+        <p>Skor Kuis Pertemuan 6 — Mobile Injection & Authentication</p>
+      </div>
+
+      <div class="quiz-nav">
+        <button class="quiz-btn" id="prev-btn" onclick="prevQ()" style="display:none">← Soal Sebelumnya</button>
+        <button class="quiz-btn" id="next-btn" onclick="nextQ()" style="display:none">Soal Berikutnya →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 15: REFERENSI -->
+<div class="slide" id="s15" data-title="Referensi & Sumber Belajar">
+  <div class="slide-header">
+    <div class="section-label">Referensi</div>
+    <h2>Referensi & Sumber Belajar</h2>
+    <p>Sumber materi Pertemuan 6 — Sub-CPMK 262.1 & 262.2</p>
+  </div>
+  <div class="slide-body">
+    <div class="ref-grid">
+      <div class="ref-card" style="border-top-color:#e74c3c;">
+        <h4>OWASP Mobile Security</h4>
+        <ul>
+          <li>OWASP Mobile Top 10 2024 — owasp.org/www-project-mobile-top-10</li>
+          <li>OWASP MASVS v2 — mas.owasp.org/MASVS</li>
+          <li>OWASP MSTG (MAS Testing Guide) — mas.owasp.org/MASTG</li>
+          <li>OWASP Mobile Testing Checklist — MASTG Checklist</li>
+        </ul>
+      </div>
+      <div class="ref-card" style="border-top-color:#e67e22;">
+        <h4>Tools & Lab</h4>
+        <ul>
+          <li>MobSF — github.com/MobSF/Mobile-Security-Framework-MobSF</li>
+          <li>Drozer — github.com/WithSecureLabs/drozer</li>
+          <li>Frida — frida.re</li>
+          <li>Jadx — github.com/skylot/jadx</li>
+          <li>DIVA Android — divamobile.github.io</li>
+        </ul>
+      </div>
+      <div class="ref-card" style="border-top-color:#8e44ad;">
+        <h4>Standar & CVE</h4>
+        <ul>
+          <li>CWE-89 — SQL Injection</li>
+          <li>CWE-312 — Cleartext Storage of Sensitive Information</li>
+          <li>CWE-798 — Use of Hardcoded Credentials</li>
+          <li>CVE-2019-11932 — WhatsApp SQLite SQLi (real case)</li>
+          <li>Android Security Bulletins — source.android.com/security/bulletin</li>
+        </ul>
+      </div>
+      <div class="ref-card" style="border-top-color:#16a085;">
+        <h4>Bacaan Lanjutan</h4>
+        <ul>
+          <li>Android Developers — Security best practices</li>
+          <li>Penetration Testing Mobile (Packt Publishing)</li>
+          <li>Android Hacker's Handbook — Drake et al.</li>
+          <li>HackerOne Mobile Reports — hackerone.com/hacktivity</li>
+        </ul>
+      </div>
+    </div>
+    <div class="info-box mt16">
+      <p><strong>Pertemuan Berikutnya (Mg 7):</strong> <strong>Kriptografi & Otorisasi</strong> — pengujian kriptografi lemah (OWASP M10), otorisasi tidak tepat, dan penyusunan laporan temuan lengkap. Pelajari OWASP M10 dan struktur laporan pengujian keamanan profesional.</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- end #slideshow -->
+
+<!-- NAVBAR -->
+<div id="navbar">
+  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>← Sebelumnya</button>
+  <div id="slide-title-bar">Cover</div>
+  <div id="progress-bar"><div id="progress-fill" style="width:6.25%"></div></div>
+  <div id="slide-counter">1 / 16</div>
+  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Berikutnya →</button>
+</div>
+
+<script>
+  /* ---- SLIDESHOW ---- */
+  const slides = document.querySelectorAll('.slide');
+  let cur = 0;
+  const total = slides.length;
+  function showSlide(n) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(n, total - 1));
+    slides[cur].classList.add('active');
+    slides[cur].scrollTop = 0;
+    document.getElementById('btn-prev').disabled = cur === 0;
+    document.getElementById('btn-next').disabled = cur === total - 1;
+    document.getElementById('slide-counter').textContent = (cur+1) + ' / ' + total;
+    document.getElementById('progress-fill').style.width = ((cur+1)/total*100) + '%';
+    document.getElementById('slide-title-bar').textContent = slides[cur].dataset.title || '';
+  }
+  function changeSlide(d) { showSlide(cur + d); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  /* ---- QUIZ ---- */
+  const correctAnswers = { 1:'b', 2:'c', 3:'a', 4:'d', 5:'b' };
+  const answered = {};
+  let qCur = 1;
+  const totalQ = 5;
+  let score = 0;
+
+  function answer(q, choice) {
+    if (answered[q]) return;
+    answered[q] = choice;
+    const options = document.querySelectorAll('#q' + q + ' .q-option');
+    const letters = ['a','b','c','d'];
+    options.forEach((btn, i) => {
+      btn.disabled = true;
+      if (letters[i] === correctAnswers[q]) btn.classList.add('correct');
+      else if (letters[i] === choice)       btn.classList.add('wrong');
+    });
+    const isOk = choice === correctAnswers[q];
+    if (isOk) score++;
+    document.getElementById('q' + q + (isOk ? '-ok' : '-ko')).classList.add('show');
+    document.getElementById('next-btn').style.display = 'inline-block';
+    if (q > 1) document.getElementById('prev-btn').style.display = 'inline-block';
+    if (q === totalQ) {
+      document.getElementById('next-btn').textContent = 'Lihat Skor →';
+    }
+  }
+
+  function nextQ() {
+    if (qCur === totalQ) {
+      document.getElementById('q' + qCur).style.display = 'none';
+      document.getElementById('score-display').textContent = score + ' / ' + totalQ;
+      document.getElementById('quiz-score').style.display = 'block';
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('prev-btn').style.display = 'none';
+      return;
+    }
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur++;
+    document.getElementById('q' + qCur).style.display = 'block';
+    document.getElementById('next-btn').style.display = answered[qCur] ? 'inline-block' : 'none';
+    document.getElementById('prev-btn').style.display = qCur > 1 ? 'inline-block' : 'none';
+  }
+
+  function prevQ() {
+    if (qCur <= 1) return;
+    document.getElementById('q' + qCur).style.display = 'none';
+    qCur--;
+    document.getElementById('q' + qCur).style.display = 'block';
+    document.getElementById('next-btn').style.display = 'inline-block';
+    document.getElementById('prev-btn').style.display = qCur > 1 ? 'inline-block' : 'none';
+  }
+</script>
+</body>
+</html>

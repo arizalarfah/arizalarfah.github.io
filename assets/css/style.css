@@ -1264,3 +1264,67 @@ thead {
 .credits a:hover {
   color: #fff;
 }
+
+/*--------------------------------------------------------------
+# Research Table Responsive
+--------------------------------------------------------------*/
+.research-cards {
+  display: none;
+}
+
+.research-card {
+  background: #262626;
+  border-left: 3px solid #18d26e;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.research-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.research-card-title {
+  color: #eee;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.research-card-year {
+  background: #18d26e;
+  color: #111;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.research-card-journal {
+  color: #aaa;
+  font-size: 13px;
+  font-style: italic;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.research-card-status {
+  color: #ccc;
+  font-style: italic;
+  border-left-color: #666;
+}
+
+@media (max-width: 768px) {
+  #research-table-wrapper {
+    display: none;
+  }
+
+  .research-cards {
+    display: block;
+  }
+}

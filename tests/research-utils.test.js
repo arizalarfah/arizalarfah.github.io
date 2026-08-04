@@ -51,8 +51,8 @@ test('buildTableRowsHtml renders one escaped <tr> per entry', () => {
 test('buildCardsHtml renders one escaped research-card per entry', () => {
   const entries = [{ article: 'Title', journal: 'J & K', year: 2025 }];
   const html = ResearchUtils.buildCardsHtml(entries);
-  assert.ok(html.includes('class="research-card"'));
-  assert.ok(html.includes('research-card-title">Title<'));
-  assert.ok(html.includes('research-card-year">2025<'));
-  assert.ok(html.includes('research-card-journal">J &amp; K<'));
+  assert.strictEqual(
+    html,
+    '<div class="research-card"><div class="research-card-header"><span class="research-card-title">Title</span><span class="research-card-year">2025</span></div><div class="research-card-journal">J &amp; K</div></div>'
+  );
 });

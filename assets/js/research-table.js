@@ -16,6 +16,7 @@
   var LOADING_CARDS_HTML =
     '<div class="research-card research-card-status">Memuat data publikasi...</div>';
   var ERROR_MESSAGE = 'Gagal memuat data publikasi, silakan muat ulang halaman.';
+  var EMPTY_MESSAGE = 'Belum ada data publikasi.';
 
   function renderLoading(tbody, cardsEl) {
     tbody.innerHTML = LOADING_TABLE_HTML;
@@ -29,6 +30,12 @@
   }
 
   function renderEntries(tbody, cardsEl, entries) {
+    if (entries.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3">' + EMPTY_MESSAGE + '</td></tr>';
+      cardsEl.innerHTML =
+        '<div class="research-card research-card-status">' + EMPTY_MESSAGE + '</div>';
+      return;
+    }
     tbody.innerHTML = window.ResearchUtils.buildTableRowsHtml(entries);
     cardsEl.innerHTML = window.ResearchUtils.buildCardsHtml(entries);
   }
@@ -50,7 +57,8 @@
         var sorted = window.ResearchUtils.sortByYearDesc(entries);
         renderEntries(tbody, cardsEl, sorted);
       })
-      .catch(function () {
+      .catch(function (err) {
+        if (window.console) console.error('research-table:', err);
         renderError(tbody, cardsEl);
       });
   }

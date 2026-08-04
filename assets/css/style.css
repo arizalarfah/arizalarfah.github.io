@@ -1270,6 +1270,7 @@ thead {
 --------------------------------------------------------------*/
 .research-cards {
   display: none;
+  padding: 8px;
 }
 
 .research-card {

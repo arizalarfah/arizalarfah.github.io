@@ -78,9 +78,34 @@ the end of `<body>` in `index.html`.
   interpreted as HTML/script.
 - Target `<tbody>` in `index.html`'s Journal & Conference table is emptied
   of its 17 hardcoded rows and populated entirely by this script.
-- No manual `<br>` line breaks in cell content — existing table CSS already
-  wraps long text within a `<td>`, so plain text values from the sheet
-  render correctly without markup.
+- No manual `<br>` line breaks in cell content — text wraps naturally via
+  CSS, so plain values from the sheet render correctly without markup.
+
+### Responsive layout: dual markup, CSS-toggled by breakpoint
+
+Approved via visual mockup comparison: below the site's existing `768px`
+breakpoint (already used elsewhere in `assets/css/style.css`), the table
+is replaced by a stacked card list — one card per publication, article
+title as heading, journal/conference as an italic subtitle below it, and
+year as a small badge next to the title. At `768px` and above (tablet,
+iPad, desktop) it renders as the existing `<table>`.
+
+Rather than fight CSS `display: table-row` transforms to reflow a real
+`<table>` into that card shape (badge repositioned next to the title,
+not at the row's end), `research-table.js` renders **two parallel DOM
+structures from the same sorted data array**:
+
+- The existing `<table>` (desktop/tablet), inside its current
+  `.table-responsive` wrapper.
+- A new `<div class="research-cards">` sibling, containing one
+  `.research-card` per entry (title + year badge on top, journal/
+  conference italic below), matching the approved mockup.
+
+CSS (added to `assets/css/style.css`) shows exactly one of the two via
+`@media (max-width: 768px)` — `.research-cards { display: none; }` by
+default, flipped with `.table-responsive { display: none; } .research-cards { display: block; }` inside the media query. Both structures are built
+once per fetch; only visibility toggles, so there's no duplicate
+fetching and no JS-driven breakpoint listening (pure CSS).
 
 ## Error handling
 
@@ -108,6 +133,8 @@ one-time manual paste, not part of the code changes.
   - Table renders rows sourced from the real sheet.
   - Rows are sorted newest-year-first.
   - `console --errors` clean (no JS exceptions).
+  - At a mobile viewport (e.g. 375px wide) the card list is visible and
+    the table is hidden; at desktop width (e.g. 1400px) the reverse.
 - Remove `localhost/*` from the referrer allowlist after confirming it
   works against the live domain.
 

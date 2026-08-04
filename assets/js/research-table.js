@@ -1,0 +1,59 @@
+(function () {
+  var SPREADSHEET_ID = '17cIxLbrxB70IMS1DyRHRfuQa2oWel_Z_md48Kc4kbNc';
+  // TODO(owner): replace with the real key after completing the Google
+  // Cloud setup in docs/superpowers/specs/2026-08-04-dynamic-research-table-google-sheets-design.md
+  var API_KEY = 'REPLACE_WITH_GOOGLE_SHEETS_API_KEY';
+  var RANGE = 'research!A2:C';
+  var API_URL =
+    'https://sheets.googleapis.com/v4/spreadsheets/' +
+    SPREADSHEET_ID +
+    '/values/' +
+    encodeURIComponent(RANGE) +
+    '?key=' +
+    API_KEY;
+
+  var LOADING_TABLE_HTML = '<tr><td colspan="3">Memuat data publikasi...</td></tr>';
+  var LOADING_CARDS_HTML =
+    '<div class="research-card research-card-status">Memuat data publikasi...</div>';
+  var ERROR_MESSAGE = 'Gagal memuat data publikasi, silakan muat ulang halaman.';
+
+  function renderLoading(tbody, cardsEl) {
+    tbody.innerHTML = LOADING_TABLE_HTML;
+    cardsEl.innerHTML = LOADING_CARDS_HTML;
+  }
+
+  function renderError(tbody, cardsEl) {
+    tbody.innerHTML = '<tr><td colspan="3">' + ERROR_MESSAGE + '</td></tr>';
+    cardsEl.innerHTML =
+      '<div class="research-card research-card-status">' + ERROR_MESSAGE + '</div>';
+  }
+
+  function renderEntries(tbody, cardsEl, entries) {
+    tbody.innerHTML = window.ResearchUtils.buildTableRowsHtml(entries);
+    cardsEl.innerHTML = window.ResearchUtils.buildCardsHtml(entries);
+  }
+
+  function init() {
+    var tbody = document.getElementById('research-table-body');
+    var cardsEl = document.getElementById('research-cards');
+    if (!tbody || !cardsEl) return;
+
+    renderLoading(tbody, cardsEl);
+
+    fetch(API_URL)
+      .then(function (res) {
+        if (!res.ok) throw new Error('Sheets API error: ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        var entries = window.ResearchUtils.parseSheetRows(data.values || []);
+        var sorted = window.ResearchUtils.sortByYearDesc(entries);
+        renderEntries(tbody, cardsEl, sorted);
+      })
+      .catch(function () {
+        renderError(tbody, cardsEl);
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();

@@ -1,8 +1,6 @@
 (function () {
   var SPREADSHEET_ID = '17cIxLbrxB70IMS1DyRHRfuQa2oWel_Z_md48Kc4kbNc';
-  // TODO(owner): replace with the real key after completing the Google
-  // Cloud setup in docs/superpowers/specs/2026-08-04-dynamic-research-table-google-sheets-design.md
-  var API_KEY = 'REPLACE_WITH_GOOGLE_SHEETS_API_KEY';
+  var API_KEY = 'AIzaSyBlPwbtiYu7G0Na3hwK_vBTxAWnxTd98Pw';
   var RANGE = 'research!A2:C';
   var API_URL =
     'https://sheets.googleapis.com/v4/spreadsheets/' +

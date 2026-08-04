@@ -722,4 +722,4 @@ These cannot be performed by whoever executes this plan — they require the own
 1. Complete the external setup from `docs/superpowers/specs/2026-08-04-dynamic-research-table-google-sheets-design.md` (share the sheet as Viewer-anyone-with-link, create and restrict the Sheets API key).
 2. Replace `REPLACE_WITH_GOOGLE_SHEETS_API_KEY` in `assets/js/research-table.js` with the real key, commit, and push.
 3. Paste the Task 7 TSV into the `research` sheet tab.
-4. Load the live site once and visually confirm the real data appears (Task 6 already proved the rendering logic works against mocked data — this step just confirms the real key/sheet combination works).
+4. Load the live site once, open the browser DevTools console, and confirm the real data appears with no errors logged. If it doesn't, the console error from `research-table.js`'s fetch handler will show which step of the external setup (sheet sharing, API key, referrer restriction) failed.

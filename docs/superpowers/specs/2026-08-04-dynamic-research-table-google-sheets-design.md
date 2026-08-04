@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Replace the hardcoded 17-row "Journal & Conference" table in `index.html`
+Replace the hardcoded 19-row "Journal & Conference" table in `index.html`
 (Research section) with a table populated live from a public Google Sheet.
 The owner adds a row in the sheet; the next visitor to load the page sees it
 — no rebuild, no redeploy, no backend.
@@ -15,7 +15,7 @@ The owner adds a row in the sheet; the next visitor to load the page sees it
 - Source sheet: `https://docs.google.com/spreadsheets/d/17cIxLbrxB70IMS1DyRHRfuQa2oWel_Z_md48Kc4kbNc/edit`
   (spreadsheet ID `17cIxLbrxB70IMS1DyRHRfuQa2oWel_Z_md48Kc4kbNc`), tab name `research`.
 - Sheet columns (row 1 = header): `Article`, `Journal/Conference`, `Year`.
-- Sheet currently has some/no rows populated; the 17 existing entries in
+- Sheet currently has some/no rows populated; the 19 existing entries in
   `index.html` need to be migrated into it.
 
 ## Chosen approach: Sheets API v4 + restricted read-only API key, client-side fetch
@@ -73,11 +73,17 @@ the end of `<body>` in `index.html`.
 - Parse `response.values` (array of `[article, journal, year]` arrays,
   skipping rows with a missing/blank Year to avoid an unsortable entry).
 - Sort by `Year` descending (numeric).
-- Build `<tr>` rows using `document.createElement` + `textContent` (not
-  `innerHTML`) for each cell value, so sheet content can never be
-  interpreted as HTML/script.
+- Build `<tr>` rows (and card `<div>`s) as HTML strings, running each cell
+  value through a dedicated `escapeHtml` function (escaping `& < > " '`)
+  before concatenation, then assign the result via `innerHTML`. This is a
+  deliberate deviation from a `document.createElement` + `textContent`
+  approach: it keeps the row/card-building logic as pure functions
+  (`assets/js/research-utils.js`) testable with Node's built-in test
+  runner, with no DOM/jsdom dependency, while still guaranteeing sheet
+  content can never be interpreted as HTML/script — the guarantee comes
+  from escaping rather than from the DOM API choice.
 - Target `<tbody>` in `index.html`'s Journal & Conference table is emptied
-  of its 17 hardcoded rows and populated entirely by this script.
+  of its 19 hardcoded rows and populated entirely by this script.
 - No manual `<br>` line breaks in cell content — text wraps naturally via
   CSS, so plain values from the sheet render correctly without markup.
 
@@ -118,7 +124,7 @@ fetching and no JS-driven breakpoint listening (pure CSS).
 
 ## Data migration
 
-The 17 entries currently hardcoded in `index.html`'s Journal & Conference
+The 19 entries currently hardcoded in `index.html`'s Journal & Conference
 table will be converted to tab-separated rows (Article / Journal-Conference
 / Year, `<br>`-breaks flattened to plain text with spaces) for the owner to
 paste directly into the `research` sheet tab starting at cell A2. This is a

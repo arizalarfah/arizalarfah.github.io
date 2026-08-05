@@ -573,7 +573,7 @@
           <div class="col-12">
             <div class="card shadow-2-strong">
               <div class="card-body p-0">
-                <div class="table-responsive table-scroll" data-mdb-perfect-scrollbar="true" style="position: relative; height: 210px">
+                <div class="table-responsive table-scroll" id="ipr-table-wrapper" data-mdb-perfect-scrollbar="true" style="position: relative; height: 210px">
                   <table class="table table-dark mb-0">
                     <thead style="background-color: #393939;">
                       <tr class="text-uppercase text-success">
@@ -582,41 +582,17 @@
                         <th scope="col">Years</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      <tr>
-                      <td>Implementasi Protokol MQTT Dan Skema Protokol<br> Otentikasi Berbasis Elliptic Curve Cryptography Lingkungan Rumah Pintar</td>
-                        <td>KEMENKUMHAM RI</td>
-                        <td>2024</td>                        
-                      </tr>
-                      <tr>
-                      <td>Kendali Akses Dengan Smartcard Dan Time-Based One-Time
-                        Password <br> Pada Warehouse Inventory Management System Berbasis IoT</td>
-                        <td>KEMENKUMHAM RI</td>
-                        <td>2023</td>                        
-                      </tr>
-                      <tr>
-                        <td>Program Komputer : Sistem Informasi Tugas Akhir Berbasis Website</td>
-                        <td>KEMENKUMHAM RI</td>
-                        <td>2022</td>                        
-                      </tr>
-                      <tr>
-                        <td>Program Komputer : Indonesian Clickbait Headline Detector Berbasis Chrome Extention</td>
-                        <td>KEMENKUMHAM RI</td>
-                        <td>2022</td>                        
-                      </tr>
-                      <tr>
-                      <td>Buku : Kriptografi : Teknik Keamanan Data</td>
-                        <td>KEMENKUMHAM RI</td>
-                        <td>2022</td>                        
-                      </tr>
-                       <tr>
-                      <td>Buku : Komunikasi Data</td>
-                        <td>KEMENKUMHAM RI</td>
-                        <td>2022</td>                        
-                      </tr>
+                    <tbody id="ipr-table-body">
+                      <tr><td colspan="3">Memuat data IPR...</td></tr>
                     </tbody>
                   </table>
                 </div>
+                <div class="sheet-cards" id="ipr-cards">
+                  <div class="sheet-card sheet-card-status">Memuat data IPR...</div>
+                </div>
+                <noscript>
+                  <p class="text-center" style="padding: 12px; color: #888;">JavaScript diperlukan untuk menampilkan tabel IPR ini. Lihat data lengkap di <a href="https://docs.google.com/spreadsheets/d/17cIxLbrxB70IMS1DyRHRfuQa2oWel_Z_md48Kc4kbNc/edit" target="_blank" rel="noopener">Google Sheet</a>.</p>
+                </noscript>
               </div>
             </div>
           </div>

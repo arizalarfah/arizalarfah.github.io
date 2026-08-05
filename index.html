@@ -535,7 +535,7 @@
           <div class="col-12">
             <div class="card shadow-2-strong">
               <div class="card-body p-0">
-                <div class="table-responsive table-scroll" data-mdb-perfect-scrollbar="true" style="position: relative; height: 250px">
+                <div class="table-responsive table-scroll" id="books-table-wrapper" data-mdb-perfect-scrollbar="true" style="position: relative; height: 250px">
                   <table class="table table-dark mb-0">
                     <thead style="background-color: #393939;">
                       <tr class="text-uppercase text-success">
@@ -544,35 +544,17 @@
                         <th scope="col">Years</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      <tr>
-                        <td>Kriptografi: Teknik Keamanan Data</td>
-                        <td>Yayasan Kita Menulis</td>
-                        <td>2022</td>                        
-                      </tr>
-                      <tr>
-                        <td>Komunikasi Data</td>
-                        <td>Yayasan Kita Menulis</td>
-                        <td>2022</td>                        
-                      </tr>
-                      <tr>
-                      <td>Teknologi Multimedia</td>
-                        <td>Politeknik Siber dan Sandi Negara</td>
-                        <td>2020</td>                        
-                      </tr>
-                       <tr>
-                      <td>Perangkat Akses Kontrol</td>
-                        <td>Politeknik Siber dan Sandi Negara</td>
-                        <td>2020</td>                        
-                      </tr>
-                       <tr>
-                      <td>Komunikasi Nirkabel</td>
-                        <td>Politeknik Siber dan Sandi Negara</td>
-                        <td>2020</td>                        
-                      </tr>
+                    <tbody id="books-table-body">
+                      <tr><td colspan="3">Memuat data buku...</td></tr>
                     </tbody>
                   </table>
                 </div>
+                <div class="sheet-cards" id="books-cards">
+                  <div class="sheet-card sheet-card-status">Memuat data buku...</div>
+                </div>
+                <noscript>
+                  <p class="text-center" style="padding: 12px; color: #888;">JavaScript diperlukan untuk menampilkan tabel buku ini. Lihat data lengkap di <a href="https://docs.google.com/spreadsheets/d/17cIxLbrxB70IMS1DyRHRfuQa2oWel_Z_md48Kc4kbNc/edit" target="_blank" rel="noopener">Google Sheet</a>.</p>
+                </noscript>
               </div>
             </div>
           </div>

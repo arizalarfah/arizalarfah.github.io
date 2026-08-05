@@ -1266,21 +1266,29 @@ thead {
 }
 
 /*--------------------------------------------------------------
-# Research Table Responsive
+# Sheet-Driven Table Responsive
 --------------------------------------------------------------*/
-.research-cards {
+.sheet-cards {
   display: none;
   padding: 8px;
 }
 
 #research-table-wrapper table td,
-#research-table-wrapper table th {
+#research-table-wrapper table th,
+#training-table-wrapper table td,
+#training-table-wrapper table th,
+#teaching-table-wrapper table td,
+#teaching-table-wrapper table th,
+#books-table-wrapper table td,
+#books-table-wrapper table th,
+#ipr-table-wrapper table td,
+#ipr-table-wrapper table th {
   white-space: normal;
   overflow: visible;
   text-overflow: clip;
 }
 
-.research-card {
+.sheet-card {
   background: #262626;
   border-left: 3px solid #18d26e;
   border-radius: 6px;
@@ -1288,21 +1296,21 @@ thead {
   margin-bottom: 10px;
 }
 
-.research-card-header {
+.sheet-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 8px;
 }
 
-.research-card-title {
+.sheet-card-title {
   color: #eee;
   font-size: 14px;
   font-weight: 600;
   line-height: 1.4;
 }
 
-.research-card-year {
+.sheet-card-badge {
   background: #18d26e;
   color: #111;
   font-size: 12px;
@@ -1313,7 +1321,7 @@ thead {
   flex-shrink: 0;
 }
 
-.research-card-journal {
+.sheet-card-subtitle {
   color: #aaa;
   font-size: 13px;
   font-style: italic;
@@ -1321,18 +1329,22 @@ thead {
   line-height: 1.4;
 }
 
-.research-card-status {
+.sheet-card-status {
   color: #ccc;
   font-style: italic;
   border-left-color: #666;
 }
 
 @media (max-width: 768px) {
-  #research-table-wrapper {
+  #research-table-wrapper,
+  #training-table-wrapper,
+  #teaching-table-wrapper,
+  #books-table-wrapper,
+  #ipr-table-wrapper {
     display: none;
   }
 
-  .research-cards {
+  .sheet-cards {
     display: block;
   }
 }

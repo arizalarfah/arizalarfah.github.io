@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis</title>
+<style>
+  :root {
+    --accent: #4f6df5;
+    --accent-dark: #3a52c9;
+    --bg-top: #eef1fb;
+    --bg-bottom: #f7f8fc;
+    --text-dark: #1f2430;
+    --text-muted: #6b7280;
+    --card-radius: 16px;
+    --shadow: 0 10px 30px rgba(31, 36, 48, 0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 45%);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px 40px;
+  }
+
+  .page-wrap {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .back-link:hover { background: rgba(79, 109, 245, 0.1); color: var(--accent-dark); }
+
+  header.quiz-header {
+    text-align: center;
+    padding: 8px 8px 4px;
+  }
+  header.quiz-header h1 {
+    margin: 0 0 6px;
+    font-size: clamp(20px, 4vw, 28px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  header.quiz-header p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .quiz-card {
+    position: relative;
+    width: 100%;
+    background: #fff;
+    border-radius: var(--card-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .iframe-wrap {
+    position: relative;
+    width: 100%;
+    height: 70vh;
+    min-height: 480px;
+  }
+  @media (max-width: 600px) {
+    .iframe-wrap { height: 78vh; min-height: 420px; }
+  }
+
+  .iframe-wrap iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .loader {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: #fff;
+    transition: opacity 0.25s ease;
+  }
+  .loader.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 4px solid rgba(79, 109, 245, 0.15);
+    border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+  }
+  .loader span {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  footer.quiz-footer {
+    text-align: center;
+    padding: 6px 8px 0;
+  }
+  footer.quiz-footer a {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  footer.quiz-footer a:hover {
+    color: var(--accent-dark);
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+  <div class="page-wrap">
+    <a class="back-link" href="#" id="backLink">&#8592; Kembali</a>
+
+    <header class="quiz-header">
+      <h1>Kuis</h1>
+      <p>Kerjakan kuis di bawah ini sesuai instruksi. Pastikan koneksi internet stabil sebelum memulai.</p>
+    </header>
+
+    <div class="quiz-card">
+      <div class="iframe-wrap">
+        <div class="loader" id="quizLoader">
+          <div class="spinner"></div>
+          <span>Memuat kuis&hellip;</span>
+        </div>
+        <iframe
+          id="quizFrame"
+          src="https://wayground.com/embed/quiz/6a7541a155df1b3f2abede7e"
+          title="Kuis - Wayground"
+          allowfullscreen
+          loading="lazy"
+        ></iframe>
+      </div>
+    </div>
+
+    <footer class="quiz-footer">
+      <a href="https://wayground.com/admin?source=embedFrame" target="_blank" rel="noopener">Explore more at Wayground.</a>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      var frame = document.getElementById('quizFrame');
+      var loader = document.getElementById('quizLoader');
+      if (frame && loader) {
+        frame.addEventListener('load', function () {
+          loader.classList.add('is-hidden');
+        });
+      }
+
+      var backLink = document.getElementById('backLink');
+      if (backLink) {
+        backLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.location.href = '/';
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

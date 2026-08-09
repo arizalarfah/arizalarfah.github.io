@@ -304,25 +304,17 @@ bash cleanup.sh</pre>
 
           <h3>5. Sisi penyerang: data diterima</h3>
           <p>Di terminal tempat <code>camphish.sh</code> berjalan, notifikasi muncul begitu lokasi &amp; snapshot kamera target diterima:</p>
-          <div class="code-window">
-            <div class="code-tab"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp;terminal — attacker console</div>
-            <pre><span class="g">[+] Location data received!</span>
-<span class="g">[+] Current location data:</span>
-Latitude: <span class="y">-6.xxxxxxxxxxxx</span>
-Longitude: <span class="y">106.xxxxxxxxxxx</span>
-Accuracy: <span class="y">xxx</span> meters
-Google Maps: https://www.google.com/maps/place/<span class="y">-6.xxxxxxx,106.xxxxxxx</span>
-Date: <span class="y">DDMonYYYYHHmmss</span>
-
-<span class="g">[+] Cam file received!</span></pre>
+          <div class="shot">
+            <img src="img/08-attacker-location-received.png" alt="Console attacker menerima notifikasi lokasi &amp; cam file diterima (koordinat ditutup)" loading="lazy">
           </div>
-          <div class="admonition note">
-            <div class="adm-title">ℹ️ NOTE</div>
-            <p>Angka koordinat di atas sudah diganti placeholder (<code>x</code>) — bukan lokasi asli hasil self-test. Formatnya persis seperti output <code>camphish.sh</code> yang sesungguhnya: latitude/longitude, radius akurasi (meter), link Google Maps langsung, dan timestamp.</p>
-          </div>
+          <p class="shot-caption">Latitude, longitude, dan link Google Maps sengaja ditutup kotak solid oleh penulis sebelum di-publish — <code>Accuracy</code> dan format output lainnya (<code>Cam file received!</code> per capture) tetap terlihat apa adanya.</p>
 
           <h3>6. File hasil capture</h3>
-          <p>Foto kamera &amp; data lokasi yang diterima disimpan sebagai file di folder tool, dengan pola penamaan:</p>
+          <p>Foto kamera &amp; data lokasi yang diterima disimpan sebagai file di folder tool. Berikut struktur hasilnya (thumbnail foto kamera sengaja di-blur oleh penulis):</p>
+          <div class="shot">
+            <img src="img/09-generated-files.png" alt="Struktur file hasil capture CamPhish: foto kamera (di-blur) dan file lokasi di folder tool" loading="lazy">
+          </div>
+          <p class="shot-caption">Baris atas: thumbnail <code>cam*.jpg</code> (snapshot kamera per capture, di-blur) dan <code>location_*</code>. Baris bawah: file bawaan tool — <code>camphish</code>, <code>cleanup</code>, <code>debug_log</code>, template (<code>festivalwishes</code>, <code>LiveYTTV</code>, <code>OnlineMeeting</code>), <code>ip</code>, <code>LICENSE</code>, <code>ngrok</code>, <code>cloudflare</code>, dan folder arsip <code>saved_locations/</code>.</p>
           <table class="gfm-table">
             <thead><tr><th>Pola nama file</th><th>Isi</th></tr></thead>
             <tbody>
@@ -333,7 +325,7 @@ Date: <span class="y">DDMonYYYYHHmmss</span>
           </table>
           <div class="admonition tip">
             <div class="adm-title">💡 TIP</div>
-            <p>Screenshot asli foto kamera &amp; koordinat GPS presisi dari sesi self-test tidak ditampilkan di halaman ini secara sengaja — diganti representasi teks di atas supaya wajah &amp; lokasi pribadi tidak ikut ter-publish permanen ke halaman publik yang ter-index mesin pencari. Segera jalankan <code>bash cleanup.sh</code> setelah sesi demo untuk menghapus file-file ini dari server kamu sendiri.</p>
+            <p>Kedua screenshot di atas berasal dari sesi self-test penulis sendiri — koordinat GPS presisi ditutup penuh dan wajah pada thumbnail kamera di-blur sebelum di-publish, supaya struktur &amp; alur data tetap terlihat tanpa membocorkan wajah/lokasi asli ke halaman publik yang ter-index mesin pencari. Segera jalankan <code>bash cleanup.sh</code> setelah sesi demo untuk menghapus file-file ini dari server kamu sendiri.</p>
           </div>
 
           <hr class="sep">

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Irrigation – Latsitarda PoltekSSN | Instalasi &amp; Implementasi</title>
-<meta name="description" content="Dokumentasi project Smart Irrigation (Latsitarda PoltekSSN): instalasi driver &amp; Arduino IDE, wiring, source code NodeMCU ESP8266 ke MQTT HiveMQ, dan hasil implementasi.">
+<title>Smart Irrigation – Latsitarda PoltekSSN | Instalasi, Implementasi &amp; Integrasi Mobile App</title>
+<meta name="description" content="Dokumentasi project Smart Irrigation (Latsitarda Nusantara XLIII, PoltekSSN): konteks program Desa Digital, instalasi driver &amp; Arduino IDE, wiring, source code NodeMCU ESP8266 ke MQTT HiveMQ, hasil implementasi, dan integrasi ke mobile app &quot;Irigasi Pintar&quot; (Irpin Solok).">
 <style>
   :root {
     --accent: #16a34a;
@@ -118,11 +118,13 @@
       <a class="back-link" href="../index.html#portfolio">&#8592; Kembali ke Portfolio</a>
       <div class="header-badge">🤖 Hardware / IoT Project</div>
       <h1>Smart Irrigation — Latsitarda PoltekSSN</h1>
-      <p class="lead">Dokumentasi alur lengkap: instalasi driver &amp; Arduino IDE, wiring, source code NodeMCU ESP8266 untuk membaca sensor kelembaban tanah dan mempublikasikan datanya ke broker MQTT HiveMQ Cloud, hingga hasil implementasi di lapangan.</p>
+      <p class="lead">Dokumentasi alur lengkap: konteks program, instalasi driver &amp; Arduino IDE, wiring, source code NodeMCU ESP8266 untuk membaca sensor kelembaban tanah &amp; ketinggian air dan mempublikasikan datanya ke broker MQTT, hasil implementasi di sawah, hingga integrasi ke mobile app <strong>Irigasi Pintar (Irpin Solok)</strong> yang dipakai petani.</p>
       <div class="header-meta">
         <div class="meta-item"><div class="label">Hardware</div><div class="value">NodeMCU ESP8266 Lolin</div></div>
         <div class="meta-item"><div class="label">Peran</div><div class="value">Hardware Developer</div></div>
         <div class="meta-item"><div class="label">Protokol</div><div class="value">MQTT (HiveMQ Cloud)</div></div>
+        <div class="meta-item"><div class="label">Mobile App</div><div class="value">Irigasi Pintar (Irpin Solok)</div></div>
+        <div class="meta-item"><div class="label">Lokasi</div><div class="value">Kota Solok, Sumatera Barat</div></div>
       </div>
     </div>
   </header>
@@ -133,10 +135,12 @@
       <h2>Daftar Isi</h2>
       <ol>
         <li><a href="#bom">Ringkasan &amp; Bill of Materials</a></li>
+        <li><a href="#konteks">Konteks Program</a></li>
         <li><a href="#setting">Setting Instalasi</a></li>
         <li><a href="#design">Design Hardware &amp; Wiring</a></li>
         <li><a href="#source">Source Code</a></li>
         <li><a href="#output">Contoh Output &amp; Format Data</a></li>
+        <li><a href="#mobile-app">Integrasi Mobile App</a></li>
         <li><a href="#implementasi">Prototyping &amp; Implementasi</a></li>
         <li><a href="#referensi">Referensi</a></li>
       </ol>
@@ -146,29 +150,56 @@
     <section class="doc-section" id="bom">
       <div class="section-header"><div class="section-num">1</div><h2>Ringkasan &amp; Bill of Materials</h2></div>
       <div class="section-body">
-        <p style="margin-bottom:12px;">Project ini membaca kelembaban tanah secara berkala lalu mempublikasikan nilainya ke broker MQTT, sehingga bisa dipantau atau dipakai men-trigger otomasi penyiraman dari sisi lain (dashboard/aktuator) yang berlangganan topik yang sama.</p>
+        <p style="margin-bottom:12px;">Tiap node membaca sensornya secara berkala lalu mempublikasikan nilainya ke broker MQTT. Di lapangan, sistem ini dipasang sebagai <strong>3 pasang node</strong> (3 sensor kelembaban tanah + 3 sensor ketinggian air) di titik-titik sawah yang berbeda, dan datanya ditampilkan ke petani lewat mobile app <strong>Irigasi Pintar (Irpin Solok)</strong> — lihat bagian <a href="#konteks">Konteks Program</a> dan <a href="#mobile-app">Integrasi Mobile App</a>. Source code yang didokumentasikan di bagian 5 adalah sketch representatif untuk satu node (soil moisture); node ketinggian air memakai pola yang sama dengan sensor &amp; topic MQTT yang berbeda.</p>
         <div class="table-wrap">
           <table class="spec-table">
             <thead><tr><th>Komponen</th><th>Keterangan</th></tr></thead>
             <tbody>
               <tr><td>NodeMCU ESP8266 (Lolin)</td><td>Mikrokontroler dengan WiFi bawaan, menjalankan sketch di bawah</td></tr>
               <tr><td>Sensor Soil Moisture (analog)</td><td>Terhubung ke pin <code>A0</code>, dibaca sebagai nilai analog 0–1024</td></tr>
+              <tr><td>Sensor Ketinggian Air</td><td>Node terpisah dengan pola kode yang sama, satuan output CM (lihat bagian <a href="#design">Design Hardware</a>)</td></tr>
               <tr><td>LED indikator</td><td>Terhubung ke pin <code>D5</code>, berkedip tiap siklus <code>loop()</code> sebagai heartbeat</td></tr>
-              <tr><td>Kabel USB CH340G</td><td>Untuk flashing sketch &amp; power dari komputer (butuh driver CH340G, lihat bagian 2)</td></tr>
+              <tr><td>Panel surya + baterai 18650</td><td>Sumber daya mandiri per node di lapangan (lihat diagram wiring di bagian 3)</td></tr>
+              <tr><td>Modem</td><td>Menghubungkan node-node di sawah ke internet/server saat tidak ada WiFi tetap</td></tr>
+              <tr><td>Kabel USB CH340G</td><td>Untuk flashing sketch &amp; power dari komputer (butuh driver CH340G, lihat bagian 3)</td></tr>
               <tr><td>Broker MQTT — HiveMQ Cloud</td><td>Menampung data yang dipublish dari device (koneksi TLS port <code>8883</code>)</td></tr>
+              <tr><td>Mobile App — Irigasi Pintar (Irpin Solok)</td><td>Menampilkan data realtime dari server ke petani, lihat bagian <a href="#mobile-app">Integrasi Mobile App</a></td></tr>
             </tbody>
           </table>
         </div>
         <div class="note-box">
           <span class="box-label">Catatan sumber</span>
-          <p>Bagian bill of materials, tabel wiring (bagian 3), dan contoh output (bagian 5) diturunkan langsung dari pin dan variabel yang dipakai di source code — bukan asumsi tambahan di luar apa yang tertulis di kode.</p>
+          <p>Bill of materials inti, tabel wiring, dan contoh output diturunkan langsung dari pin/variabel di source code node soil moisture — bukan asumsi tambahan. Baris panel surya, baterai, modem, node ketinggian air, dan mobile app diturunkan dari dokumentasi presentasi project (<em>IRIGASI PINTAR.pptx</em>) dan artikel resmi PoltekSSN, dicatat sebagai konteks sistem lengkap di luar sketch yang ditampilkan.</p>
         </div>
       </div>
     </section>
 
-    <!-- 2. SETTING INSTALASI -->
+    <!-- 2. KONTEKS PROGRAM -->
+    <section class="doc-section" id="konteks">
+      <div class="section-header"><div class="section-num">2</div><h2>Konteks Program</h2></div>
+      <div class="section-body">
+        <p style="margin-bottom:10px;">Project ini dibangun pada <strong>Latsitarda Nusantara XLIII/2023</strong> (latihan integratif taruna/taruni gabungan Poltek SSN, Akmil, AAL, AAU, Akpol, dan Praja IPDN) di <strong>Kota Solok, Sumatera Barat</strong> — daerah sentra produksi padi ("Beras Solok") yang jadi pemasok utama beras ke Sumatera Barat hingga Jambi dan Riau, dengan sentra produksi di Kecamatan Gunung Talang, Bukit Sundi, Kubung, Lembang Jaya, dan X Koto Singkarak.</p>
+        <p style="margin-bottom:10px;">Smart Irrigation adalah salah satu implementasi dari program <strong>Desa Digital</strong>: memanfaatkan teknologi IoT dan digitalisasi kegiatan pertanian agar petani bisa memantau kondisi sawah tanpa harus datang langsung ke lokasi.</p>
+        <div class="table-wrap">
+          <table class="spec-table">
+            <thead><tr><th>Prasyarat program</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td>Jaringan internet di desa</td><td>Dipenuhi lewat modem di tiap titik node (lihat bagian Bill of Materials)</td></tr>
+              <tr><td>SDM pengelola desa digital</td><td>Petani/perangkat desa yang memantau data lewat mobile app</td></tr>
+              <tr><td>Dukungan aktif Pemerintah Desa</td><td>Pemasangan &amp; pemeliharaan perangkat di lahan sawah warga</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ok-box">
+          <span class="box-label">Manfaat bagi petani</span>
+          <p>Petani bisa melihat kondisi ketinggian air dan kelembaban tanah dari rumah tanpa perlu selalu sehat/mampu ke sawah, membantu menentukan waktu &amp; jumlah air irigasi yang tepat, menghindari kelebihan/kekurangan air, mendeteksi masalah drainase lebih awal, hingga jadi peringatan dini risiko banjir/erosi dan penyakit tanaman (mis. Blast) akibat genangan yang tidak sesuai fase pertumbuhan padi.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SETTING INSTALASI -->
     <section class="doc-section" id="setting">
-      <div class="section-header"><div class="section-num">2</div><h2>Setting Instalasi</h2></div>
+      <div class="section-header"><div class="section-num">3</div><h2>Setting Instalasi</h2></div>
       <div class="section-body">
 
         <h3 class="sub-title">2.1 Install Driver CH340G</h3>
@@ -208,14 +239,15 @@
       </div>
     </section>
 
-    <!-- 3. DESIGN & WIRING -->
+    <!-- 4. DESIGN & WIRING -->
     <section class="doc-section" id="design">
-      <div class="section-header"><div class="section-num">3</div><h2>Design Hardware &amp; Wiring</h2></div>
+      <div class="section-header"><div class="section-num">4</div><h2>Design Hardware &amp; Wiring</h2></div>
       <div class="section-body">
         <div class="img-slot">
           <img src="img/04-design-hardware.png" alt="Skema/desain hardware Smart Irrigation" onerror="this.classList.add('img-missing')">
           <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/04-design-hardware.png</code></span></div>
         </div>
+        <p class="img-caption" style="margin:-10px 0 14px;">Diagram wiring: panel surya mengisi baterai 18650 (lewat modul charge/protection), yang jadi sumber daya NodeMCU, LED indikator, dan sensor soil moisture — sesuai desain per-node yang mandiri daya di lapangan.</p>
         <div class="table-wrap">
           <table class="spec-table">
             <thead><tr><th>Pin NodeMCU</th><th>Terhubung ke</th><th>Fungsi di kode</th></tr></thead>
@@ -224,6 +256,7 @@
               <tr><td><code>D5</code></td><td>LED indikator</td><td><code>digitalWrite(led, led_state)</code> — toggle tiap siklus <code>loop()</code></td></tr>
               <tr><td><code>GPIO2</code></td><td>&mdash;</td><td><code>digitalWrite(2, HIGH)</code> — di-set HIGH terus tiap loop</td></tr>
               <tr><td><code>BUILTIN_LED</code></td><td>LED bawaan board</td><td>diinisialisasi sebagai <code>OUTPUT</code> di <code>setup()</code></td></tr>
+              <tr><td>Baterai 18650 (via modul charge/protection)</td><td>Jalur daya (VIN/3V3 &amp; GND)</td><td>Diisi oleh panel surya, menyalakan NodeMCU secara mandiri di lapangan</td></tr>
             </tbody>
           </table>
         </div>
@@ -231,14 +264,31 @@
           <span class="box-label">Kalibrasi sensor</span>
           <p>Konversi ke persentase memakai <code>((sensor_value - 288.00) / (1024.00 - 288.00)) * 100.00</code>. Nilai <code>288.00</code> adalah baseline kalibrasi spesifik untuk sensor yang dipakai di project ini — dipertahankan apa adanya dari source code asli, sesuaikan sendiri jika sensormu berbeda.</p>
         </div>
+
+        <h3 class="sub-title">Satuan &amp; Ambang Nilai Sensor</h3>
+        <div class="table-wrap">
+          <table class="spec-table">
+            <thead><tr><th>Sensor</th><th>Satuan</th><th>Rentang</th></tr></thead>
+            <tbody>
+              <tr><td rowspan="3">Kelembaban tanah</td><td rowspan="3">RH (Relative Humidity)</td><td>0–40 RH — tanah kering</td></tr>
+              <tr><td>40–60 RH — kelembaban ideal</td></tr>
+              <tr><td>60–100 RH — tanah basah</td></tr>
+              <tr><td>Ketinggian air</td><td>CM (dari permukaan tanah)</td><td>Optimal untuk padi sawah: sekitar &minus;2.5 s.d. 7.5 cm (lihat referensi di bawah)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="info-box">
+          <span class="box-label">Rujukan ketinggian air optimal</span>
+          <p>Arwitas (1988): penggenangan 2.5–5.0 cm. De Datta (1993): penggenangan 2.5–7.5 cm terus-menerus memberi hasil optimal. Percobaan Muammar Michael (2018): tinggi genangan optimal &minus;2.5 cm s.d. 7.5 cm. Angka-angka ini dikutip apa adanya dari materi presentasi project, bukan hasil pengukuran independen.</p>
+        </div>
       </div>
     </section>
 
-    <!-- 4. SOURCE CODE -->
+    <!-- 5. SOURCE CODE -->
     <section class="doc-section" id="source">
-      <div class="section-header"><div class="section-num">4</div><h2>Source Code</h2></div>
+      <div class="section-header"><div class="section-num">5</div><h2>Source Code</h2></div>
       <div class="section-body">
-        <p style="margin-bottom:10px;">Sketch Arduino untuk NodeMCU ESP8266: membaca sensor soil moisture, konek ke WiFi &amp; broker MQTT HiveMQ Cloud (TLS), lalu mempublikasikan pembacaan setiap 10 detik.</p>
+        <p style="margin-bottom:10px;">Sketch Arduino untuk NodeMCU ESP8266: membaca sensor soil moisture, konek ke WiFi &amp; broker MQTT HiveMQ Cloud (TLS), lalu mempublikasikan pembacaan setiap 10 detik. Node sensor ketinggian air di lapangan memakai pola kode yang sama — bedanya cuma jenis sensor yang dibaca di <code>analogRead()</code>/pin input dan nama <code>topic</code> MQTT-nya — tapi sketch spesifik untuk node tersebut tidak ada di sumber dokumentasi asli, jadi tidak dicantumkan di sini supaya tidak mengarang kode yang belum pernah diverifikasi berjalan.</p>
         <div class="warn-box">
           <span class="box-label">Kredensial di-redact</span>
           <p><code>ssid</code>, <code>password</code>, <code>mqtt_server</code>, <code>mqtt_username</code>, dan <code>mqtt_password</code> di bawah ini sudah diganti jadi placeholder. Isi dengan kredensial WiFi &amp; broker MQTT-mu sendiri di salinan lokal — jangan commit nilai asli ke repository publik ini.</p>
@@ -406,9 +456,9 @@ void publishMessage(const char* topic, String payload , boolean retained){
       </div>
     </section>
 
-    <!-- 5. CONTOH OUTPUT -->
+    <!-- 6. CONTOH OUTPUT -->
     <section class="doc-section" id="output">
-      <div class="section-header"><div class="section-num">5</div><h2>Contoh Output &amp; Format Data</h2></div>
+      <div class="section-header"><div class="section-num">6</div><h2>Contoh Output &amp; Format Data</h2></div>
       <div class="section-body">
         <h3 class="sub-title">Serial Monitor (baud 9600)</h3>
         <p class="code-caption">Contoh log saat device menyala dan berhasil konek</p>
@@ -440,24 +490,57 @@ Message publised [solok/humidity2]: 41.90</div>
       </div>
     </section>
 
-    <!-- 6. IMPLEMENTASI -->
+    <!-- 7. INTEGRASI MOBILE APP -->
+    <section class="doc-section" id="mobile-app">
+      <div class="section-header"><div class="section-num">7</div><h2>Integrasi Mobile App</h2></div>
+      <div class="section-body">
+        <p style="margin-bottom:10px;">Data yang dipublish tiap node ke broker MQTT diteruskan oleh server ke mobile app Android <strong>"Irigasi Pintar"</strong> (terdaftar di Play Store dengan nama <strong>Irpin Solok</strong>, developer <strong>Pluto Lab</strong>), supaya petani bisa memantau sawah dari rumah.</p>
+        <div class="img-slot">
+          <img src="img/07-mobile-app-realtime.jpg" alt="Foto sensor terpasang di sawah berdampingan dengan tampilan realtime app Irigasi Pintar" onerror="this.classList.add('img-missing')">
+          <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/07-mobile-app-realtime.jpg</code></span></div>
+        </div>
+        <p class="img-caption" style="margin:-10px 0 14px;">Kiri: node sensor kelembaban &amp; ketinggian air (dengan modem) terpasang di saluran irigasi sawah. Kanan: tampilan app "Irigasi Pintar" dengan dua tab realtime — Ketinggian Air (cm) dan Kelembaban Tanah (RH) — untuk masing-masing 3 sensor.</p>
+
+        <h3 class="sub-title">Alur Data ke Mobile App</h3>
+        <ol class="step-list">
+          <li><span class="step-badge">1</span><span class="step-content">Tiap node (NodeMCU + sensor + modem) membaca nilai sensornya dan <code>publish</code> ke broker MQTT lewat koneksi internet dari modem — pola yang sama dengan sketch di bagian <a href="#source">Source Code</a>.</span></li>
+          <li><span class="step-badge">2</span><span class="step-content">Server men-<code>subscribe</code> topic-topic MQTT tersebut dan menyimpan/menyediakan nilai terbaru tiap sensor.</span></li>
+          <li><span class="step-badge">3</span><span class="step-content">Mobile app "Irigasi Pintar" mengambil data dari server tersebut dan menampilkannya sebagai daftar realtime per sensor, dipisah tab Ketinggian Air dan Kelembaban Tanah.</span></li>
+        </ol>
+        <div class="note-box">
+          <span class="box-label">Detail server &amp; app di luar cakupan dokumentasi ini</span>
+          <p>Bagaimana persisnya server meneruskan data dari broker MQTT ke app (REST API, polling, atau MQTT langsung dari app) tidak ada di materi presentasi sumber, jadi tidak didokumentasikan di sini supaya tidak mengarang detail yang belum terverifikasi. Yang bisa dipastikan dari sumber: alurnya <strong>Sensor Node &rarr; Modem/Internet &rarr; Server &rarr; Mobile App</strong>.</p>
+        </div>
+        <div class="warn-box">
+          <span class="box-label">Status ketersediaan app</span>
+          <p>Per dokumentasi sumber (2023), app terdaftar di Play Store sebagai <strong>Irpin Solok</strong> oleh Pluto Lab. Saya tidak menemukan URL listing tersebut lewat pencarian web saat menulis halaman ini, jadi tautan langsung tidak dicantumkan di sini supaya tidak salah arah — statusnya (masih live, berganti nama, atau sudah di-unpublish) perlu dicek langsung ke pengelola project sebelum dicantumkan sebagai link publik.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. IMPLEMENTASI -->
     <section class="doc-section" id="implementasi">
-      <div class="section-header"><div class="section-num">6</div><h2>Prototyping &amp; Implementasi</h2></div>
+      <div class="section-header"><div class="section-num">8</div><h2>Prototyping &amp; Implementasi</h2></div>
       <div class="section-body">
         <div class="img-slot">
           <img src="img/05-prototype-1.png" alt="Foto prototipe Smart Irrigation" onerror="this.classList.add('img-missing')">
           <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/05-prototype-1.png</code></span></div>
         </div>
         <div class="img-slot">
-          <img src="img/06-prototype-2.jpg" alt="Foto implementasi Smart Irrigation di lapangan" onerror="this.classList.add('img-missing')">
-          <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/06-prototype-2.jpg</code></span></div>
+          <img src="img/06-prototype-2.png" alt="Foto implementasi Smart Irrigation di lapangan" onerror="this.classList.add('img-missing')">
+          <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/06-prototype-2.png</code></span></div>
         </div>
+        <div class="img-slot">
+          <img src="img/08-sensor-assembly.jpg" alt="Rangkaian sensor sebelum dan sesudah dipasang dalam housing pipa PVC waterproof" onerror="this.classList.add('img-missing')">
+          <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/08-sensor-assembly.jpg</code></span></div>
+        </div>
+        <p class="img-caption" style="margin:-10px 0 4px;">Modul sensor (probe + board NodeMCU + baterai) sebelum dan sesudah dipasang dalam housing pipa PVC tahan air untuk penempatan di saluran irigasi.</p>
       </div>
     </section>
 
-    <!-- 7. REFERENSI -->
+    <!-- 9. REFERENSI -->
     <section class="doc-section" id="referensi">
-      <div class="section-header"><div class="section-num">7</div><h2>Referensi</h2></div>
+      <div class="section-header"><div class="section-num">9</div><h2>Referensi</h2></div>
       <div class="section-body">
         <ul class="link-list">
           <li><span class="tag">Blog</span><a href="https://www.hivemq.com/blog/mqtt-on-arduino-nodemcu-esp8266-hivemq-cloud/" target="_blank" rel="noopener">HiveMQ — MQTT on Arduino NodeMCU ESP8266 &amp; HiveMQ Cloud</a></li>
@@ -465,6 +548,8 @@ Message publised [solok/humidity2]: 41.90</div>
           <li><span class="tag">Q&amp;A</span><a href="https://stackoverflow.com/questions/73444331/failed-to-connect-to-hivemq-and-arduino-state-2" target="_blank" rel="noopener">Stack Overflow — Failed to connect to HiveMQ, Arduino state -2</a></li>
           <li><span class="tag">Repo</span><a href="https://github.com/esp8266/Arduino" target="_blank" rel="noopener">github.com/esp8266/Arduino — ESP8266 core untuk Arduino IDE</a></li>
           <li><span class="tag">Repo</span><a href="https://github.com/knolleary/pubsubclient" target="_blank" rel="noopener">github.com/knolleary/pubsubclient — library MQTT client</a></li>
+          <li><span class="tag">Artikel</span><a href="https://poltekssn.ac.id/berita/smart-irigation-di-solok-latsitarda-nusantara-xliii-2023/" target="_blank" rel="noopener">Politeknik Siber dan Sandi Negara — Smart Irrigation di Solok (Latsitarda Nusantara XLIII 2023)</a></li>
+          <li><span class="tag">Berita</span><a href="https://www.antaranews.com/berita/3561639/latsitardanus-xliii-terapkan-sistem-irigasi-pintar-di-sawah-solok" target="_blank" rel="noopener">ANTARA News — Latsitardanus XLIII terapkan sistem irigasi pintar di sawah Solok</a></li>
         </ul>
       </div>
     </section>

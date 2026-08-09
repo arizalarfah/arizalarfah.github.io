@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>arizalarfah/camphish-workflow</title>
+<meta name="description" content="Dokumentasi workflow CamPhish (social engineering / camera &amp; geolocation phishing demo) untuk pembelajaran security awareness — instalasi sesuai sumber GitHub resmi dan langkah penggunaan.">
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-panel: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-muted: #8b949e;
+    --link: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --purple: #a371f7;
+    --topic-bg: #388bfd1a;
+    --topic-text: #79c0ff;
+    --radius: 6px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre { font-family: ui-monospace, "Courier New", Courier, monospace; }
+
+  /* DISCLAIMER MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(1,4,9,0.88); backdrop-filter: blur(2px);
+    display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-box {
+    background: var(--bg-panel); border: 1px solid var(--red); border-radius: 10px;
+    max-width: 560px; width: 100%; padding: 28px 26px 24px; box-shadow: 0 0 40px rgba(248,81,73,0.15);
+  }
+  .modal-box .modal-icon { font-size: 30px; margin-bottom: 10px; }
+  .modal-box h2 { font-size: 18px; color: #ffa198; margin: 0 0 12px; }
+  .modal-box p { font-size: 13.5px; color: var(--text); margin: 0 0 12px; line-height: 1.65; }
+  .modal-box ul { margin: 0 0 16px; padding-left: 20px; font-size: 13px; color: var(--text-muted); }
+  .modal-box li { margin-bottom: 6px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+  .btn-ack { background: var(--red); color: #fff; border: none; border-radius: 6px; padding: 9px 18px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+  .btn-ack:hover { background: #ff6a61; }
+  body.modal-open { overflow: hidden; }
+  body.modal-open > *:not(.modal-overlay) { filter: blur(3px); pointer-events: none; user-select: none; }
+
+  /* TOP BAR */
+  .topbar { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 12px 20px; }
+  .topbar-inner { max-width: 1180px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  .site-mark { font-size: 20px; }
+  .back-link { color: var(--text-muted); font-size: 13px; margin-left: auto; }
+  .back-link:hover { color: var(--text); }
+
+  /* REPO HEADER */
+  .repo-header { max-width: 1180px; margin: 0 auto; padding: 20px 20px 0; }
+  .breadcrumb { font-size: 20px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .breadcrumb .owner { color: var(--link); }
+  .breadcrumb .repo { color: var(--text); font-weight: 600; }
+  .visibility-badge { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 2em; padding: 0 8px; font-size: 12px; color: var(--text-muted); margin-left: 4px; }
+  .repo-desc { color: var(--text-muted); font-size: 14px; margin: 10px 0 16px; max-width: 720px; }
+
+  .repo-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+  .repo-tabs span { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; font-size: 14px; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; }
+  .repo-tabs span.active { color: var(--text); border-bottom-color: var(--red); font-weight: 600; }
+
+  /* LAYOUT */
+  .layout { max-width: 1180px; margin: 0 auto; padding: 16px 20px 80px; display: grid; grid-template-columns: 1fr 296px; gap: 24px; align-items: start; }
+
+  /* FILE LIST */
+  .file-list { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; }
+  .file-list-header { background: var(--bg-panel); padding: 10px 16px; font-size: 12.5px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .file-row { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .file-row:last-child { border-bottom: none; }
+  .file-row .fname { color: var(--link); min-width: 190px; }
+  .file-row .fdesc { color: var(--text-muted); }
+
+  /* README PANEL */
+  .readme-panel { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .readme-title { display: flex; align-items: center; gap: 8px; background: var(--bg-panel); padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13.5px; font-weight: 600; }
+  .readme-body { padding: 24px 32px 36px; }
+  .readme-body h1 { font-size: 26px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 16px; }
+  .readme-body h2 { font-size: 20px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 32px 0 14px; }
+  .readme-body h3 { font-size: 16px; font-weight: 700; margin: 22px 0 10px; }
+  .readme-body p { margin: 0 0 14px; color: var(--text); }
+  .readme-body ul, .readme-body ol { margin: 0 0 14px; padding-left: 26px; }
+  .readme-body li { margin-bottom: 6px; }
+  .readme-body strong { color: #fff; }
+  .readme-body code { background: rgba(110,118,129,0.2); padding: 0.15em 0.4em; border-radius: 4px; font-size: 12.5px; }
+
+  .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; font-size: 11.5px; color: var(--text-muted); }
+  .badge.b-red { color: #ffa198; border-color: rgba(248,81,73,0.4); }
+  .badge.b-green { color: #7ee787; border-color: rgba(63,185,80,0.4); }
+  .badge.b-blue { color: var(--topic-text); border-color: rgba(56,139,253,0.4); }
+
+  /* ADMONITIONS */
+  .admonition { border-left: 4px solid; border-radius: 4px; padding: 10px 14px; margin: 0 0 18px; background: var(--bg-panel); }
+  .admonition .adm-title { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .admonition p, .admonition ul { margin: 0; font-size: 13.5px; color: var(--text); }
+  .admonition ul { padding-left: 18px; margin-top: 6px; }
+  .admonition.caution { border-color: var(--red); }
+  .admonition.caution .adm-title { color: var(--red); }
+  .admonition.note { border-color: var(--link); }
+  .admonition.note .adm-title { color: var(--link); }
+  .admonition.tip { border-color: var(--green); }
+  .admonition.tip .adm-title { color: var(--green); }
+
+  /* CODE BLOCK */
+  .code-window { border: 1px solid var(--border); border-radius: var(--radius); margin: 0 0 18px; overflow: hidden; }
+  .code-tab { display: flex; align-items: center; gap: 8px; background: var(--bg-panel); padding: 8px 14px; font-size: 12.5px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .code-tab .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .code-window pre { margin: 0; padding: 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.65; color: #c9d1d9; background: #0d1117; white-space: pre; }
+  .code-window pre .c { color: #8b949e; }
+  .code-window pre .s { color: #a5d6ff; }
+  .code-window pre .g { color: #3fb950; }
+  .code-window pre .y { color: #d29922; }
+
+  /* IMAGES */
+  .shot { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 6px 0 6px; background: var(--bg-panel); }
+  .shot img { display: block; width: 100%; height: auto; }
+  .shot-caption { font-size: 12px; color: var(--text-muted); margin: 0 0 20px; }
+
+  .step-list { list-style: none; padding: 0; margin: 0 0 8px; counter-reset: step; }
+  .step-list li { position: relative; padding-left: 34px; margin-bottom: 14px; font-size: 13.5px; }
+  .step-list li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+  table.gfm-table { width: 100%; border-collapse: collapse; margin: 0 0 18px; font-size: 13px; }
+  table.gfm-table th, table.gfm-table td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; }
+  table.gfm-table th { background: var(--bg-panel); }
+
+  hr.sep { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  /* SIDEBAR */
+  .sidebar { display: flex; flex-direction: column; gap: 20px; }
+  .side-block { border-top: 1px solid var(--border); padding-top: 16px; }
+  .side-block:first-child { border-top: none; padding-top: 0; }
+  .side-title { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .side-block p { font-size: 13px; color: var(--text); margin: 0 0 12px; }
+  .topics { display: flex; flex-wrap: wrap; gap: 6px; }
+  .topic-pill { background: var(--topic-bg); color: var(--topic-text); border-radius: 2em; padding: 3px 12px; font-size: 12px; }
+  .side-list { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+  .side-list li { display: flex; align-items: center; gap: 8px; padding: 5px 0; color: var(--text); }
+  .side-list li .ic { color: var(--text-muted); }
+
+  footer.page-footer { max-width: 1180px; margin: 0 auto; padding: 0 20px 40px; text-align: center; font-size: 12px; color: var(--text-muted); }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { order: -1; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .side-block { border-top: none; padding-top: 0; }
+    .readme-body { padding: 20px 18px 28px; }
+  }
+</style>
+</head>
+<body class="modal-open">
+
+  <!-- DISCLAIMER POPUP -->
+  <div class="modal-overlay" id="disclaimerModal">
+    <div class="modal-box">
+      <div class="modal-icon">⚠️</div>
+      <h2>Disclaimer — Baca Sebelum Lanjut</h2>
+      <p><strong>Workflow CamPhish ini hanya digunakan untuk pembelajaran dalam rangka meningkatkan security awareness</strong> (kesadaran keamanan terhadap phishing kamera &amp; lokasi) — bukan panduan untuk menyerang orang lain tanpa izin.</p>
+      <ul>
+        <li>Hanya jalankan pada perangkat/akun milik sendiri atau dalam engagement pentest/security-awareness dengan izin tertulis eksplisit.</li>
+        <li>Mengakses kamera/lokasi orang lain tanpa persetujuan adalah pelanggaran hukum &amp; privasi di banyak yurisdiksi (termasuk UU ITE &amp; UU PDP di Indonesia).</li>
+        <li>Penulis halaman ini tidak bertanggung jawab atas penyalahgunaan di luar konteks edukasi.</li>
+      </ul>
+      <div class="modal-actions">
+        <button class="btn-ack" id="ackBtn">Saya Mengerti, Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <span class="site-mark">📷</span>
+      <strong>arizal.my.id</strong>
+      <a class="back-link" href="../index.html#portfolio">&#8592; Kembali ke Portfolio</a>
+    </div>
+  </div>
+
+  <div class="repo-header">
+    <div class="breadcrumb">
+      <span class="owner">arizalarfah</span> / <span class="repo">camphish-workflow</span>
+      <span class="visibility-badge">Public</span>
+    </div>
+    <p class="repo-desc">Dokumentasi workflow <a href="https://github.com/techchipnet/CamPhish" target="_blank" rel="noopener">CamPhish</a> (techchipnet) — tool demo social engineering yang mengambil foto kamera &amp; lokasi GPS target lewat link phishing bertema (Festival Wishing / Live YouTube TV / Online Meeting). Didokumentasikan untuk pelatihan security awareness.</p>
+    <nav class="repo-tabs" aria-label="Repo nav (dekoratif)">
+      <span class="active">&lt;&gt; Code</span>
+      <span>Issues</span>
+      <span>Pull requests</span>
+      <span>Actions</span>
+      <span>Security</span>
+    </nav>
+  </div>
+
+  <div class="layout">
+    <main>
+
+      <div class="file-list">
+        <div class="file-list-header">Upstream: <a href="https://github.com/techchipnet/CamPhish" target="_blank" rel="noopener">github.com/techchipnet/CamPhish</a> (GPL-3.0)</div>
+        <div class="file-row"><span class="fname">📄 README.md</span><span class="fdesc">Dokumentasi workflow instalasi &amp; penggunaan (halaman ini)</span></div>
+      </div>
+
+      <div class="readme-panel">
+        <div class="readme-title">📖 README.md</div>
+        <div class="readme-body">
+
+          <h1>📷 CamPhish — Workflow Security Awareness</h1>
+          <div class="badge-row">
+            <span class="badge b-red">⚠ educational-use-only</span>
+            <span class="badge">upstream: techchipnet/CamPhish</span>
+            <span class="badge b-blue">license: GPL-3.0</span>
+            <span class="badge b-green">tunnel: CloudFlare</span>
+          </div>
+
+          <div class="admonition caution">
+            <div class="adm-title">⚠️ CAUTION — Etika &amp; Legalitas</div>
+            <p>CamPhish menipu target agar meng-klik "Allow" pada permintaan kamera/lokasi browser lewat halaman kedok (festival, live TV, online meeting). Ini adalah <strong>social engineering</strong> yang mengambil data pribadi nyata (wajah &amp; lokasi presisi) dari orang yang tidak sadar sedang diuji.</p>
+            <ul>
+              <li>Hanya untuk demo security-awareness ke diri sendiri, siswa/peserta yang sudah diberi konteks &amp; persetujuan, atau engagement pentest berizin tertulis.</li>
+              <li>Jangan sebarkan link ke orang yang tidak tahu ini adalah simulasi/demo.</li>
+              <li>Hapus semua data yang terkumpul (foto, lokasi) setelah sesi demo selesai — lihat <code>bash cleanup.sh</code> di bagian Instalasi.</li>
+            </ul>
+          </div>
+
+          <h2 id="overview">Overview</h2>
+          <p>CamPhish menghosting halaman web palsu (mis. "Festival Wishing") dan mengeksposnya lewat tunnel publik (ngrok/CloudFlare Tunnel). Saat target membuka link dan menekan <strong>Allow</strong> pada prompt lokasi &amp; kamera browser, tool menangkap koordinat GPS dan satu snapshot dari kamera target, lalu menyimpannya di server penyerang.</p>
+
+          <h2 id="instalasi">Instalasi</h2>
+          <p>Sesuai README resmi <a href="https://github.com/techchipnet/CamPhish" target="_blank" rel="noopener">techchipnet/CamPhish</a> (mendukung Kali Linux, Termux, Ubuntu, Parrot OS, macOS, dan Windows/WSL):</p>
+          <div class="code-window">
+            <div class="code-tab"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp;terminal</div>
+            <pre><span class="c"># dependency</span>
+apt-get -y install php wget unzip
+
+<span class="c"># clone &amp; masuk folder</span>
+git clone https://github.com/techchipnet/CamPhish
+cd CamPhish
+
+<span class="c"># jalankan</span>
+bash camphish.sh
+
+<span class="c"># bersihkan log &amp; data hasil capture setelah selesai</span>
+bash cleanup.sh</pre>
+          </div>
+          <div class="shot">
+            <img src="img/01-cd-camphish.png" alt="Terminal masuk ke folder CamPhish" loading="lazy">
+          </div>
+          <p class="shot-caption"><code>cd CamPhish/</code> — folder tool ini berdampingan dengan tool security-testing lain di environment yang sama.</p>
+
+          <h2 id="penggunaan">Penggunaan</h2>
+
+          <h3>1. Jalankan &amp; pilih tunnel</h3>
+          <p>Jalankan <code>bash camphish.sh</code>, lalu pilih server tunnel — pada workflow ini dipilih <strong>[2] CloudFlare Tunnel</strong> (tidak perlu akun/token, berbeda dengan Ngrok).</p>
+          <div class="shot">
+            <img src="img/02-tunnel-select.png" alt="Prompt pemilihan tunnel server: Ngrok atau CloudFlare Tunnel" loading="lazy">
+          </div>
+          <p class="shot-caption">Banner CamPhish v2.0 dan pilihan tunnel server.</p>
+
+          <h3>2. Pilih template halaman kedok</h3>
+          <p>Tersedia 3 template: <strong>[1] Festival Wishing</strong>, <strong>[2] Live YouTube TV</strong>, <strong>[3] Online Meeting</strong> (beta). Workflow ini memakai template <strong>Festival Wishing</strong>.</p>
+          <div class="shot">
+            <img src="img/03-template-select.png" alt="Prompt pemilihan template halaman: Festival Wishing, Live YouTube TV, Online Meeting" loading="lazy">
+          </div>
+          <p class="shot-caption">Pilihan template halaman kedok.</p>
+
+          <h3>3. Isi nama &amp; ambil link</h3>
+          <p>Masukkan nama bebas untuk halaman festival (mis. "Giveway"), tool otomatis menjalankan PHP server + CloudFlare tunnel dan mencetak link publik yang tinggal dibagikan ke target.</p>
+          <div class="shot">
+            <img src="img/04-generated-link.png" alt="Link direct yang dihasilkan CamPhish beserta status GPS location tracking ACTIVE" loading="lazy">
+          </div>
+          <p class="shot-caption">Direct link ter-generate (domain <code>trycloudflare.com</code> sekali pakai, mati begitu proses dihentikan) dan status <code>GPS Location tracking is ACTIVE</code>.</p>
+
+          <h3>4. Sisi target: buka link</h3>
+          <p>Begitu target membuka link, browser menampilkan halaman "Loading..." sambil meminta izin lokasi.</p>
+          <div class="shot">
+            <img src="img/05-target-loading-location-prompt.png" alt="Halaman loading di sisi target yang meminta izin akses lokasi" loading="lazy">
+          </div>
+          <p class="shot-caption">Tampilan di sisi target: permintaan izin lokasi sebelum halaman "asli" ditampilkan.</p>
+
+          <p>Beberapa template (mis. Festival Wishing) juga menampilkan prompt input nama sebagai bagian dari personalisasi halaman kedok.</p>
+          <div class="shot">
+            <img src="img/06-target-enter-name-prompt.png" alt="Prompt JavaScript meminta target mengisi nama" loading="lazy">
+          </div>
+          <p class="shot-caption">Prompt "Please Enter Your Name" — hasil isian dipakai untuk mempersonalisasi halaman ucapan festival.</p>
+
+          <p>Setelah halaman ucapan tampil, target diminta mengizinkan akses kamera:</p>
+          <div class="shot">
+            <img src="img/07-target-camera-permission-prompt.png" alt="Browser meminta izin akses kamera di halaman ucapan festival" loading="lazy">
+          </div>
+          <p class="shot-caption">Klik <strong>"Allow"</strong> di sini berarti target memberikan akses kamera ke halaman.</p>
+
+          <h3>5. Sisi penyerang: data diterima</h3>
+          <p>Di terminal tempat <code>camphish.sh</code> berjalan, notifikasi muncul begitu lokasi &amp; snapshot kamera target diterima:</p>
+          <div class="code-window">
+            <div class="code-tab"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp;terminal — attacker console</div>
+            <pre><span class="g">[+] Location data received!</span>
+<span class="g">[+] Current location data:</span>
+Latitude: <span class="y">-6.xxxxxxxxxxxx</span>
+Longitude: <span class="y">106.xxxxxxxxxxx</span>
+Accuracy: <span class="y">xxx</span> meters
+Google Maps: https://www.google.com/maps/place/<span class="y">-6.xxxxxxx,106.xxxxxxx</span>
+Date: <span class="y">DDMonYYYYHHmmss</span>
+
+<span class="g">[+] Cam file received!</span></pre>
+          </div>
+          <div class="admonition note">
+            <div class="adm-title">ℹ️ NOTE</div>
+            <p>Angka koordinat di atas sudah diganti placeholder (<code>x</code>) — bukan lokasi asli hasil self-test. Formatnya persis seperti output <code>camphish.sh</code> yang sesungguhnya: latitude/longitude, radius akurasi (meter), link Google Maps langsung, dan timestamp.</p>
+          </div>
+
+          <h3>6. File hasil capture</h3>
+          <p>Foto kamera &amp; data lokasi yang diterima disimpan sebagai file di folder tool, dengan pola penamaan:</p>
+          <table class="gfm-table">
+            <thead><tr><th>Pola nama file</th><th>Isi</th></tr></thead>
+            <tbody>
+              <tr><td><code>cam{DDMmmYYYYhhmm}.jpg</code></td><td>Snapshot kamera target, satu file per capture</td></tr>
+              <tr><td><code>location_{DDMmmYYYYhhmm}.txt</code></td><td>Koordinat GPS + link Google Maps + timestamp dalam bentuk teks</td></tr>
+              <tr><td><code>saved_locations/</code></td><td>Folder arsip histori lokasi yang pernah diterima</td></tr>
+            </tbody>
+          </table>
+          <div class="admonition tip">
+            <div class="adm-title">💡 TIP</div>
+            <p>Screenshot asli foto kamera &amp; koordinat GPS presisi dari sesi self-test tidak ditampilkan di halaman ini secara sengaja — diganti representasi teks di atas supaya wajah &amp; lokasi pribadi tidak ikut ter-publish permanen ke halaman publik yang ter-index mesin pencari. Segera jalankan <code>bash cleanup.sh</code> setelah sesi demo untuk menghapus file-file ini dari server kamu sendiri.</p>
+          </div>
+
+          <hr class="sep">
+
+          <h2 id="referensi">Referensi</h2>
+          <ul>
+            <li><a href="https://github.com/techchipnet/CamPhish" target="_blank" rel="noopener">github.com/techchipnet/CamPhish</a> — source resmi, README instalasi lengkap, lisensi GPL-3.0</li>
+            <li><a href="https://www.techchip.net" target="_blank" rel="noopener">techchip.net</a> — situs pembuat tool</li>
+            <li><a href="https://youtube.com/techchipnet" target="_blank" rel="noopener">youtube.com/techchipnet</a> — channel penjelasan tool</li>
+          </ul>
+
+        </div>
+      </div>
+    </main>
+
+    <aside class="sidebar">
+      <div class="side-block">
+        <div class="side-title">📖 About</div>
+        <p>Workflow instalasi &amp; penggunaan CamPhish (camera + geolocation phishing demo) untuk materi security awareness — bagaimana satu klik "Allow" pada link yang tidak dikenal bisa membocorkan wajah &amp; lokasi.</p>
+        <div class="topics">
+          <span class="topic-pill">camphish</span>
+          <span class="topic-pill">social-engineering</span>
+          <span class="topic-pill">phishing</span>
+          <span class="topic-pill">osint</span>
+          <span class="topic-pill">security-awareness</span>
+          <span class="topic-pill">red-team</span>
+        </div>
+      </div>
+      <div class="side-block">
+        <div class="side-title">Upstream Tool</div>
+        <ul class="side-list">
+          <li><span class="ic">🔗</span> <a href="https://github.com/techchipnet/CamPhish" target="_blank" rel="noopener">techchipnet/CamPhish</a></li>
+          <li><span class="ic">⚖️</span> GPL-3.0 License</li>
+        </ul>
+      </div>
+      <div class="side-block">
+        <div class="side-title">Templates</div>
+        <ul class="side-list">
+          <li><span class="ic">🎉</span> Festival Wishing</li>
+          <li><span class="ic">📺</span> Live YouTube TV</li>
+          <li><span class="ic">💼</span> Online Meeting (beta)</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="page-footer">
+    <p>camphish-workflow — dokumentasi security awareness, Arizal (arizal.my.id). Untuk penggunaan edukasi &amp; pengujian yang sah/berizin saja.</p>
+  </footer>
+
+  <script>
+    (function () {
+      var modal = document.getElementById('disclaimerModal');
+      var ackBtn = document.getElementById('ackBtn');
+      var body = document.body;
+      if (ackBtn && modal) {
+        ackBtn.addEventListener('click', function () {
+          modal.classList.add('hidden');
+          body.classList.remove('modal-open');
+        });
+      }
+    })();
+  </script>
+
+</body>
+</html>

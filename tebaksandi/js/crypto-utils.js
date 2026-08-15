@@ -1,25 +1,18 @@
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
-    module.exports = factory(root);
+    module.exports = factory();
   } else {
-    root.CryptoUtils = factory(root);
+    root.CryptoUtils = factory();
   }
-})(typeof self !== 'undefined' ? self : (typeof global !== 'undefined' ? global : this), function (root) {
-  var getCrypto = function() {
-    // Try to get crypto from root (global in Node.js)
-    if (root && root.crypto) return root.crypto;
-    // Try globalThis
-    if (typeof globalThis !== 'undefined' && globalThis && globalThis.crypto) return globalThis.crypto;
-    // Try global
-    if (typeof global !== 'undefined' && global && global.crypto) return global.crypto;
-    // Fall back to requiring in Node.js
+})(typeof self !== 'undefined' ? self : this, function () {
+  var cryptoObj = (typeof globalThis !== 'undefined' && globalThis.crypto) || (typeof global !== 'undefined' && global.crypto);
+  if (!cryptoObj) {
     try {
-      var _crypto = require('crypto');
-      return _crypto;
+      cryptoObj = require('crypto');
     } catch (e) {
-      throw new Error('crypto not available');
+      // In browser or if crypto not available
     }
-  };
+  }
 
   function normalizeAnswer(str) {
     return String(str || '').trim().toLowerCase();
@@ -47,9 +40,8 @@
   // normalized plaintext are both visible in this file, and the Bukti/
   // Fakta screen reveals the answer anyway once a level is solved.
   function sha256Hex(str) {
-    var crypto = getCrypto();
     var bytes = new TextEncoder().encode(String(str || ''));
-    return crypto.subtle.digest('SHA-256', bytes).then(function (buffer) {
+    return cryptoObj.subtle.digest('SHA-256', bytes).then(function (buffer) {
       return Array.from(new Uint8Array(buffer))
         .map(function (b) { return b.toString(16).padStart(2, '0'); })
         .join('');

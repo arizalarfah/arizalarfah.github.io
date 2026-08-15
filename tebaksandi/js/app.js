@@ -8,7 +8,7 @@
   // "tebaksandi" Google Sheet tab (Nama / sesi_mulai / sesi_selesai). Empty
   // until deployed — logSessionEvent() no-ops when this is blank, so the
   // game works normally before the Sheet logging is wired up.
-  var SHEET_WEBHOOK_URL = '';
+  var SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxDHgsSyb8oUTYgUN4KaHA-L6SN819AIj7ua3PvhFlfHl-NU-dWsJNhj9UKyT6mlahU/exec';
 
   var state = {
     participantName: null,

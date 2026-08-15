@@ -1,0 +1,145 @@
+<!-- tebaksandi/index.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Tebak Sandi — game edukasi kriptografi 3 level: Pemula, Ahli, dan Dewa.">
+  <title>Tebak Sandi</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="ts-nav">
+    <div class="ts-logo">
+      <svg class="ts-logo-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="5" y="11" width="14" height="9" rx="2"></rect>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+      </svg>
+      <span class="ts-logo-text">TEBAK<br>SANDI</span>
+    </div>
+    <nav class="ts-menu">
+      <button type="button" data-nav="tentang">TENTANG</button>
+      <button type="button" data-nav="petunjuk">PETUNJUK</button>
+      <button type="button" data-nav="materi">MATERI</button>
+      <button type="button" data-nav="pengembang">PENGEMBANG</button>
+    </nav>
+  </header>
+
+  <main id="ts-app">
+
+    <section id="screen-landing" class="ts-screen ts-screen--active">
+      <div class="ts-hero">
+        <h1 class="ts-hero-title">TEBAK<br>SANDI</h1>
+        <p class="ts-hero-tagline">Beranikah menguji seberapa tinggi kemampuan <em>hacking</em> kamu?</p>
+        <button type="button" id="btn-start" class="ts-btn-primary">Coba sekarang!</button>
+      </div>
+    </section>
+
+    <section id="screen-name" class="ts-screen">
+      <h2>Siapa namamu?</h2>
+      <div class="ts-name-row">
+        <input type="text" id="input-name" placeholder="Who?" autocomplete="off">
+        <button type="button" id="btn-name-submit" class="ts-btn-primary">&rarr;</button>
+      </div>
+    </section>
+
+    <section id="screen-hub" class="ts-screen">
+      <h1 class="ts-section-title">TENTUKAN PILIHANMU!</h1>
+      <div class="ts-level-cards">
+        <button type="button" class="ts-level-card" data-level="pemula">
+          <h3>PEMULA</h3>
+          <p>Maksimalkan kemampuan logika dan visualisasimu dalam memecahkan petunjuk yang ditampilkan.</p>
+        </button>
+        <button type="button" class="ts-level-card" data-level="ahli">
+          <h3>AHLI</h3>
+          <p>Pemahaman tentang dasar-dasar persandian dibutuhkan di tahap ini.</p>
+        </button>
+        <button type="button" class="ts-level-card" data-level="dewa">
+          <h3>DEWA</h3>
+          <p>Maksimalkan semua kemampuan yang kamu miliki, termasuk insting <em>hacker</em>-mu.</p>
+        </button>
+      </div>
+    </section>
+
+    <section id="screen-tentang" class="ts-screen">
+      <h2>TENTANG</h2>
+      <p>TEBAK SANDI adalah game edukasi singkat seputar dasar-dasar kriptografi: sandi klasik, teknik penyandian, dan cara berpikir seorang pemecah kode. Uji kemampuan logika, ketelitian, dan nalarmu dalam membongkar petunjuk menjadi kata sandi yang tepat.</p>
+      <p class="ts-credit">Diadaptasi dari konsep game Tebak Sandi oleh Sifa Septiano Nugroho, Badan Siber dan Sandi Negara (BSSN).</p>
+      <button type="button" class="ts-arrow-back" data-back>&larr;</button>
+    </section>
+
+    <section id="screen-petunjuk" class="ts-screen">
+      <h2>PETUNJUK</h2>
+      <ul class="ts-petunjuk-list">
+        <li>Gambar &amp; narasi di setiap level menyimpan petunjuk tersembunyi.</li>
+        <li>Ketik jawabanmu pada kolom "apa kata sandinya?".</li>
+        <li>Tekan tombol LOG IN untuk memeriksa jawaban.</li>
+        <li>Stempel merah <strong>FALSE</strong> muncul jika jawabanmu masih keliru — coba lagi.</li>
+        <li>Stempel hijau <strong>DO'S</strong> muncul jika jawabanmu benar, lalu tekan panah untuk melihat penjelasannya.</li>
+      </ul>
+      <button type="button" class="ts-arrow-back" data-back>&larr;</button>
+    </section>
+
+    <section id="screen-materi" class="ts-screen">
+      <h2>MATERI</h2>
+      <p>Tiga level di game ini mewakili tiga cara berpikir dasar dalam kriptografi:</p>
+      <ul>
+        <li><strong>PEMULA</strong> melatih ketelitian membaca pola tersembunyi (akrostik).</li>
+        <li><strong>AHLI</strong> mengenalkan sandi substitusi klasik seperti Caesar Cipher.</li>
+        <li><strong>DEWA</strong> melatih kriptanalisis: menggabungkan beberapa petunjuk dan pengetahuan di luar teks untuk memecahkan kode.</li>
+      </ul>
+      <button type="button" class="ts-arrow-back" data-back>&larr;</button>
+    </section>
+
+    <section id="screen-pengembang" class="ts-screen">
+      <h2>PENGEMBANG</h2>
+      <div class="ts-dev-card">
+        <img src="../assets/img/me.jpg" alt="Foto Arizal" class="ts-dev-photo">
+        <div>
+          <h3>Arizal</h3>
+          <p>Dosen Keamanan Siber, Politeknik Siber dan Sandi Negara (Badan Siber dan Sandi Negara)</p>
+        </div>
+      </div>
+      <button type="button" class="ts-arrow-back" data-back>&larr;</button>
+    </section>
+
+    <section id="screen-puzzle" class="ts-screen">
+      <div class="ts-level-badge" id="puzzle-level-badge"></div>
+      <img id="puzzle-image" class="ts-puzzle-image" src="" alt="">
+      <p id="puzzle-narrative" class="ts-puzzle-narrative"></p>
+      <p id="puzzle-hint" class="ts-puzzle-hint"></p>
+      <div class="ts-puzzle-input-row">
+        <input type="text" id="puzzle-answer-input" placeholder="apa kata sandinya?" autocomplete="off">
+        <button type="button" id="puzzle-submit-btn">LOG IN</button>
+      </div>
+      <div class="ts-stamp ts-stamp--false" id="puzzle-stamp-false" hidden>FALSE</div>
+      <div class="ts-stamp ts-stamp--dos" id="puzzle-stamp-dos" hidden>DO'S</div>
+      <div class="ts-puzzle-nav">
+        <button type="button" class="ts-arrow-back" id="puzzle-back-btn">&larr;</button>
+        <button type="button" class="ts-arrow-next" id="puzzle-next-btn" hidden>&rarr;</button>
+      </div>
+    </section>
+
+    <section id="screen-explain" class="ts-screen">
+      <div class="ts-level-badge" id="explain-level-badge"></div>
+      <h2>Bukti:</h2>
+      <p id="explain-bukti"></p>
+      <h2>Fakta:</h2>
+      <img id="explain-fakta-image" class="ts-fakta-image" src="" alt="" hidden>
+      <p id="explain-fakta-text"></p>
+      <button type="button" class="ts-arrow-next" id="explain-hub-btn">&rarr;</button>
+    </section>
+
+    <section id="screen-closing" class="ts-screen">
+      <h1 class="ts-section-title">FIX KAMU JAGO KEREN MY "SUHU"</h1>
+      <p id="closing-summary"></p>
+      <button type="button" id="btn-exit" class="ts-btn-primary">Selesai</button>
+    </section>
+
+  </main>
+
+  <script src="js/crypto-utils.js"></script>
+  <script src="js/questions.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

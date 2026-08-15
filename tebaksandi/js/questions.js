@@ -9,7 +9,8 @@
     {
       level: 'pemula',
       title: 'Sarapan yang Menggugah',
-      image: 'img/pemula-clue.svg',
+      image: 'img/pemula-clue.jpg',
+      imageFallback: 'img/pemula-clue.svg',
       narrativeHtml:
         'T<b>e</b>rlihat sarapa<b>n</b> pagi in<b>i</b> yang sederhana namun ' +
         'meng<b>g</b>ugah, karena racikan bu<b>m</b>bu rahasi<b>a</b> membuat ' +
@@ -23,7 +24,8 @@
           'semua orang ketagihan setiap pagi. Huruf tebal membentuk kata ' +
           '<strong>enigma</strong>.',
         fakta: {
-          image: 'img/enigma-fakta.svg',
+          image: 'img/pemula-fakta.jpg',
+          imageFallback: 'img/enigma-fakta.svg',
           text:
             'Mesin Enigma adalah mesin enkripsi elektromekanis yang digunakan ' +
             'militer Jerman pada Perang Dunia II. Sekutu berhasil memecahkan ' +
@@ -35,7 +37,8 @@
     {
       level: 'ahli',
       title: 'Kiper yang Tangguh',
-      image: 'img/ahli-clue.svg',
+      image: 'img/ahli-clue.jpg',
+      imageFallback: 'img/ahli-clue.svg',
       narrativeHtml:
         'Seorang kiper legendaris dikenal sebagai sosok yang <b>Tangguh</b> ' +
         'saat menghadapi adu penalti. Julius Caesar, panglima Romawi yang ' +
@@ -52,7 +55,8 @@
           'Kata kunci <strong>Tangguh</strong> digeser maju 3 huruf menjadi ' +
           '<strong>Wdqjjxk</strong> — itulah kata sandinya.',
         fakta: {
-          image: null,
+          image: 'img/ahli-fakta.jpg',
+          imageFallback: null,
           text:
             'Caesar Cipher adalah salah satu teknik penyandian substitusi ' +
             'tertua, dinamai dari Julius Caesar yang konon memakainya untuk ' +
@@ -65,7 +69,8 @@
     {
       level: 'dewa',
       title: 'Sungai yang Tersembunyi',
-      image: 'img/dewa-clue.svg',
+      image: 'img/dewa-clue.jpg',
+      imageFallback: 'img/dewa-clue.svg',
       narrativeHtml:
         'Sebuah kliping berita lama menyebut banjir di Kali Ciliwung — tapi ' +
         'itu jebakan. Kode <b>7Kt10KBptnprVJt1m</b> ditemukan bersama daftar ' +
@@ -83,7 +88,8 @@
           'sekitar 320 km: <strong>Brantas</strong>. Kode acak dan foto ' +
           'berita Ciliwung hanyalah jebakan.',
         fakta: {
-          image: null,
+          image: 'img/dewa-fakta.jpg',
+          imageFallback: null,
           text:
             'Sungai Brantas adalah sungai terpanjang kedua di Pulau Jawa, ' +
             'mengalir sekitar 320 km dari Kota Batu hingga bermuara di ' +

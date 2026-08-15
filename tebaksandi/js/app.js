@@ -4,13 +4,41 @@
 
   var STORAGE_KEY = 'tebaksandi-state';
 
+  // Google Apps Script Web App URL for recording session start/finish to the
+  // "tebaksandi" Google Sheet tab (Nama / sesi_mulai / sesi_selesai). Empty
+  // until deployed — logSessionEvent() no-ops when this is blank, so the
+  // game works normally before the Sheet logging is wired up.
+  var SHEET_WEBHOOK_URL = '';
+
   var state = {
     participantName: null,
     startTime: null,
+    startTimeIso: null,
     solvedLevels: {},
     currentLevel: null,
     currentQuestion: null,
   };
+
+  // Fire-and-forget POST to the Apps Script Web App. Uses mode:'no-cors' so
+  // the browser never needs to read the response (Apps Script's response
+  // goes through a redirect that's awkward to read cross-origin) — this is
+  // informational logging only, not a source of truth the game depends on,
+  // so failures here are silently ignored.
+  function logSessionEvent(payload) {
+    if (!SHEET_WEBHOOK_URL) return;
+    try {
+      fetch(SHEET_WEBHOOK_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload),
+      }).catch(function () {
+        // Network/CORS failure: logging is best-effort, never blocks play.
+      });
+    } catch (e) {
+      // fetch not available or threw synchronously: ignore, same reason.
+    }
+  }
 
   var lastScreenBeforeInfo = 'screen-hub';
 
@@ -25,6 +53,7 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       participantName: state.participantName,
       startTime: state.startTime,
+      startTimeIso: state.startTimeIso,
       solvedLevels: state.solvedLevels,
     }));
   }
@@ -36,6 +65,7 @@
       var saved = JSON.parse(raw);
       state.participantName = saved.participantName || null;
       state.startTime = saved.startTime || null;
+      state.startTimeIso = saved.startTimeIso || null;
       state.solvedLevels = saved.solvedLevels || {};
     } catch (e) {
       // Corrupt localStorage value: ignore and start fresh.
@@ -55,7 +85,13 @@
     }
     state.participantName = name;
     state.startTime = Date.now();
+    state.startTimeIso = new Date(state.startTime).toISOString();
     persistState();
+    logSessionEvent({
+      action: 'start',
+      nama: state.participantName,
+      sesi_mulai: state.startTimeIso,
+    });
     showScreen('screen-hub');
   }
 
@@ -65,6 +101,27 @@
     showScreen('screen-puzzle');
   }
 
+  // Sets img.src to `primary`; if that fails to load and a `fallback` path
+  // is given, swaps to it once. If there's no fallback (or it also fails),
+  // hides the element instead of leaving a broken-image icon visible.
+  function setImageWithFallback(img, primary, fallback) {
+    img.onerror = function () {
+      img.onerror = null;
+      if (fallback) {
+        img.hidden = false;
+        img.src = fallback;
+        img.onerror = function () {
+          img.onerror = null;
+          img.hidden = true;
+        };
+      } else {
+        img.hidden = true;
+      }
+    };
+    img.hidden = false;
+    img.src = primary;
+  }
+
   function renderPuzzle(level) {
     var question = Questions.filter(function (item) {
       return item.level === level;
@@ -72,7 +129,7 @@
     state.currentQuestion = question;
 
     document.getElementById('puzzle-level-badge').textContent = level.toUpperCase();
-    document.getElementById('puzzle-image').src = question.image;
+    setImageWithFallback(document.getElementById('puzzle-image'), question.image, question.imageFallback);
     document.getElementById('puzzle-image').alt = question.title;
     document.getElementById('puzzle-narrative').innerHTML = question.narrativeHtml;
     document.getElementById('puzzle-hint').textContent = question.hint;
@@ -119,9 +176,8 @@
 
     var faktaImage = document.getElementById('explain-fakta-image');
     if (question.explanation.fakta.image) {
-      faktaImage.src = question.explanation.fakta.image;
       faktaImage.alt = question.title || 'Ilustrasi penjelasan';
-      faktaImage.hidden = false;
+      setImageWithFallback(faktaImage, question.explanation.fakta.image, question.explanation.fakta.imageFallback);
     } else {
       faktaImage.hidden = true;
     }
@@ -142,11 +198,19 @@
       summary = state.participantName + ', kamu menyelesaikan semua level!';
     }
     document.getElementById('closing-summary').textContent = summary;
+
+    logSessionEvent({
+      action: 'finish',
+      nama: state.participantName,
+      sesi_mulai: state.startTimeIso,
+      sesi_selesai: new Date().toISOString(),
+    });
   }
 
   function resetToLanding() {
     state.participantName = null;
     state.startTime = null;
+    state.startTimeIso = null;
     state.solvedLevels = {};
     localStorage.removeItem(STORAGE_KEY);
     showScreen('screen-landing');

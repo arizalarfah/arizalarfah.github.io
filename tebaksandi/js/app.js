@@ -107,6 +107,42 @@
     });
   }
 
+  function renderExplain(level) {
+    var question = state.currentQuestion;
+    document.getElementById('explain-level-badge').textContent = level.toUpperCase();
+    document.getElementById('explain-bukti').innerHTML = question.explanation.bukti;
+
+    var faktaImage = document.getElementById('explain-fakta-image');
+    if (question.explanation.fakta.image) {
+      faktaImage.src = question.explanation.fakta.image;
+      faktaImage.hidden = false;
+    } else {
+      faktaImage.hidden = true;
+    }
+    document.getElementById('explain-fakta-text').textContent = question.explanation.fakta.text;
+  }
+
+  function renderClosing() {
+    var elapsedSeconds = Math.floor((Date.now() - state.startTime) / 1000);
+    var minutes = Math.floor(elapsedSeconds / 60);
+    var seconds = elapsedSeconds % 60;
+    document.getElementById('closing-summary').textContent =
+      state.participantName + ', kamu menyelesaikan semua level dalam ' +
+      minutes + ' menit ' + seconds + ' detik.';
+  }
+
+  function handleExplainNext() {
+    var allSolved = ['pemula', 'ahli', 'dewa'].every(function (level) {
+      return !!state.solvedLevels[level];
+    });
+    if (allSolved) {
+      renderClosing();
+      showScreen('screen-closing');
+    } else {
+      showScreen('screen-hub');
+    }
+  }
+
   function wireNav() {
     document.getElementById('btn-start').addEventListener('click', handleStart);
     document.getElementById('btn-name-submit').addEventListener('click', handleNameSubmit);
@@ -134,6 +170,21 @@
     document.getElementById('puzzle-submit-btn').addEventListener('click', handlePuzzleSubmit);
     document.getElementById('puzzle-back-btn').addEventListener('click', function () {
       showScreen('screen-hub');
+    });
+
+    document.getElementById('puzzle-next-btn').addEventListener('click', function () {
+      renderExplain(state.currentLevel);
+      showScreen('screen-explain');
+    });
+
+    document.getElementById('explain-hub-btn').addEventListener('click', handleExplainNext);
+
+    document.getElementById('btn-exit').addEventListener('click', function () {
+      state.participantName = null;
+      state.startTime = null;
+      state.solvedLevels = {};
+      localStorage.removeItem(STORAGE_KEY);
+      showScreen('screen-landing');
     });
   }
 

@@ -104,6 +104,11 @@
         dosStamp.hidden = true;
         falseStamp.hidden = false;
       }
+    }).catch(function () {
+      var falseStamp = document.getElementById('puzzle-stamp-false');
+      var dosStamp = document.getElementById('puzzle-stamp-dos');
+      dosStamp.hidden = true;
+      falseStamp.hidden = false;
     });
   }
 
@@ -115,6 +120,7 @@
     var faktaImage = document.getElementById('explain-fakta-image');
     if (question.explanation.fakta.image) {
       faktaImage.src = question.explanation.fakta.image;
+      faktaImage.alt = question.title || 'Ilustrasi penjelasan';
       faktaImage.hidden = false;
     } else {
       faktaImage.hidden = true;
@@ -122,13 +128,28 @@
     document.getElementById('explain-fakta-text').textContent = question.explanation.fakta.text;
   }
 
+  var MAX_SANE_ELAPSED_SECONDS = 10800; // 3 hours
+
   function renderClosing() {
     var elapsedSeconds = Math.floor((Date.now() - state.startTime) / 1000);
-    var minutes = Math.floor(elapsedSeconds / 60);
-    var seconds = elapsedSeconds % 60;
-    document.getElementById('closing-summary').textContent =
-      state.participantName + ', kamu menyelesaikan semua level dalam ' +
-      minutes + ' menit ' + seconds + ' detik.';
+    var summary;
+    if (elapsedSeconds >= 0 && elapsedSeconds <= MAX_SANE_ELAPSED_SECONDS) {
+      var minutes = Math.floor(elapsedSeconds / 60);
+      var seconds = elapsedSeconds % 60;
+      summary = state.participantName + ', kamu menyelesaikan semua level dalam ' +
+        minutes + ' menit ' + seconds + ' detik.';
+    } else {
+      summary = state.participantName + ', kamu menyelesaikan semua level!';
+    }
+    document.getElementById('closing-summary').textContent = summary;
+  }
+
+  function resetToLanding() {
+    state.participantName = null;
+    state.startTime = null;
+    state.solvedLevels = {};
+    localStorage.removeItem(STORAGE_KEY);
+    showScreen('screen-landing');
   }
 
   function handleExplainNext() {
@@ -146,11 +167,16 @@
   function wireNav() {
     document.getElementById('btn-start').addEventListener('click', handleStart);
     document.getElementById('btn-name-submit').addEventListener('click', handleNameSubmit);
+    document.getElementById('input-name').addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') handleNameSubmit();
+    });
+
+    var infoScreens = ['screen-tentang', 'screen-petunjuk', 'screen-materi', 'screen-pengembang'];
 
     document.querySelectorAll('[data-nav]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var active = document.querySelector('.ts-screen--active');
-        if (active) lastScreenBeforeInfo = active.id;
+        if (active && infoScreens.indexOf(active.id) === -1) lastScreenBeforeInfo = active.id;
         showScreen('screen-' + btn.getAttribute('data-nav'));
       });
     });
@@ -168,6 +194,9 @@
     });
 
     document.getElementById('puzzle-submit-btn').addEventListener('click', handlePuzzleSubmit);
+    document.getElementById('puzzle-answer-input').addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') handlePuzzleSubmit();
+    });
     document.getElementById('puzzle-back-btn').addEventListener('click', function () {
       showScreen('screen-hub');
     });
@@ -179,13 +208,9 @@
 
     document.getElementById('explain-hub-btn').addEventListener('click', handleExplainNext);
 
-    document.getElementById('btn-exit').addEventListener('click', function () {
-      state.participantName = null;
-      state.startTime = null;
-      state.solvedLevels = {};
-      localStorage.removeItem(STORAGE_KEY);
-      showScreen('screen-landing');
-    });
+    document.getElementById('btn-exit').addEventListener('click', resetToLanding);
+
+    document.getElementById('btn-restart').addEventListener('click', resetToLanding);
   }
 
   document.addEventListener('DOMContentLoaded', function () {

@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Tebak Sandi — game edukasi kriptografi 3 level: Pemula, Ahli, dan Dewa.">
   <title>Tebak Sandi</title>
+  <link rel="icon" href="../assets/img/favicon.png">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -59,6 +60,7 @@
           <p>Maksimalkan semua kemampuan yang kamu miliki, termasuk insting <em>hacker</em>-mu.</p>
         </button>
       </div>
+      <button type="button" id="btn-restart" class="ts-restart-btn">Mulai ulang</button>
     </section>
 
     <section id="screen-tentang" class="ts-screen">
@@ -112,8 +114,8 @@
         <input type="text" id="puzzle-answer-input" placeholder="apa kata sandinya?" autocomplete="off">
         <button type="button" id="puzzle-submit-btn">LOG IN</button>
       </div>
-      <div class="ts-stamp ts-stamp--false" id="puzzle-stamp-false" hidden>FALSE</div>
-      <div class="ts-stamp ts-stamp--dos" id="puzzle-stamp-dos" hidden>DO'S</div>
+      <div class="ts-stamp ts-stamp--false" id="puzzle-stamp-false" hidden aria-live="polite">FALSE</div>
+      <div class="ts-stamp ts-stamp--dos" id="puzzle-stamp-dos" hidden aria-live="polite">DO'S</div>
       <div class="ts-puzzle-nav">
         <button type="button" class="ts-arrow-back" id="puzzle-back-btn">&larr;</button>
         <button type="button" class="ts-arrow-next" id="puzzle-next-btn" hidden>&rarr;</button>

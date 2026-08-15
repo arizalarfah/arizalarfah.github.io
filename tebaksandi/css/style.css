@@ -181,6 +181,21 @@ button {
   font-style: italic;
 }
 
+.ts-restart-btn {
+  display: block;
+  margin: 2rem auto 0;
+  background: none;
+  border: none;
+  color: var(--ts-text-dim);
+  font-size: .85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ts-restart-btn:hover {
+  color: var(--ts-text);
+}
+
 .ts-petunjuk-list {
   line-height: 1.9;
 }

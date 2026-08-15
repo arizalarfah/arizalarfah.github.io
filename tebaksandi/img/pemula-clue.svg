@@ -1,0 +1,15 @@
+<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustrasi semangkuk sarapan pagi">
+  <rect width="400" height="260" fill="#0b1120"/>
+  <rect x="20" y="190" width="360" height="14" rx="7" fill="#132132"/>
+  <ellipse cx="120" cy="150" rx="80" ry="50" fill="#173042"/>
+  <ellipse cx="120" cy="140" rx="70" ry="40" fill="#1fb6c9" opacity="0.85"/>
+  <ellipse cx="95" cy="130" rx="14" ry="9" fill="#f2c14e"/>
+  <ellipse cx="140" cy="135" rx="10" ry="7" fill="#e8622c"/>
+  <ellipse cx="260" cy="160" rx="70" ry="44" fill="#173042"/>
+  <ellipse cx="260" cy="150" rx="60" ry="34" fill="#2fd3c7" opacity="0.85"/>
+  <ellipse cx="240" cy="145" rx="12" ry="8" fill="#f2c14e"/>
+  <ellipse cx="280" cy="148" rx="9" ry="6" fill="#6bbf59"/>
+  <path d="M100 90 q6 -18 0 -30" stroke="#8fe3df" stroke-width="3" fill="none" opacity="0.6"/>
+  <path d="M130 90 q6 -18 0 -30" stroke="#8fe3df" stroke-width="3" fill="none" opacity="0.6"/>
+  <path d="M250 100 q6 -16 0 -28" stroke="#8fe3df" stroke-width="3" fill="none" opacity="0.6"/>
+</svg>

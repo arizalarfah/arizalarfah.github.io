@@ -1,0 +1,22 @@
+<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustrasi mesin sandi Enigma">
+  <rect width="400" height="260" fill="#0b1120"/>
+  <rect x="70" y="120" width="260" height="100" rx="8" fill="#173042"/>
+  <g fill="#2fd3c7">
+    <circle cx="140" cy="90" r="26"/>
+    <circle cx="200" cy="90" r="26"/>
+    <circle cx="260" cy="90" r="26"/>
+  </g>
+  <g fill="#0b1120">
+    <circle cx="140" cy="90" r="10"/>
+    <circle cx="200" cy="90" r="10"/>
+    <circle cx="260" cy="90" r="10"/>
+  </g>
+  <g fill="#1fb6c9">
+    <circle cx="100" cy="160" r="10"/><circle cx="125" cy="160" r="10"/><circle cx="150" cy="160" r="10"/>
+    <circle cx="175" cy="160" r="10"/><circle cx="200" cy="160" r="10"/><circle cx="225" cy="160" r="10"/>
+    <circle cx="250" cy="160" r="10"/><circle cx="275" cy="160" r="10"/><circle cx="300" cy="160" r="10"/>
+    <circle cx="112" cy="190" r="10"/><circle cx="137" cy="190" r="10"/><circle cx="162" cy="190" r="10"/>
+    <circle cx="187" cy="190" r="10"/><circle cx="212" cy="190" r="10"/><circle cx="237" cy="190" r="10"/>
+    <circle cx="262" cy="190" r="10"/><circle cx="287" cy="190" r="10"/>
+  </g>
+</svg>

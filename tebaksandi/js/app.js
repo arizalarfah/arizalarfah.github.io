@@ -132,7 +132,6 @@
     setImageWithFallback(document.getElementById('puzzle-image'), question.image, question.imageFallback);
     document.getElementById('puzzle-image').alt = question.title;
     document.getElementById('puzzle-narrative').innerHTML = question.narrativeHtml;
-    document.getElementById('puzzle-hint').textContent = question.hint;
 
     var input = document.getElementById('puzzle-answer-input');
     input.value = '';

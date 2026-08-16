@@ -13,7 +13,6 @@ test('every question has the fields the app depends on', () => {
     assert.strictEqual(typeof q.title, 'string');
     assert.strictEqual(typeof q.image, 'string');
     assert.strictEqual(typeof q.narrativeHtml, 'string');
-    assert.strictEqual(typeof q.hint, 'string');
     assert.strictEqual(typeof q.answerHash, 'string');
     assert.strictEqual(q.answerHash.length, 64);
     assert.strictEqual(typeof q.explanation.bukti, 'string');

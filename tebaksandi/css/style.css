@@ -242,12 +242,6 @@ button {
   font-size: 1.05rem;
 }
 
-.ts-puzzle-hint {
-  color: var(--ts-text-dim);
-  font-size: .9rem;
-  font-style: italic;
-}
-
 .ts-puzzle-input-row {
   display: flex;
   gap: .75rem;

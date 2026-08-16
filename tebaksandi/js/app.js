@@ -173,6 +173,15 @@
     document.getElementById('explain-level-badge').textContent = level.toUpperCase();
     document.getElementById('explain-bukti').innerHTML = question.explanation.bukti;
 
+    var faktaAnimation = document.getElementById('explain-fakta-animation');
+    if (question.explanation.fakta.animationHtml) {
+      faktaAnimation.innerHTML = question.explanation.fakta.animationHtml;
+      faktaAnimation.hidden = false;
+    } else {
+      faktaAnimation.innerHTML = '';
+      faktaAnimation.hidden = true;
+    }
+
     var faktaImage = document.getElementById('explain-fakta-image');
     if (question.explanation.fakta.image) {
       faktaImage.alt = question.title || 'Ilustrasi penjelasan';

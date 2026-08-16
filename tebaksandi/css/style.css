@@ -237,6 +237,87 @@ button {
   display: block;
 }
 
+.ts-fakta-animation {
+  margin-bottom: 1.5rem;
+}
+
+.ts-cipher-caption {
+  color: var(--ts-text-dim);
+  font-size: .9rem;
+  margin: 0 0 .75rem;
+}
+
+.ts-cipher-anim {
+  width: 100%;
+  max-width: 600px;
+  display: block;
+}
+
+.ts-cipher-box {
+  fill: var(--ts-bg-alt);
+  stroke: var(--ts-border);
+  stroke-width: 2;
+}
+
+.ts-cipher-box--cipher {
+  stroke: var(--ts-success);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(.7);
+  animation: ts-cipher-pop .4s ease forwards;
+  animation-delay: calc(var(--col-delay, 0s) + .5s);
+}
+
+.ts-cipher-letter {
+  font-size: 26px;
+  font-weight: 800;
+  text-anchor: middle;
+  fill: var(--ts-text);
+}
+
+.ts-cipher-letter--cipher {
+  fill: var(--ts-success);
+  opacity: 0;
+  animation: ts-cipher-fade .3s ease forwards;
+  animation-delay: calc(var(--col-delay, 0s) + .5s);
+}
+
+.ts-cipher-arrow {
+  stroke: var(--ts-accent);
+  stroke-width: 3;
+  stroke-dasharray: 76;
+  stroke-dashoffset: 76;
+  animation: ts-cipher-draw .6s ease forwards;
+  animation-delay: var(--col-delay, 0s);
+}
+
+.ts-cipher-arrowhead-fill {
+  fill: var(--ts-accent);
+}
+
+.ts-cipher-plus {
+  font-size: 15px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: var(--ts-accent);
+  opacity: 0;
+  animation: ts-cipher-fade .3s ease forwards;
+  animation-delay: var(--col-delay, 0s);
+}
+
+@keyframes ts-cipher-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes ts-cipher-fade {
+  to { opacity: 1; }
+}
+
+@keyframes ts-cipher-pop {
+  to { opacity: 1; transform: scale(1); }
+}
+
 .ts-puzzle-narrative {
   line-height: 1.7;
   font-size: 1.05rem;

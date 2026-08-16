@@ -2,7 +2,9 @@
  * Tebak Sandi — Google Apps Script Web App
  *
  * Records session start/finish events from the Tebak Sandi game into the
- * "tebaksandi" tab of this spreadsheet:
+ * "peserta" tab of this spreadsheet (the spreadsheet's file name is
+ * "tebaksandi", but the data tab itself is named "peserta" — confirmed via
+ * the Sheets API on 2026-08-17, spreadsheet.sheets[].properties.title):
  *   https://docs.google.com/spreadsheets/d/1qdsGzZsu9G3eGjpKT4kut_l6VnzRpMNYvcH-G2XvtIM
  *
  * Columns (row 1 header already exists): Nama | sesi_mulai | sesi_selesai
@@ -35,7 +37,7 @@
  * up the change — creating a brand new deployment gives a different URL.
  */
 
-var SHEET_NAME = 'tebaksandi';
+var SHEET_NAME = 'peserta';
 
 function doPost(e) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);

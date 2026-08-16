@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Irrigation – Latsitarda PoltekSSN | Instalasi, Implementasi &amp; Integrasi Mobile App</title>
+<meta name="description" content="Dokumentasi project Smart Irrigation (Latsitarda Nusantara XLIII, PoltekSSN): konteks program Desa Digital, instalasi driver &amp; Arduino IDE, wiring, source code NodeMCU ESP8266 ke MQTT HiveMQ, hasil implementasi, dan integrasi ke mobile app &quot;Irigasi Pintar&quot; (Irpin Solok).">
+<style>
+  :root {
+    --accent: #16a34a;
+    --accent-dark: #15803d;
+    --accent-light: #dcfce7;
+    --bg-light: #f4faf6;
+    --text-dark: #16241c;
+    --text-muted: #5b6b62;
+    --shadow: 0 4px 20px rgba(15, 41, 25, 0.08);
+    --radius: 12px;
+    --accent-blue: #2980b9;
+    --accent-orange: #e67e22;
+    --accent-red: #e74c3c;
+    --accent-purple: #8e44ad;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
+  a { color: var(--accent-dark); }
+
+  /* HEADER */
+  .page-header { background: linear-gradient(135deg, #14532d 0%, #16a34a 55%, #4ade80 100%); color: #fff; padding: 36px 24px 30px; }
+  .header-inner { max-width: 1000px; margin: 0 auto; }
+  .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); text-decoration: none; margin-bottom: 18px; }
+  .back-link:hover { color: #fff; text-decoration: underline; }
+  .header-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.35); color: #fff; border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 14px; }
+  .page-header h1 { font-size: clamp(24px, 4vw, 32px); font-weight: 800; margin-bottom: 8px; }
+  .page-header p.lead { font-size: 14px; color: rgba(255,255,255,0.85); max-width: 640px; }
+  .header-meta { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+  .meta-item { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 8px 16px; }
+  .meta-item .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.7); }
+  .meta-item .value { font-size: 13px; font-weight: 700; margin-top: 2px; }
+
+  /* LAYOUT */
+  .container { max-width: 1000px; margin: 0 auto; padding: 32px 20px 80px; }
+  .toc { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 22px; margin-bottom: 32px; }
+  .toc h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent-dark); margin-bottom: 10px; }
+  .toc ol { list-style: decimal; padding-left: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; }
+  .toc a { font-size: 13.5px; color: var(--text-dark); text-decoration: none; }
+  .toc a:hover { color: var(--accent-dark); text-decoration: underline; }
+
+  section.doc-section { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 28px; overflow: hidden; scroll-margin-top: 16px; }
+  .section-header { padding: 20px 26px; border-left: 6px solid var(--accent); display: flex; align-items: center; gap: 14px; }
+  .section-num { width: 38px; height: 38px; border-radius: 10px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; flex-shrink: 0; }
+  .section-header h2 { font-size: 18px; font-weight: 800; color: var(--accent-dark); }
+  .section-body { padding: 6px 26px 26px; }
+  h3.sub-title { font-size: 14.5px; font-weight: 700; color: var(--accent-dark); margin: 18px 0 10px; }
+  h3.sub-title:first-child { margin-top: 0; }
+  p, li { font-size: 13.5px; color: #333; }
+
+  .step-list { list-style: none; margin-bottom: 12px; }
+  .step-list li { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+  .step-badge { min-width: 24px; height: 24px; border-radius: 50%; background: var(--accent-dark); color: #fff; font-weight: 800; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .step-content { font-size: 13.5px; color: #333; line-height: 1.65; }
+  .step-content code, p code, li code { background: #eef2ef; padding: 1px 6px; border-radius: 4px; font-size: 12px; font-family: "Courier New", monospace; }
+
+  ul.plain { list-style: disc; padding-left: 20px; margin-bottom: 10px; }
+  ul.plain li { margin-bottom: 6px; }
+
+  /* BOXES */
+  .info-box, .warn-box, .ok-box, .note-box { border-radius: 8px; padding: 12px 16px; margin: 6px 0 16px; border-left: 4px solid; }
+  .info-box { background: #e3f2fd; border-color: var(--accent-blue); }
+  .warn-box { background: #fff8e1; border-color: var(--accent-orange); }
+  .ok-box { background: var(--accent-light); border-color: var(--accent); }
+  .note-box { background: #f3e5f5; border-color: var(--accent-purple); }
+  .info-box p, .warn-box p, .ok-box p, .note-box p { font-size: 13px; line-height: 1.6; color: #333; }
+  .box-label { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .info-box .box-label { color: var(--accent-blue); }
+  .warn-box .box-label { color: #b8730c; }
+  .ok-box .box-label { color: var(--accent-dark); }
+  .note-box .box-label { color: var(--accent-purple); }
+
+  /* TABLES */
+  .table-wrap { overflow-x: auto; margin-bottom: 16px; }
+  table.spec-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.spec-table th, table.spec-table td { padding: 8px 12px; border: 1px solid #e2e8e4; text-align: left; vertical-align: top; }
+  table.spec-table th { background: var(--accent-light); color: var(--accent-dark); font-weight: 700; }
+  table.spec-table td code { background: #eef2ef; padding: 1px 5px; border-radius: 4px; font-family: "Courier New", monospace; font-size: 12px; }
+
+  /* CODE BLOCK */
+  .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 16px 18px; font-family: "Courier New", monospace; font-size: 12px; line-height: 1.65; margin: 8px 0 16px; overflow-x: auto; white-space: pre; }
+  .code-caption { font-size: 11px; color: var(--text-muted); margin: -8px 0 8px; }
+
+  /* IMAGE SLOTS */
+  .img-slot { position: relative; border-radius: 10px; overflow: hidden; margin: 10px 0 18px; border: 1px solid #e2e8e4; background: #fafcfa; }
+  .img-slot img { display: block; width: 100%; height: auto; }
+  .img-slot img.img-missing { display: none; }
+  .img-fallback { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 36px 16px; text-align: center; }
+  .img-slot img.img-missing + .img-fallback { display: flex; }
+  .img-fallback .icon { font-size: 24px; }
+  .img-fallback span { font-size: 12px; color: var(--text-muted); }
+  .img-fallback code { background: #eef2ef; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; }
+  .img-caption { font-size: 12px; color: var(--text-muted); text-align: center; padding: 8px 10px 0; }
+
+  .link-list { list-style: none; }
+  .link-list li { margin-bottom: 10px; padding: 10px 14px; background: #fafcfa; border: 1px solid #e2e8e4; border-radius: 8px; font-size: 13px; }
+  .link-list .tag { display: inline-block; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent-dark); background: var(--accent-light); border-radius: 10px; padding: 2px 8px; margin-right: 8px; }
+  .link-list a { word-break: break-all; }
+
+  footer.page-footer { text-align: center; padding: 10px 16px 0; font-size: 12px; color: var(--text-muted); }
+
+  @media (max-width: 640px) {
+    .toc ol { grid-template-columns: 1fr; }
+    .section-header { padding: 16px 18px; }
+    .section-body { padding: 4px 18px 20px; }
+  }
+</style>
+</head>
+<body>
+  <header class="page-header">
+    <div class="header-inner">
+      <a class="back-link" href="../index.html#portfolio">&#8592; Kembali ke Portfolio</a>
+      <div class="header-badge">🤖 Hardware / IoT Project</div>
+      <h1>Smart Irrigation — Latsitarda PoltekSSN</h1>
+      <p class="lead">Dokumentasi alur lengkap: konteks program, instalasi driver &amp; Arduino IDE, wiring, source code NodeMCU ESP8266 untuk membaca sensor kelembaban tanah &amp; ketinggian air dan mempublikasikan datanya ke broker MQTT, hasil implementasi di sawah, hingga integrasi ke mobile app <strong>Irigasi Pintar (Irpin Solok)</strong> yang dipakai petani.</p>
+      <div class="header-meta">
+        <div class="meta-item"><div class="label">Hardware</div><div class="value">NodeMCU ESP8266 Lolin</div></div>
+        <div class="meta-item"><div class="label">Peran</div><div class="value">Hardware Developer</div></div>
+        <div class="meta-item"><div class="label">Protokol</div><div class="value">MQTT (HiveMQ Cloud)</div></div>
+        <div class="meta-item"><div class="label">Mobile App</div><div class="value">Irigasi Pintar (Irpin Solok)</div></div>
+        <div class="meta-item"><div class="label">Lokasi</div><div class="value">Kota Solok, Sumatera Barat</div></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <nav class="toc" aria-label="Daftar isi">
+      <h2>Daftar Isi</h2>
+      <ol>
+        <li><a href="#bom">Ringkasan &amp; Bill of Materials</a></li>
+        <li><a href="#konteks">Konteks Program</a></li>
+        <li><a href="#setting">Setting Instalasi</a></li>
+        <li><a href="#design">Design Hardware &amp; Wiring</a></li>
+        <li><a href="#source">Source Code</a></li>
+        <li><a href="#output">Contoh Output &amp; Format Data</a></li>
+        <li><a href="#mobile-app">Integrasi Mobile App</a></li>
+        <li><a href="#implementasi">Prototyping &amp; Implementasi</a></li>
+        <li><a href="#referensi">Referensi</a></li>
+      </ol>
+    </nav>
+
+    <!-- 1. BOM -->
+    <section class="doc-section" id="bom">
+      <div class="section-header"><div class="section-num">1</div><h2>Ringkasan &amp; Bill of Materials</h2></div>
+      <div class="section-body">
+        <p style="margin-bottom:12px;">Tiap node membaca sensornya secara berkala lalu mempublikasikan nilainya ke broker MQTT. Di lapangan, sistem ini dipasang sebagai <strong>3 pasang node</strong> (3 sensor kelembaban tanah + 3 sensor ketinggian air) di titik-titik sawah yang berbeda, dan datanya ditampilkan ke petani lewat mobile app <strong>Irigasi Pintar (Irpin Solok)</strong> — lihat bagian <a href="#konteks">Konteks Program</a> dan <a href="#mobile-app">Integrasi Mobile App</a>. Source code yang didokumentasikan di bagian 5 adalah sketch representatif untuk satu node (soil moisture); node ketinggian air memakai pola yang sama dengan sensor &amp; topic MQTT yang berbeda.</p>
+        <div class="table-wrap">
+          <table class="spec-table">
+            <thead><tr><th>Komponen</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td>NodeMCU ESP8266 (Lolin)</td><td>Mikrokontroler dengan WiFi bawaan, menjalankan sketch di bawah</td></tr>
+              <tr><td>Sensor Soil Moisture (analog)</td><td>Terhubung ke pin <code>A0</code>, dibaca sebagai nilai analog 0–1024</td></tr>
+              <tr><td>Sensor Ketinggian Air</td><td>Node terpisah dengan pola kode yang sama, satuan output CM (lihat bagian <a href="#design">Design Hardware</a>)</td></tr>
+              <tr><td>LED indikator</td><td>Terhubung ke pin <code>D5</code>, berkedip tiap siklus <code>loop()</code> sebagai heartbeat</td></tr>
+              <tr><td>Panel surya + baterai 18650</td><td>Sumber daya mandiri per node di lapangan (lihat diagram wiring di bagian 3)</td></tr>
+              <tr><td>Modem</td><td>Menghubungkan node-node di sawah ke internet/server saat tidak ada WiFi tetap</td></tr>
+              <tr><td>Kabel USB CH340G</td><td>Untuk flashing sketch &amp; power dari komputer (butuh driver CH340G, lihat bagian 3)</td></tr>
+              <tr><td>Broker MQTT — HiveMQ Cloud</td><td>Menampung data yang dipublish dari device (koneksi TLS port <code>8883</code>)</td></tr>
+              <tr><td>Mobile App — Irigasi Pintar (Irpin Solok)</td><td>Menampilkan data realtime dari server ke petani, lihat bagian <a href="#mobile-app">Integrasi Mobile App</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note-box">
+          <span class="box-label">Catatan sumber</span>
+          <p>Bill of materials inti, tabel wiring, dan contoh output diturunkan langsung dari pin/variabel di source code node soil moisture — bukan asumsi tambahan. Baris panel surya, baterai, modem, node ketinggian air, dan mobile app diturunkan dari dokumentasi presentasi project (<em>IRIGASI PINTAR.pptx</em>) dan artikel resmi PoltekSSN, dicatat sebagai konteks sistem lengkap di luar sketch yang ditampilkan.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. KONTEKS PROGRAM -->
+    <section class="doc-section" id="konteks">
+      <div class="section-header"><div class="section-num">2</div><h2>Konteks Program</h2></div>
+      <div class="section-body">
+        <p style="margin-bottom:10px;">Project ini dibangun pada <strong>Latsitarda Nusantara XLIII/2023</strong> (latihan integratif taruna/taruni gabungan Poltek SSN, Akmil, AAL, AAU, Akpol, dan Praja IPDN) di <strong>Kota Solok, Sumatera Barat</strong> — daerah sentra produksi padi ("Beras Solok") yang jadi pemasok utama beras ke Sumatera Barat hingga Jambi dan Riau, dengan sentra produksi di Kecamatan Gunung Talang, Bukit Sundi, Kubung, Lembang Jaya, dan X Koto Singkarak.</p>
+        <p style="margin-bottom:10px;">Smart Irrigation adalah salah satu implementasi dari program <strong>Desa Digital</strong>: memanfaatkan teknologi IoT dan digitalisasi kegiatan pertanian agar petani bisa memantau kondisi sawah tanpa harus datang langsung ke lokasi.</p>
+        <div class="table-wrap">
+          <table class="spec-table">
+            <thead><tr><th>Prasyarat program</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td>Jaringan internet di desa</td><td>Dipenuhi lewat modem di tiap titik node (lihat bagian Bill of Materials)</td></tr>
+              <tr><td>SDM pengelola desa digital</td><td>Petani/perangkat desa yang memantau data lewat mobile app</td></tr>
+              <tr><td>Dukungan aktif Pemerintah Desa</td><td>Pemasangan &amp; pemeliharaan perangkat di lahan sawah warga</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ok-box">
+          <span class="box-label">Manfaat bagi petani</span>
+          <p>Petani bisa melihat kondisi ketinggian air dan kelembaban tanah dari rumah tanpa perlu selalu sehat/mampu ke sawah, membantu menentukan waktu &amp; jumlah air irigasi yang tepat, menghindari kelebihan/kekurangan air, mendeteksi masalah drainase lebih awal, hingga jadi peringatan dini risiko banjir/erosi dan penyakit tanaman (mis. Blast) akibat genangan yang tidak sesuai fase pertumbuhan padi.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SETTING INSTALASI -->
+    <section class="doc-section" id="setting">
+      <div class="section-header"><div class="section-num">3</div><h2>Setting Instalasi</h2></div>
+      <div class="section-body">
+
+        <h3 class="sub-title">2.1 Install Driver CH340G</h3>
+        <p style="margin-bottom:10px;">NodeMCU Lolin memakai chip USB-to-serial CH340G. Install driver-nya dulu agar komputer bisa mengenali board saat dicolok lewat USB.</p>
+        <div class="info-box">
+          <span class="box-label">Sumber driver</span>
+          <p>Driver resmi CH340G tersedia di situs pabrikan WCH: <a href="https://www.wch-ic.com/downloads/CH341SER_ZIP.html" target="_blank" rel="noopener">wch-ic.com/downloads/CH341SER_ZIP.html</a>. Dokumentasi asli project ini melampirkan file <code>DRIVER1_CH340.zip</code> langsung di Notion — file tersebut tidak ikut diekstrak ke sini, silakan taruh salinannya sendiri di <code>smart-irrigation/files/DRIVER1_CH340.zip</code> jika ingin tetap menyertakan versi yang persis sama.</p>
+        </div>
+
+        <h3 class="sub-title">2.2 Install Board NodeMCU ESP8266 ke Arduino IDE</h3>
+        <ol class="step-list">
+          <li><span class="step-badge">1</span><span class="step-content">Buka Arduino IDE, lalu pilih menu <strong>File &rarr; Preferences</strong>.</span></li>
+          <li><span class="step-badge">2</span><span class="step-content">Pada kolom <strong>Additional Boards Manager URLs</strong>, tempelkan URL berikut lalu klik <strong>OK</strong>:<br><code>http://arduino.esp8266.com/stable/package_esp8266com_index.json</code></span></li>
+        </ol>
+        <div class="img-slot">
+          <img src="img/01-boards-manager-url.png" alt="Menambahkan URL ke Additional Boards Manager URLs" onerror="this.classList.add('img-missing')">
+          <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/01-boards-manager-url.png</code></span></div>
+        </div>
+        <ol class="step-list" start="3">
+          <li><span class="step-badge">3</span><span class="step-content">Buka <strong>Tools &rarr; Board &rarr; Boards Manager…</strong>, cari <strong>ESP8266 Community</strong>, lalu klik Install.</span></li>
+        </ol>
+        <div class="img-slot">
+          <img src="img/02-esp8266-community-install.png" alt="Instalasi board ESP8266 Community di Boards Manager" onerror="this.classList.add('img-missing')">
+          <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/02-esp8266-community-install.png</code></span></div>
+        </div>
+        <ol class="step-list" start="4">
+          <li><span class="step-badge">4</span><span class="step-content">Buka Library Manager, cari library <strong>PubSubClient</strong> (repo: <a href="https://github.com/knolleary/pubsubclient" target="_blank" rel="noopener">knolleary/pubsubclient</a>), lalu Install.</span></li>
+        </ol>
+        <div class="img-slot">
+          <img src="img/03-pubsubclient-install.png" alt="Instalasi library PubSubClient" onerror="this.classList.add('img-missing')">
+          <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/03-pubsubclient-install.png</code></span></div>
+        </div>
+        <div class="info-box">
+          <span class="box-label">Core ESP8266</span>
+          <p>Board manager di atas menginstall Arduino core resmi untuk ESP8266: <a href="https://github.com/esp8266/Arduino" target="_blank" rel="noopener">github.com/esp8266/Arduino</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. DESIGN & WIRING -->
+    <section class="doc-section" id="design">
+      <div class="section-header"><div class="section-num">4</div><h2>Design Hardware &amp; Wiring</h2></div>
+      <div class="section-body">
+        <div class="img-slot">
+          <img src="img/04-design-hardware.png" alt="Skema/desain hardware Smart Irrigation" onerror="this.classList.add('img-missing')">
+          <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/04-design-hardware.png</code></span></div>
+        </div>
+        <p class="img-caption" style="margin:-10px 0 14px;">Diagram wiring: panel surya mengisi baterai 18650 (lewat modul charge/protection), yang jadi sumber daya NodeMCU, LED indikator, dan sensor soil moisture — sesuai desain per-node yang mandiri daya di lapangan.</p>
+        <div class="table-wrap">
+          <table class="spec-table">
+            <thead><tr><th>Pin NodeMCU</th><th>Terhubung ke</th><th>Fungsi di kode</th></tr></thead>
+            <tbody>
+              <tr><td><code>A0</code></td><td>Sensor soil moisture (output analog)</td><td><code>analogRead(sensor1)</code>, dikonversi ke persentase kelembaban</td></tr>
+              <tr><td><code>D5</code></td><td>LED indikator</td><td><code>digitalWrite(led, led_state)</code> — toggle tiap siklus <code>loop()</code></td></tr>
+              <tr><td><code>GPIO2</code></td><td>&mdash;</td><td><code>digitalWrite(2, HIGH)</code> — di-set HIGH terus tiap loop</td></tr>
+              <tr><td><code>BUILTIN_LED</code></td><td>LED bawaan board</td><td>diinisialisasi sebagai <code>OUTPUT</code> di <code>setup()</code></td></tr>
+              <tr><td>Baterai 18650 (via modul charge/protection)</td><td>Jalur daya (VIN/3V3 &amp; GND)</td><td>Diisi oleh panel surya, menyalakan NodeMCU secara mandiri di lapangan</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="warn-box">
+          <span class="box-label">Kalibrasi sensor</span>
+          <p>Konversi ke persentase memakai <code>((sensor_value - 288.00) / (1024.00 - 288.00)) * 100.00</code>. Nilai <code>288.00</code> adalah baseline kalibrasi spesifik untuk sensor yang dipakai di project ini — dipertahankan apa adanya dari source code asli, sesuaikan sendiri jika sensormu berbeda.</p>
+        </div>
+
+        <h3 class="sub-title">Satuan &amp; Ambang Nilai Sensor</h3>
+        <div class="table-wrap">
+          <table class="spec-table">
+            <thead><tr><th>Sensor</th><th>Satuan</th><th>Rentang</th></tr></thead>
+            <tbody>
+              <tr><td rowspan="3">Kelembaban tanah</td><td rowspan="3">RH (Relative Humidity)</td><td>0–40 RH — tanah kering</td></tr>
+              <tr><td>40–60 RH — kelembaban ideal</td></tr>
+              <tr><td>60–100 RH — tanah basah</td></tr>
+              <tr><td>Ketinggian air</td><td>CM (dari permukaan tanah)</td><td>Optimal untuk padi sawah: sekitar &minus;2.5 s.d. 7.5 cm (lihat referensi di bawah)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="info-box">
+          <span class="box-label">Rujukan ketinggian air optimal</span>
+          <p>Arwitas (1988): penggenangan 2.5–5.0 cm. De Datta (1993): penggenangan 2.5–7.5 cm terus-menerus memberi hasil optimal. Percobaan Muammar Michael (2018): tinggi genangan optimal &minus;2.5 cm s.d. 7.5 cm. Angka-angka ini dikutip apa adanya dari materi presentasi project, bukan hasil pengukuran independen.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. SOURCE CODE -->
+    <section class="doc-section" id="source">
+      <div class="section-header"><div class="section-num">5</div><h2>Source Code</h2></div>
+      <div class="section-body">
+        <p style="margin-bottom:10px;">Sketch Arduino untuk NodeMCU ESP8266: membaca sensor soil moisture, konek ke WiFi &amp; broker MQTT HiveMQ Cloud (TLS), lalu mempublikasikan pembacaan setiap 10 detik. Node sensor ketinggian air di lapangan memakai pola kode yang sama — bedanya cuma jenis sensor yang dibaca di <code>analogRead()</code>/pin input dan nama <code>topic</code> MQTT-nya — tapi sketch spesifik untuk node tersebut tidak ada di sumber dokumentasi asli, jadi tidak dicantumkan di sini supaya tidak mengarang kode yang belum pernah diverifikasi berjalan.</p>
+        <div class="warn-box">
+          <span class="box-label">Kredensial di-redact</span>
+          <p><code>ssid</code>, <code>password</code>, <code>mqtt_server</code>, <code>mqtt_username</code>, dan <code>mqtt_password</code> di bawah ini sudah diganti jadi placeholder. Isi dengan kredensial WiFi &amp; broker MQTT-mu sendiri di salinan lokal — jangan commit nilai asli ke repository publik ini.</p>
+        </div>
+        <p class="code-caption">smart-irrigation-esp8266.ino</p>
+        <div class="code-block">/*
+ * Smart Irrigation
+ * Latsitarda
+ * Politeknik Siber dan Sandi Negara
+ */
+
+
+#include &lt;ESP8266WiFi.h&gt;  // Pins for board ESP8266 Wemos-NodeMCU
+#include &lt;PubSubClient.h&gt;
+#include &lt;WiFiClientSecure.h&gt;
+//////////////
+//---- WiFi settings
+// GANTI nilai di bawah ini dengan kredensial WiFi Anda sendiri.
+// Jangan commit kredensial asli ke repository publik.
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+
+//---- MQTT Broker settings
+// GANTI dengan detail cluster HiveMQ Cloud Anda sendiri.
+const char* mqtt_server = "YOUR_HIVEMQ_CLUSTER_URL"; // contoh: xxxxxxxxxxxx.s2.eu.hivemq.cloud
+const char* mqtt_username = "YOUR_MQTT_USERNAME";
+const char* mqtt_password = "YOUR_MQTT_PASSWORD";
+const int mqtt_port =8883;
+const char* sensor1_topic= "solok/humidity2";
+// Sensor Soil Humidity
+int sensor1 = A0;
+
+
+int led = D5; //pin LED
+bool led_state = false; // status LED, false untuk mati dan true untuk nyala
+
+WiFiClientSecure espClient;   // for no secure connection use WiFiClient instead of WiFiClientSecure
+//WiFiClient espClient;
+PubSubClient client(espClient);
+unsigned long lastMsg = 0;
+
+#define MSG_BUFFER_SIZE	(50)
+char msg[MSG_BUFFER_SIZE];
+
+static const char *root_ca PROGMEM = R"EOF(
+-----BEGIN CERTIFICATE-----
+MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
+TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh
+cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4
+WhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJu
+ZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBY
+MTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK3oJHP0FDfzm54rVygc
+h77ct984kIxuPOZXoHj3dcKi/vVqbvYATyjb3miGbESTtrFj/RQSa78f0uoxmyF+
+0TM8ukj13Xnfs7j/EvEhmkvBioZxaUpmZmyPfjxwv60pIgbz5MDmgK7iS4+3mX6U
+A5/TR5d8mUgjU+g4rk8Kb4Mu0UlXjIB0ttov0DiNewNwIRt18jA8+o+u3dpjq+sW
+T8KOEUt+zwvo/7V3LvSye0rgTBIlDHCNAymg4VMk7BPZ7hm/ELNKjD+Jo2FR3qyH
+B5T0Y3HsLuJvW5iB4YlcNHlsdu87kGJ55tukmi8mxdAQ4Q7e2RCOFvu396j3x+UC
+B5iPNgiV5+I3lg02dZ77DnKxHZu8A/lJBdiB3QW0KtZB6awBdpUKD9jf1b0SHzUv
+KBds0pjBqAlkd25HN7rOrFleaJ1/ctaJxQZBKT5ZPt0m9STJEadao0xAH0ahmbWn
+OlFuhjuefXKnEgV4We0+UXgVCwOPjdAvBbI+e0ocS3MFEvzG6uBQE3xDk3SzynTn
+jh8BCNAw1FtxNrQHusEwMFxIt4I7mKZ9YIqioymCzLq9gwQbooMDQaHWBfEbwrbw
+qHyGO0aoSCqI3Haadr8faqU9GY/rOPNk3sgrDQoo//fb4hVC1CLQJ13hef4Y53CI
+rU7m2Ys6xt0nUW7/vGT1M0NPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNV
+HRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5tFnme7bl5AFzgAiIyBpY9umbbjANBgkq
+hkiG9w0BAQsFAAOCAgEAVR9YqbyyqFDQDLHYGmkgJykIrGF1XIpu+ILlaS/V9lZL
+ubhzEFnTIZd+50xx+7LSYK05qAvqFyFWhfFQDlnrzuBZ6brJFe+GnY+EgPbk6ZGQ
+3BebYhtF8GaV0nxvwuo77x/Py9auJ/GpsMiu/X1+mvoiBOv/2X/qkSsisRcOj/KK
+NFtY2PwByVS5uCbMiogziUwthDyC3+6WVwW6LLv3xLfHTjuCvjHIInNzktHCgKQ5
+ORAzI4JMPJ+GslWYHb4phowim57iaztXOoJwTdwJx4nLCgdNbOhdjsnvzqvHu7Ur
+TkXWStAmzOVyyghqpZXjFaH3pO3JLF+l+/+sKAIuvtd7u+Nxe5AW0wdeRlN8NwdC
+jNPElpzVmbUq4JUagEiuTDkHzsxHpFKVK7q4+63SM1N95R1NbdWhscdCb+ZAJzVc
+oyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq
+4RgqsahDYVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPA
+mRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d
+emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
+-----END CERTIFICATE-----
+)EOF";
+
+//==========================================
+void setup_wifi() {
+  delay(10);
+  Serial.print("\nConnecting to ");
+  Serial.println(ssid);
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  randomSeed(micros());
+  Serial.println("\nWiFi connected\nIP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+//=====================================
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    String clientId = "ESP8266Client-";   // Create a random client ID
+    clientId += String(random(0xffff), HEX);
+    // Attempt to connect
+    if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
+      Serial.println("connected");
+
+       // subscribe the topics here
+      //client.subscribe(command2_topic);   // subscribe the topics here
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");   // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
+//================================================ setup
+void setup() {
+  pinMode(led, OUTPUT);
+  pinMode(2, OUTPUT);
+
+  Serial.begin(9600);
+  while (!Serial) delay(1);
+  setup_wifi();
+  pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
+
+  #ifdef ESP8266
+    espClient.setInsecure();
+  #else   // for the ESP32
+    espClient.setCACert(root_ca);      // enable this line and the the "certificate" code for secure connection
+  #endif
+
+  client.setServer(mqtt_server, mqtt_port);
+}
+
+//================================================ loop
+void loop() {
+ digitalWrite(2, HIGH);
+ digitalWrite(led, led_state);  // mengatur output pada pin LED sesuai dengan status LED
+
+  led_state = !led_state;  // mengubah status LED menjadi kebalikannya
+
+
+  if (!client.connected()) reconnect();
+  client.loop();
+
+     int sensor_value = analogRead(sensor1);
+     float moisturePercent = ((sensor_value - 288.00) / (1024.00-288.00)) * 100.00; //konversi dari bacaan sensor kelembaban tanah ke Rh : Rh = ((Bacaan Sensor - Nilai Minimum)/(Nilai Maksimum - Nilai Minimum)) x 100
+   //float moisturePercent = ((1024 - sensor_value) / 1024.00) * 100.00; // konversi nilai sensor kelembaban tanah ke dalam persentase
+
+    publishMessage(sensor1_topic,String(moisturePercent),true);
+
+
+
+  delay(10000);
+}
+
+//======================================= publising as string
+void publishMessage(const char* topic, String payload , boolean retained){
+  if (client.publish(topic, payload.c_str(), true))
+      Serial.println("Message publised ["+String(topic)+"]: "+payload);
+}</div>
+      </div>
+    </section>
+
+    <!-- 6. CONTOH OUTPUT -->
+    <section class="doc-section" id="output">
+      <div class="section-header"><div class="section-num">6</div><h2>Contoh Output &amp; Format Data</h2></div>
+      <div class="section-body">
+        <h3 class="sub-title">Serial Monitor (baud 9600)</h3>
+        <p class="code-caption">Contoh log saat device menyala dan berhasil konek</p>
+        <div class="code-block">Connecting to YOUR_WIFI_SSID
+.....
+WiFi connected
+IP address:
+192.168.1.23
+Attempting MQTT connection...connected
+Message publised [solok/humidity2]: 42.35
+Message publised [solok/humidity2]: 41.90</div>
+
+        <h3 class="sub-title">Payload MQTT</h3>
+        <div class="table-wrap">
+          <table class="spec-table">
+            <thead><tr><th>Item</th><th>Nilai</th></tr></thead>
+            <tbody>
+              <tr><td>Topic</td><td><code>solok/humidity2</code></td></tr>
+              <tr><td>Payload</td><td>String angka persentase kelembaban, mis. <code>"42.35"</code></td></tr>
+              <tr><td>Retained</td><td><code>true</code> — broker menyimpan pesan terakhir untuk subscriber baru</td></tr>
+              <tr><td>Interval publish</td><td>~10 detik (<code>delay(10000)</code> di akhir <code>loop()</code>)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ok-box">
+          <span class="box-label">Cara verifikasi</span>
+          <p>Subscribe ke topic <code>solok/humidity2</code> lewat MQTT client (mis. MQTT Explorer atau <code>mosquitto_sub</code>) yang terhubung ke cluster HiveMQ Cloud yang sama. Kalau device berhasil publish, nilai persentase kelembaban akan muncul setiap ~10 detik.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. INTEGRASI MOBILE APP -->
+    <section class="doc-section" id="mobile-app">
+      <div class="section-header"><div class="section-num">7</div><h2>Integrasi Mobile App</h2></div>
+      <div class="section-body">
+        <p style="margin-bottom:10px;">Data yang dipublish tiap node ke broker MQTT diteruskan oleh server ke mobile app Android <strong>"Irigasi Pintar"</strong> (terdaftar di Play Store dengan nama <strong>Irpin Solok</strong>, developer <strong>Pluto Lab</strong>), supaya petani bisa memantau sawah dari rumah.</p>
+        <div class="img-slot">
+          <img src="img/07-mobile-app-realtime.jpg" alt="Foto sensor terpasang di sawah berdampingan dengan tampilan realtime app Irigasi Pintar" onerror="this.classList.add('img-missing')">
+          <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/07-mobile-app-realtime.jpg</code></span></div>
+        </div>
+        <p class="img-caption" style="margin:-10px 0 14px;">Kiri: node sensor kelembaban &amp; ketinggian air (dengan modem) terpasang di saluran irigasi sawah. Kanan: tampilan app "Irigasi Pintar" dengan dua tab realtime — Ketinggian Air (cm) dan Kelembaban Tanah (RH) — untuk masing-masing 3 sensor.</p>
+
+        <h3 class="sub-title">Alur Data ke Mobile App</h3>
+        <ol class="step-list">
+          <li><span class="step-badge">1</span><span class="step-content">Tiap node (NodeMCU + sensor + modem) membaca nilai sensornya dan <code>publish</code> ke broker MQTT lewat koneksi internet dari modem — pola yang sama dengan sketch di bagian <a href="#source">Source Code</a>.</span></li>
+          <li><span class="step-badge">2</span><span class="step-content">Server men-<code>subscribe</code> topic-topic MQTT tersebut dan menyimpan/menyediakan nilai terbaru tiap sensor.</span></li>
+          <li><span class="step-badge">3</span><span class="step-content">Mobile app "Irigasi Pintar" mengambil data dari server tersebut dan menampilkannya sebagai daftar realtime per sensor, dipisah tab Ketinggian Air dan Kelembaban Tanah.</span></li>
+        </ol>
+        <div class="note-box">
+          <span class="box-label">Detail server &amp; app di luar cakupan dokumentasi ini</span>
+          <p>Bagaimana persisnya server meneruskan data dari broker MQTT ke app (REST API, polling, atau MQTT langsung dari app) tidak ada di materi presentasi sumber, jadi tidak didokumentasikan di sini supaya tidak mengarang detail yang belum terverifikasi. Yang bisa dipastikan dari sumber: alurnya <strong>Sensor Node &rarr; Modem/Internet &rarr; Server &rarr; Mobile App</strong>.</p>
+        </div>
+        <div class="warn-box">
+          <span class="box-label">Status ketersediaan app</span>
+          <p>Per dokumentasi sumber (2023), app terdaftar di Play Store sebagai <strong>Irpin Solok</strong> oleh Pluto Lab. Saya tidak menemukan URL listing tersebut lewat pencarian web saat menulis halaman ini, jadi tautan langsung tidak dicantumkan di sini supaya tidak salah arah — statusnya (masih live, berganti nama, atau sudah di-unpublish) perlu dicek langsung ke pengelola project sebelum dicantumkan sebagai link publik.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. IMPLEMENTASI -->
+    <section class="doc-section" id="implementasi">
+      <div class="section-header"><div class="section-num">8</div><h2>Prototyping &amp; Implementasi</h2></div>
+      <div class="section-body">
+        <div class="img-slot">
+          <img src="img/05-prototype-1.png" alt="Foto prototipe Smart Irrigation" onerror="this.classList.add('img-missing')">
+          <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/05-prototype-1.png</code></span></div>
+        </div>
+        <div class="img-slot">
+          <img src="img/06-prototype-2.png" alt="Foto implementasi Smart Irrigation di lapangan" onerror="this.classList.add('img-missing')">
+          <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/06-prototype-2.png</code></span></div>
+        </div>
+        <div class="img-slot">
+          <img src="img/08-sensor-assembly.jpg" alt="Rangkaian sensor sebelum dan sesudah dipasang dalam housing pipa PVC waterproof" onerror="this.classList.add('img-missing')">
+          <div class="img-fallback"><span class="icon">📷</span><span>Gambar belum tersedia — taruh file di <code>img/08-sensor-assembly.jpg</code></span></div>
+        </div>
+        <p class="img-caption" style="margin:-10px 0 4px;">Modul sensor (probe + board NodeMCU + baterai) sebelum dan sesudah dipasang dalam housing pipa PVC tahan air untuk penempatan di saluran irigasi.</p>
+      </div>
+    </section>
+
+    <!-- 9. REFERENSI -->
+    <section class="doc-section" id="referensi">
+      <div class="section-header"><div class="section-num">9</div><h2>Referensi</h2></div>
+      <div class="section-body">
+        <ul class="link-list">
+          <li><span class="tag">Blog</span><a href="https://www.hivemq.com/blog/mqtt-on-arduino-nodemcu-esp8266-hivemq-cloud/" target="_blank" rel="noopener">HiveMQ — MQTT on Arduino NodeMCU ESP8266 &amp; HiveMQ Cloud</a></li>
+          <li><span class="tag">Forum</span><a href="https://community.hivemq.com/t/arduino-example-with-server-signed-certificate/502" target="_blank" rel="noopener">HiveMQ Community — Arduino example with server-signed certificate</a></li>
+          <li><span class="tag">Q&amp;A</span><a href="https://stackoverflow.com/questions/73444331/failed-to-connect-to-hivemq-and-arduino-state-2" target="_blank" rel="noopener">Stack Overflow — Failed to connect to HiveMQ, Arduino state -2</a></li>
+          <li><span class="tag">Repo</span><a href="https://github.com/esp8266/Arduino" target="_blank" rel="noopener">github.com/esp8266/Arduino — ESP8266 core untuk Arduino IDE</a></li>
+          <li><span class="tag">Repo</span><a href="https://github.com/knolleary/pubsubclient" target="_blank" rel="noopener">github.com/knolleary/pubsubclient — library MQTT client</a></li>
+          <li><span class="tag">Artikel</span><a href="https://poltekssn.ac.id/berita/smart-irigation-di-solok-latsitarda-nusantara-xliii-2023/" target="_blank" rel="noopener">Politeknik Siber dan Sandi Negara — Smart Irrigation di Solok (Latsitarda Nusantara XLIII 2023)</a></li>
+          <li><span class="tag">Berita</span><a href="https://www.antaranews.com/berita/3561639/latsitardanus-xliii-terapkan-sistem-irigasi-pintar-di-sawah-solok" target="_blank" rel="noopener">ANTARA News — Latsitardanus XLIII terapkan sistem irigasi pintar di sawah Solok</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <p>Smart Irrigation — Latsitarda, Politeknik Siber dan Sandi Negara.</p>
+    </footer>
+  </div>
+</body>
+</html>

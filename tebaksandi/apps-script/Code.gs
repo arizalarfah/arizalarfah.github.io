@@ -7,12 +7,19 @@
  * the Sheets API on 2026-08-17, spreadsheet.sheets[].properties.title):
  *   https://docs.google.com/spreadsheets/d/1qdsGzZsu9G3eGjpKT4kut_l6VnzRpMNYvcH-G2XvtIM
  *
- * Columns (row 1 header already exists): Nama | sesi_mulai | sesi_selesai
+ * Columns: Nama | sesi_mulai | sesi_selesai | durasi
+ * (row 1 header for the first three already existed; add a "durasi" header
+ * in D1 yourself — this script only writes the data cells, not the header.)
+ *
+ * sesi_mulai/sesi_selesai are formatted client-side as "YYYY-MM-DD HH:mm:ss
+ * WIB" (Asia/Jakarta, UTC+7) rather than raw UTC — see formatWib() in
+ * tebaksandi/js/app.js. durasi is a human-readable "X menit Y detik" string,
+ * also formatted client-side.
  *
  * How it's called from the game (tebaksandi/js/app.js, logSessionEvent()):
- *   - action: "start"  -> appends a new row [nama, sesi_mulai, ""]
+ *   - action: "start"  -> appends a new row [nama, sesi_mulai, "", ""]
  *   - action: "finish" -> finds the row matching {nama, sesi_mulai} and
- *                         fills in sesi_selesai
+ *                         fills in sesi_selesai and durasi
  *
  * The request is sent with mode:"no-cors", so this script's response is
  * never read by the browser — logging is fire-and-forget and never blocks
@@ -44,14 +51,14 @@ function doPost(e) {
   var data = JSON.parse(e.postData.contents);
 
   if (data.action === 'start') {
-    sheet.appendRow([data.nama || '', data.sesi_mulai || '', '']);
+    sheet.appendRow([data.nama || '', data.sesi_mulai || '', '', '']);
   } else if (data.action === 'finish') {
     var values = sheet.getDataRange().getValues();
     // Search from the bottom so the most recent matching session (in case
     // of a duplicate name) gets updated, and skip row 0 (the header row).
     for (var i = values.length - 1; i >= 1; i--) {
       if (values[i][0] === data.nama && values[i][1] === data.sesi_mulai) {
-        sheet.getRange(i + 1, 3).setValue(data.sesi_selesai || '');
+        sheet.getRange(i + 1, 3, 1, 2).setValues([[data.sesi_selesai || '', data.durasi || '']]);
         break;
       }
     }

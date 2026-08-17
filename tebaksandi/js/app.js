@@ -5,19 +5,36 @@
   var STORAGE_KEY = 'tebaksandi-state';
 
   // Google Apps Script Web App URL for recording session start/finish to the
-  // "tebaksandi" Google Sheet tab (Nama / sesi_mulai / sesi_selesai). Empty
-  // until deployed — logSessionEvent() no-ops when this is blank, so the
-  // game works normally before the Sheet logging is wired up.
+  // "peserta" Google Sheet tab (Nama / sesi_mulai / sesi_selesai / durasi).
+  // Empty until deployed — logSessionEvent() no-ops when this is blank, so
+  // the game works normally before the Sheet logging is wired up.
   var SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxDHgsSyb8oUTYgUN4KaHA-L6SN819AIj7ua3PvhFlfHl-NU-dWsJNhj9UKyT6mlahU/exec';
 
   var state = {
     participantName: null,
     startTime: null,
-    startTimeIso: null,
+    startTimeWib: null,
     solvedLevels: {},
     currentLevel: null,
     currentQuestion: null,
   };
+
+  // Formats a Date as "YYYY-MM-DD HH:mm:ss WIB" (UTC+7, no daylight saving
+  // in Indonesia, so a fixed +7h offset is always correct — no timezone
+  // database needed).
+  function formatWib(date) {
+    var wib = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    return wib.getUTCFullYear() + '-' + pad(wib.getUTCMonth() + 1) + '-' + pad(wib.getUTCDate()) +
+      ' ' + pad(wib.getUTCHours()) + ':' + pad(wib.getUTCMinutes()) + ':' + pad(wib.getUTCSeconds()) + ' WIB';
+  }
+
+  // Formats a non-negative duration in whole seconds as "X menit Y detik".
+  function formatDuration(elapsedSeconds) {
+    var minutes = Math.floor(elapsedSeconds / 60);
+    var seconds = elapsedSeconds % 60;
+    return minutes + ' menit ' + seconds + ' detik';
+  }
 
   // Fire-and-forget POST to the Apps Script Web App. Uses mode:'no-cors' so
   // the browser never needs to read the response (Apps Script's response
@@ -53,7 +70,7 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       participantName: state.participantName,
       startTime: state.startTime,
-      startTimeIso: state.startTimeIso,
+      startTimeWib: state.startTimeWib,
       solvedLevels: state.solvedLevels,
     }));
   }
@@ -65,7 +82,7 @@
       var saved = JSON.parse(raw);
       state.participantName = saved.participantName || null;
       state.startTime = saved.startTime || null;
-      state.startTimeIso = saved.startTimeIso || null;
+      state.startTimeWib = saved.startTimeWib || null;
       state.solvedLevels = saved.solvedLevels || {};
     } catch (e) {
       // Corrupt localStorage value: ignore and start fresh.
@@ -85,12 +102,12 @@
     }
     state.participantName = name;
     state.startTime = Date.now();
-    state.startTimeIso = new Date(state.startTime).toISOString();
+    state.startTimeWib = formatWib(new Date(state.startTime));
     persistState();
     logSessionEvent({
       action: 'start',
       nama: state.participantName,
-      sesi_mulai: state.startTimeIso,
+      sesi_mulai: state.startTimeWib,
     });
     showScreen('screen-hub');
   }
@@ -198,10 +215,8 @@
     var elapsedSeconds = Math.floor((Date.now() - state.startTime) / 1000);
     var summary;
     if (elapsedSeconds >= 0 && elapsedSeconds <= MAX_SANE_ELAPSED_SECONDS) {
-      var minutes = Math.floor(elapsedSeconds / 60);
-      var seconds = elapsedSeconds % 60;
       summary = state.participantName + ', kamu menyelesaikan semua level dalam ' +
-        minutes + ' menit ' + seconds + ' detik.';
+        formatDuration(elapsedSeconds) + '.';
     } else {
       summary = state.participantName + ', kamu menyelesaikan semua level!';
     }
@@ -210,15 +225,16 @@
     logSessionEvent({
       action: 'finish',
       nama: state.participantName,
-      sesi_mulai: state.startTimeIso,
-      sesi_selesai: new Date().toISOString(),
+      sesi_mulai: state.startTimeWib,
+      sesi_selesai: formatWib(new Date()),
+      durasi: formatDuration(Math.max(elapsedSeconds, 0)),
     });
   }
 
   function resetToLanding() {
     state.participantName = null;
     state.startTime = null;
-    state.startTimeIso = null;
+    state.startTimeWib = null;
     state.solvedLevels = {};
     localStorage.removeItem(STORAGE_KEY);
     showScreen('screen-landing');

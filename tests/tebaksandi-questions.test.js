@@ -21,7 +21,7 @@ test('every question has the fields the app depends on', () => {
 });
 
 test('answerHash for each level matches the SHA-256 of its known correct answer', async () => {
-  const known = { pemula: 'enigma', ahli: 'Wdqjjxk', dewa: 'brantas' };
+  const known = { pemula: 'bukhari', ahli: 'Wdqjjxk', dewa: 'brantas' };
   for (const q of Questions) {
     const expected = await CryptoUtils.sha256Hex(CryptoUtils.normalizeAnswer(known[q.level]));
     assert.strictEqual(q.answerHash, expected);

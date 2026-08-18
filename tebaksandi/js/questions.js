@@ -8,28 +8,41 @@
   return [
     {
       level: 'pemula',
-      title: 'Sarapan yang Menggugah',
+      title: 'Suasana Pagi yang Tenang',
       image: 'img/pemula-clue.jpeg',
       imageFallback: 'img/pemula-clue.svg',
       narrativeHtml:
-        'T<b>e</b>rlihat sarapa<b>n</b> pagi in<b>i</b> yang sederhana namun ' +
-        'meng<b>g</b>ugah, karena racikan bu<b>m</b>bu rahasi<b>a</b> membuat ' +
-        'semua orang ketagihan setiap pagi.',
-      answerHash: '67a4f45f0d1d9bc606486fc42dc4941668e71d34ee500735fe9b7ea4625c687c',
+        'Em<b>b</b>un pagi mulai menetes perlahan dari ujung daun yang hijau. ' +
+        'Udara di sekitar perlahan m<b>u</b>lai menghangat seiring mentari yang ' +
+        'terbit dari ufuk timur. Di teras depan, <b>k</b>ami duduk bersantai ' +
+        'sambil menikmati secangkir teh hangat. Angin <b>h</b>alus menyapa ' +
+        'wajah dengan begitu lembut dan menyejukkan. Suasan<b>a</b> tenang ' +
+        'seperti ini rasanya sangat jarang terjadi di tengah hiruk pikuk ' +
+        'perkotaan. Bu<b>r</b>ung-burung pun saling menyahut dan berkicau ' +
+        'riang di atas dahan pohon mangga. Har<b>i</b> ini benar-benar terasa ' +
+        'sangat sempurna untuk mengawali lembaran baru.',
+      answerHash: 'c2ce6da5ea0b14958640728653049a4b0d817cf06419efe926f5f6819e9ecff7',
       explanation: {
         bukti:
-          'T<b>e</b>rlihat sarapa<b>n</b> pagi in<b>i</b> yang sederhana namun ' +
-          'meng<b>g</b>ugah, karena racikan bu<b>m</b>bu rahasi<b>a</b> membuat ' +
-          'semua orang ketagihan setiap pagi. Huruf tebal membentuk kata ' +
-          '<strong>enigma</strong>.',
+          'Em<b>b</b>un pagi mulai menetes perlahan dari ujung daun yang hijau. ' +
+          'Udara di sekitar perlahan m<b>u</b>lai menghangat seiring mentari yang ' +
+          'terbit dari ufuk timur. Di teras depan, <b>k</b>ami duduk bersantai ' +
+          'sambil menikmati secangkir teh hangat. Angin <b>h</b>alus menyapa ' +
+          'wajah dengan begitu lembut dan menyejukkan. Suasan<b>a</b> tenang ' +
+          'seperti ini rasanya sangat jarang terjadi di tengah hiruk pikuk ' +
+          'perkotaan. Bu<b>r</b>ung-burung pun saling menyahut dan berkicau ' +
+          'riang di atas dahan pohon mangga. Har<b>i</b> ini benar-benar terasa ' +
+          'sangat sempurna untuk mengawali lembaran baru. Huruf tebal membentuk ' +
+          'kata <strong>bukhari</strong>.',
         fakta: {
-          image: 'img/pemula-fakta.jpeg',
-          imageFallback: 'img/enigma-fakta.svg',
+          image: null,
+          imageFallback: null,
           text:
-            'Mesin Enigma adalah mesin enkripsi elektromekanis yang digunakan ' +
-            'militer Jerman pada Perang Dunia II. Sekutu berhasil memecahkan ' +
-            'sandinya berkat kerja Alan Turing dan tim di Bletchley Park, salah ' +
-            'satu tonggak sejarah kriptografi modern.',
+            'Teknik menyembunyikan huruf-huruf tertentu di dalam sebuah teks ' +
+            'seperti ini disebut akrostik — salah satu bentuk steganografi ' +
+            '(ilmu menyembunyikan pesan) tertua, sudah dipakai sejak zaman kuno ' +
+            'untuk menyelipkan pesan rahasia di dalam surat atau puisi tanpa ' +
+            'terlihat mencurigakan oleh siapa pun yang membacanya sekilas.',
         },
       },
     },

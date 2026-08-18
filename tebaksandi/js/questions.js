@@ -35,6 +35,41 @@
           'sangat sempurna untuk mengawali lembaran baru. Huruf tebal membentuk ' +
           'kata <strong>bukhari</strong>.',
         fakta: {
+          animationHtml:
+            '<p class="ts-cipher-caption">Huruf-huruf tersembunyi pada teks di atas, ' +
+            'jika dirangkai berurutan, membentuk kata:</p>' +
+            '<svg class="ts-reveal-anim" viewBox="0 0 600 170" xmlns="http://www.w3.org/2000/svg" ' +
+            'role="img" aria-label="Animasi huruf tersembunyi B, U, K, H, A, R, I dirangkai menjadi BUKHARI">' +
+            '<g class="ts-reveal-col" style="--col-delay:.1s">' +
+            '<rect class="ts-reveal-box" x="10" y="20" width="60" height="50" rx="8"></rect>' +
+            '<text class="ts-reveal-letter" x="40" y="52">B</text>' +
+            '</g>' +
+            '<g class="ts-reveal-col" style="--col-delay:.45s">' +
+            '<rect class="ts-reveal-box" x="94" y="20" width="60" height="50" rx="8"></rect>' +
+            '<text class="ts-reveal-letter" x="124" y="52">U</text>' +
+            '</g>' +
+            '<g class="ts-reveal-col" style="--col-delay:.8s">' +
+            '<rect class="ts-reveal-box" x="178" y="20" width="60" height="50" rx="8"></rect>' +
+            '<text class="ts-reveal-letter" x="208" y="52">K</text>' +
+            '</g>' +
+            '<g class="ts-reveal-col" style="--col-delay:1.15s">' +
+            '<rect class="ts-reveal-box" x="262" y="20" width="60" height="50" rx="8"></rect>' +
+            '<text class="ts-reveal-letter" x="292" y="52">H</text>' +
+            '</g>' +
+            '<g class="ts-reveal-col" style="--col-delay:1.5s">' +
+            '<rect class="ts-reveal-box" x="346" y="20" width="60" height="50" rx="8"></rect>' +
+            '<text class="ts-reveal-letter" x="376" y="52">A</text>' +
+            '</g>' +
+            '<g class="ts-reveal-col" style="--col-delay:1.85s">' +
+            '<rect class="ts-reveal-box" x="430" y="20" width="60" height="50" rx="8"></rect>' +
+            '<text class="ts-reveal-letter" x="460" y="52">R</text>' +
+            '</g>' +
+            '<g class="ts-reveal-col" style="--col-delay:2.2s">' +
+            '<rect class="ts-reveal-box" x="514" y="20" width="60" height="50" rx="8"></rect>' +
+            '<text class="ts-reveal-letter" x="544" y="52">I</text>' +
+            '</g>' +
+            '<text class="ts-reveal-word" x="300" y="145" style="animation-delay:2.7s">BUKHARI</text>' +
+            '</svg>',
           image: null,
           imageFallback: null,
           text:
@@ -42,7 +77,15 @@
             'seperti ini disebut akrostik — salah satu bentuk steganografi ' +
             '(ilmu menyembunyikan pesan) tertua, sudah dipakai sejak zaman kuno ' +
             'untuk menyelipkan pesan rahasia di dalam surat atau puisi tanpa ' +
-            'terlihat mencurigakan oleh siapa pun yang membacanya sekilas.',
+            'terlihat mencurigakan oleh siapa pun yang membacanya sekilas. ' +
+            'Nama yang terungkap, "Bukhari", merujuk pada Imam Bukhari ' +
+            '(Muhammad bin Ismail al-Bukhari, 810–870 M), ulama besar dalam ' +
+            'sejarah Islam yang menyusun kitab Sahih al-Bukhari — kumpulan ' +
+            'hadis (riwayat perkataan dan perbuatan Nabi Muhammad SAW) yang ' +
+            'diseleksi lewat metode verifikasi jalur periwayatan (sanad) yang ' +
+            'sangat ketat. Metode itu, memeriksa dan memastikan keaslian ' +
+            'sebuah informasi sebelum dipercaya, adalah prinsip yang juga ' +
+            'menjadi inti dari ilmu keamanan informasi modern.',
         },
       },
     },

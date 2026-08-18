@@ -318,6 +318,59 @@ button {
   to { opacity: 1; transform: scale(1); }
 }
 
+.ts-reveal-anim {
+  width: 100%;
+  max-width: 600px;
+  display: block;
+}
+
+.ts-reveal-box {
+  fill: var(--ts-bg-alt);
+  stroke: var(--ts-success);
+  stroke-width: 2;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(.5) rotate(-8deg);
+  animation: ts-reveal-pop .45s cubic-bezier(.34, 1.56, .64, 1) forwards;
+  animation-delay: var(--col-delay, 0s);
+}
+
+.ts-reveal-letter {
+  font-size: 26px;
+  font-weight: 800;
+  text-anchor: middle;
+  fill: var(--ts-success);
+  opacity: 0;
+  animation: ts-reveal-fade .3s ease forwards;
+  animation-delay: calc(var(--col-delay, 0s) + .15s);
+}
+
+.ts-reveal-word {
+  font-size: 42px;
+  font-weight: 900;
+  text-anchor: middle;
+  letter-spacing: 4px;
+  fill: var(--ts-accent);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(.7);
+  animation: ts-reveal-word-in .5s cubic-bezier(.34, 1.56, .64, 1) forwards;
+}
+
+@keyframes ts-reveal-pop {
+  to { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes ts-reveal-fade {
+  to { opacity: 1; }
+}
+
+@keyframes ts-reveal-word-in {
+  to { opacity: 1; transform: scale(1); }
+}
+
 .ts-puzzle-narrative {
   line-height: 1.7;
   font-size: 1.05rem;

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Project UAS RKS222 – Keamanan Perangkat Lunak | PSSN</title>
+<style>
+:root{
+  --pssn-blue:#0d2b6b; --pssn-darkblue:#081a45; --pssn-gold:#e8a020; --pssn-lightgold:#ffd166;
+  --bg-light:#f0f4f8; --text-dark:#1a1a2e; --shadow:0 4px 20px rgba(0,0,0,0.10); --radius:12px;
+  --c263-1:#1565c0; --c263-2:#6a1b9a; --c263-3:#00695c;
+  --accent-red:#c62828; --accent-green:#2e7d32; --accent-orange:#e67e22;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg-light);color:var(--text-dark);font-size:14.5px;line-height:1.65;padding:0 0 60px;}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;}
+
+/* HEADER */
+header{background:linear-gradient(135deg,var(--pssn-blue),var(--pssn-darkblue));color:#fff;padding:34px 20px 26px;}
+header .wrap{display:flex;flex-direction:column;gap:6px;}
+.badge{display:inline-block;background:var(--pssn-gold);color:var(--pssn-darkblue);font-weight:800;font-size:11.5px;letter-spacing:1.5px;padding:5px 14px;border-radius:20px;text-transform:uppercase;width:fit-content;margin-bottom:8px;}
+header h1{font-size:26px;font-weight:800;}
+header p.sub{color:#cfd8f2;font-size:14px;margin-top:4px;}
+.meta-row{display:flex;flex-wrap:wrap;gap:10px 24px;margin-top:14px;font-size:13px;color:#e3e8f7;}
+.meta-row span b{color:#fff;}
+
+/* CARD / SECTION */
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 26px;margin-top:22px;}
+h2.sec{color:var(--pssn-blue);font-size:19px;font-weight:800;border-bottom:3px solid var(--pssn-gold);padding-bottom:8px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+h2.sec .num{background:var(--pssn-blue);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+h3.sub{color:var(--pssn-darkblue);font-size:15.5px;font-weight:700;margin:16px 0 8px;}
+p{margin-bottom:8px;}
+ul,ol{margin:6px 0 10px 22px;}
+li{margin-bottom:5px;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;margin:10px 0 16px;font-size:13.5px;}
+th,td{border:1px solid #d7dee8;padding:8px 10px;text-align:left;vertical-align:top;}
+th{background:var(--pssn-blue);color:#fff;font-weight:700;}
+tr:nth-child(even) td{background:#f7f9fc;}
+
+/* CPMK CARDS */
+.cpmk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:10px 0 16px;}
+.cpmk-card{border-radius:10px;padding:12px 14px;color:#fff;box-shadow:var(--shadow);}
+.cpmk-card h4{font-size:13px;letter-spacing:.5px;margin-bottom:6px;}
+.cpmk-card p{font-size:12.8px;color:#eef;margin:0;}
+.c1{background:var(--c263-1);} .c2{background:var(--c263-2);} .c3{background:var(--c263-3);}
+
+/* ROLE CARDS */
+.role-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:10px 0 16px;}
+.role-card{border:2px solid var(--pssn-blue);border-radius:10px;padding:14px;background:#f8faff;}
+.role-card .role-letter{width:30px;height:30px;border-radius:50%;background:var(--pssn-gold);color:var(--pssn-darkblue);font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+.role-card h4{font-size:13.5px;color:var(--pssn-blue);margin-bottom:6px;}
+.role-card ul{margin-left:16px;font-size:12.8px;}
+
+/* TIMELINE */
+.timeline{position:relative;margin:14px 0 6px;padding-left:26px;border-left:3px solid var(--pssn-gold);}
+.tl-item{position:relative;margin-bottom:16px;}
+.tl-item::before{content:'';position:absolute;left:-32.5px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--pssn-blue);border:3px solid var(--pssn-gold);}
+.tl-item b{color:var(--pssn-blue);}
+
+/* CALLOUTS */
+.callout{border-radius:10px;padding:14px 16px;margin:14px 0;font-size:13.5px;}
+.callout.warn{background:#fff3e0;border-left:5px solid var(--accent-orange);}
+.callout.danger{background:#fdecea;border-left:5px solid var(--accent-red);}
+.callout.ok{background:#e8f5e9;border-left:5px solid var(--accent-green);}
+.callout b{display:block;margin-bottom:4px;}
+
+/* WEIGHT BAR */
+.weight-bar{display:flex;height:26px;border-radius:6px;overflow:hidden;margin:10px 0 4px;font-size:11.5px;color:#fff;font-weight:700;}
+.weight-bar div{display:flex;align-items:center;justify-content:center;}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;margin-bottom:10px;}
+.legend span{display:flex;align-items:center;gap:5px;}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block;}
+
+footer{text-align:center;color:#8a94a8;font-size:12px;margin-top:28px;}
+
+@media print{
+  body{background:#fff;}
+  .card{box-shadow:none;border:1px solid #ccc;}
+  header{background:var(--pssn-blue) !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="badge">Panduan Project · UAS</span>
+    <h1>Project UAS — Threat Modeling &amp; Uji Kerawanan Aplikasi Web</h1>
+    <p class="sub">RKS222 Keamanan Perangkat Lunak · Program Studi D4 Rekayasa Keamanan Siber · Politeknik SSN</p>
+    <div class="meta-row">
+      <span>Semester: <b>Genap 2025/2026</b></span>
+      <span>Bentuk kelompok: <b>4 orang/kelompok</b></span>
+      <span>Sub-CPMK diukur: <b>263.1, 263.2, 263.3</b> (dengan fondasi 261.1)</span>
+      <span>Durasi pengerjaan: <b>4 minggu</b></span>
+      <span>Sifat: <b>Take-home, kolaboratif</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 1. DESKRIPSI -->
+  <section class="card">
+    <h2 class="sec"><span class="num">1</span> Deskripsi Umum Project</h2>
+    <p>Setiap kelompok (4 orang) berperan sebagai <b>tim security assessment</b> yang ditugaskan mengevaluasi keamanan sebuah aplikasi web. Kelompok wajib melakukan <b>threat modeling</b>, membuktikan kerentanan nyata melalui pengujian teknis (bukan sekadar teori), menghitung tingkat risiko, lalu <b>meremediasi</b> temuan tersebut lewat perbaikan source code sesuai praktik secure coding yang telah dipelajari pada Pertemuan 9–15.</p>
+    <p>Project ini merupakan sintesis dari seluruh materi satu semester: fondasi threat modeling (STRIDE/DREAD dari Pertemuan 2) diterapkan pada konteks baru — kerentanan aplikasi web (OWASP Top 10, Pertemuan 9–10), lalu ditutup dengan siklus remediasi ala Secure SDLC (Pertemuan 11–14) dan keamanan autentikasi/otorisasi (Pertemuan 15).</p>
+  </section>
+
+  <!-- 2. TUJUAN / CPMK -->
+  <section class="card">
+    <h2 class="sec"><span class="num">2</span> Tujuan Pembelajaran (Sub-CPMK yang Dinilai)</h2>
+    <div class="cpmk-grid">
+      <div class="cpmk-card c1">
+        <h4>SUB-CPMK 263.1</h4>
+        <p>Mahasiswa mampu menganalisis kerentanan aplikasi web berdasarkan OWASP Top 10 dan merekomendasikan mitigasi sesuai standar industri.</p>
+      </div>
+      <div class="cpmk-card c2">
+        <h4>SUB-CPMK 263.2</h4>
+        <p>Mahasiswa mampu mengevaluasi keamanan autentikasi, otorisasi, dan manajemen sesi pada aplikasi web.</p>
+      </div>
+      <div class="cpmk-card c3">
+        <h4>SUB-CPMK 263.3</h4>
+        <p>Mahasiswa mampu menerapkan secure coding practices &amp; alur DevSecOps untuk meremediasi kerentanan yang ditemukan.</p>
+      </div>
+    </div>
+    <p style="font-size:13px;color:#555;"><i>Catatan:</i> kemampuan threat modeling (Sub-CPMK 261.1, materi UTS) tetap diukur secara implisit sebagai prasyarat pada tahap awal pengerjaan.</p>
+  </section>
+
+  <!-- 3. KELOMPOK & PERAN -->
+  <section class="card">
+    <h2 class="sec"><span class="num">3</span> Ketentuan Kelompok &amp; Pembagian Peran</h2>
+    <p>Kelompok terdiri dari <b>4 mahasiswa</b>. Setiap anggota memegang satu peran utama, namun <b>seluruh anggota wajib memahami dan berkontribusi pada semua tahap pengujian</b> — pembagian peran hanya menentukan penanggung jawab utama, bukan pembagian kerja eksklusif.</p>
+    <div class="role-grid">
+      <div class="role-card">
+        <div class="role-letter">A</div>
+        <h4>Threat Modeling Lead</h4>
+        <ul><li>Menyusun DFD &amp; trust boundary</li><li>Memimpin analisis STRIDE/DREAD</li><li>Menentukan prioritas target pengujian</li></ul>
+      </div>
+      <div class="role-card">
+        <div class="role-letter">B</div>
+        <h4>Web Application Security Tester</h4>
+        <ul><li>Eksekusi pengujian kerawanan web (OWASP Top 10) pada aplikasi target</li><li>Mengumpulkan bukti (PoC, screenshot, request/response)</li></ul>
+      </div>
+      <div class="role-card">
+        <div class="role-letter">C</div>
+        <h4>Secure Code Reviewer &amp; Remediator</h4>
+        <ul><li>Code review pada bagian rentan</li><li>Menulis perbaikan (patch) sesuai secure coding practice</li><li>Retest pembuktian fix</li></ul>
+      </div>
+      <div class="role-card">
+        <div class="role-letter">D</div>
+        <h4>Report &amp; Risk Analyst</h4>
+        <ul><li>Menghitung CVSS v3.1 &amp; OWASP Risk Rating</li><li>Menyusun laporan profesional</li><li>Koordinasi presentasi</li></ul>
+      </div>
+    </div>
+    <div class="callout warn">
+      <b>Kontribusi individu dinilai terpisah.</b>
+      Setiap anggota mengisi <i>lembar kontribusi</i> (form singkat berisi tugas yang dikerjakan + commit/log bukti kerja) yang dilampirkan di laporan. Kontribusi tidak seimbang akan memengaruhi nilai individu, bukan hanya nilai kelompok.
+    </div>
+  </section>
+
+  <!-- 4. TARGET APLIKASI -->
+  <section class="card">
+    <h2 class="sec"><span class="num">4</span> Target Aplikasi / Studi Kasus</h2>
+    <p>Kelompok memilih <b>salah satu</b> opsi berikut sebagai target pengujian (wajib environment lokal/lab via Docker, bukan sistem produksi):</p>
+    <table>
+      <tr><th>Opsi</th><th>Target</th><th>Keterangan</th></tr>
+      <tr><td>1</td><td>Aplikasi web rentan berbasis Docker — pilih salah satu:<br>• DVWA (Damn Vulnerable Web Application)<br>• OWASP Juice Shop<br>• bWAPP (buggy web application)<br>• OWASP Mutillidae II</td><td>Dijalankan sebagai container Docker terisolasi di mesin lokal (localhost). Ikuti panduan setup: <i>"Web Application Pentest Lab setup Using Docker"</i> — <a href="https://www.hackingarticles.in/web-application-pentest-lab-setup-using-docker/" target="_blank" rel="noopener">hackingarticles.in</a>, atau sumber sejenis</td></tr>
+      <tr><td>2</td><td>Aplikasi web buatan kelompok sendiri</td><td>Dibangun ringan (mis. Flask/Express + DB) khusus untuk project ini — harus disetujui dosen sebelum H-3 deadline</td></tr>
+    </table>
+    <p style="font-size:12.5px;color:#666;">Referensi setup lab: <a href="https://www.hackingarticles.in/web-application-pentest-lab-setup-using-docker/" target="_blank" rel="noopener">hackingarticles.in – Web Application Pentest Lab setup Using Docker</a>. Boleh menggunakan panduan Docker sejenis dari sumber lain selama target tetap aplikasi rentan yang berjalan lokal.</p>
+    <div class="callout danger">
+      <b>Batasan Etis &amp; Hukum (wajib dipatuhi)</b>
+      Pengujian <u>hanya</u> boleh dilakukan pada aplikasi milik sendiri/sandbox resmi yang berjalan di environment lokal/lab (localhost, VM, container). Dilarang keras menguji, memindai, atau mengeksploitasi sistem pihak ketiga/produksi tanpa izin tertulis — pelanggaran mengacu pada UU ITE dan dapat berakibat sanksi akademik.
+    </div>
+  </section>
+
+  <!-- 5. TAHAPAN -->
+  <section class="card">
+    <h2 class="sec"><span class="num">5</span> Ruang Lingkup &amp; Tahapan Pengerjaan</h2>
+    <h3 class="sub">Tahap 1 — Rules of Engagement (RoE)</h3>
+    <p>Kelompok menyusun dan menandatangani dokumen RoE singkat: ruang lingkup target, waktu pengujian, batasan teknik yang diizinkan, dan kontak penanggung jawab.</p>
+
+    <h3 class="sub">Tahap 2 — Threat Modeling</h3>
+    <ul>
+      <li>Buat Data Flow Diagram (DFD) level konteks untuk aplikasi target</li>
+      <li>Identifikasi trust boundary dan aset kritikal</li>
+      <li>Analisis ancaman dengan STRIDE, prioritaskan dengan DREAD</li>
+    </ul>
+
+    <h3 class="sub">Tahap 3 — Uji Kerawanan Web</h3>
+    <ul>
+      <li>Buktikan minimal <b>3 kerentanan dari kategori OWASP Top 10 Web yang berbeda</b>, contoh: Injection (SQLi/XSS), Broken Access Control/IDOR, Broken Authentication/Session Management, Sensitive Data Exposure, Security Misconfiguration</li>
+      <li>Gunakan tools yang sudah dipelajari: Burp Suite dan/atau OWASP ZAP</li>
+      <li>Dokumentasikan setiap temuan dengan bukti (request/response, screenshot, payload yang digunakan)</li>
+    </ul>
+
+    <h3 class="sub">Tahap 4 — Risk Rating</h3>
+    <p>Hitung skor <b>CVSS v3.1</b> dan <b>OWASP Risk Rating</b> untuk setiap temuan, lengkap dengan vector string dan justifikasi tiap metrik.</p>
+
+    <h3 class="sub">Tahap 5 — Code Review &amp; Remediasi</h3>
+    <ul>
+      <li>Lakukan code review pada bagian source code yang menyebabkan kerentanan</li>
+      <li>Perbaiki sesuai praktik secure coding (parameterized query, validasi input, enkripsi data, session management, autentikasi/otorisasi yang benar)</li>
+      <li>Tunjukkan perbandingan kode <b>sebelum vs sesudah</b> perbaikan (diff)</li>
+    </ul>
+
+    <h3 class="sub">Tahap 6 — Retest</h3>
+    <p>Uji ulang setiap temuan pada versi yang sudah diperbaiki untuk membuktikan kerentanan telah tertutup. Sertakan bukti retest di laporan.</p>
+  </section>
+
+  <!-- 6. DELIVERABLES -->
+  <section class="card">
+    <h2 class="sec"><span class="num">6</span> Deliverables</h2>
+    <h3 class="sub">A. Laporan Tertulis (PDF)</h3>
+    <ol>
+      <li>Cover &amp; identitas kelompok (nama, NPM, peran masing-masing)</li>
+      <li>Ringkasan Eksekutif (Executive Summary)</li>
+      <li>Rules of Engagement</li>
+      <li>Threat Model: DFD, tabel STRIDE, skor DREAD</li>
+      <li>Metodologi pengujian</li>
+      <li>Temuan kerentanan (per temuan: deskripsi, kategori OWASP, PoC, CVSS/OWASP Risk Rating)</li>
+      <li>Remediasi (code review + before/after + bukti retest)</li>
+      <li>Kesimpulan &amp; rekomendasi lanjutan</li>
+      <li>Lampiran: lembar kontribusi individu, RoE bertanda tangan</li>
+    </ol>
+    <h3 class="sub">B. Source Code / PoC (Repository .zip atau tautan Git)</h3>
+    <ul>
+      <li><code>/vulnerable-version</code> — kode asli sebelum perbaikan</li>
+      <li><code>/remediated-version</code> — kode setelah perbaikan</li>
+      <li><code>/poc</code> — script/payload pembuktian tiap temuan</li>
+      <li><code>/evidence</code> — screenshot, capture request-response</li>
+    </ul>
+    <h3 class="sub">C. Presentasi &amp; Demo</h3>
+    <p>Durasi ±15 menit/kelompok: pemaparan threat model, demo live exploit pada versi rentan, demo pembuktian fix pada versi remediasi, dilanjutkan sesi tanya-jawab.</p>
+  </section>
+
+  <!-- 7. TIMELINE -->
+  <section class="card">
+    <h2 class="sec"><span class="num">7</span> Timeline Pengerjaan</h2>
+    <p style="font-size:12.5px;color:#666;">*Sesuaikan tanggal dengan kalender akademik final; kerangka minggu berikut sebagai acuan. Total durasi: <b>4 minggu</b>.</p>
+    <div class="timeline">
+      <div class="tl-item"><b>Minggu 1:</b> Pengumuman project, pembentukan kelompok, pemilihan &amp; setup target aplikasi (Docker), penyusunan RoE, threat modeling (DFD, STRIDE, DREAD) — asistensi dengan dosen</div>
+      <div class="tl-item"><b>Minggu 2:</b> Pengujian kerawanan web, pengumpulan bukti PoC (minimal 3 kategori berbeda)</div>
+      <div class="tl-item"><b>Minggu 3:</b> Risk rating (CVSS/OWASP), code review, dan proses remediasi — asistensi dengan dosen</div>
+      <div class="tl-item"><b>Minggu 4:</b> Retest, finalisasi laporan &amp; slide, pengumpulan laporan + repo, sesi presentasi &amp; demo di kelas</div>
+    </div>
+  </section>
+
+  <!-- 8. RUBRIK -->
+  <section class="card">
+    <h2 class="sec"><span class="num">8</span> Rubrik Penilaian</h2>
+    <div class="weight-bar">
+      <div style="width:20%;background:#1565c0;">20%</div>
+      <div style="width:30%;background:#c62828;">30%</div>
+      <div style="width:15%;background:#e67e22;">15%</div>
+      <div style="width:20%;background:#00695c;">20%</div>
+      <div style="width:15%;background:#6a1b9a;">15%</div>
+    </div>
+    <div class="legend">
+      <span><i style="background:#1565c0;"></i>Threat Modeling</span>
+      <span><i style="background:#c62828;"></i>Pengujian &amp; Bukti PoC</span>
+      <span><i style="background:#e67e22;"></i>Risk Rating (CVSS/OWASP)</span>
+      <span><i style="background:#00695c;"></i>Remediasi &amp; Retest</span>
+      <span><i style="background:#6a1b9a;"></i>Laporan &amp; Presentasi</span>
+    </div>
+    <table>
+      <tr><th>Komponen</th><th>Bobot</th><th>Sub-CPMK</th><th>Indikator Penilaian</th></tr>
+      <tr><td>Threat Modeling</td><td>20%</td><td>261.1 (fondasi)</td><td>DFD lengkap &amp; benar, klasifikasi STRIDE tepat, skor DREAD terjustifikasi</td></tr>
+      <tr><td>Pengujian &amp; Bukti PoC</td><td>30%</td><td>263.1, 263.2</td><td>Minimal 3 kategori kerentanan berbeda dibuktikan nyata dengan evidence lengkap</td></tr>
+      <tr><td>Risk Rating</td><td>15%</td><td>263.1, 263.2</td><td>Vector string CVSS benar, justifikasi tiap metrik logis</td></tr>
+      <tr><td>Remediasi &amp; Retest</td><td>20%</td><td>263.3</td><td>Perbaikan kode sesuai secure coding practice, retest membuktikan fix berhasil</td></tr>
+      <tr><td>Laporan &amp; Presentasi</td><td>15%</td><td>Semua</td><td>Struktur profesional, kejelasan pemaparan, penguasaan materi saat tanya-jawab</td></tr>
+    </table>
+  </section>
+
+  <!-- 9. ETIKA -->
+  <section class="card">
+    <h2 class="sec"><span class="num">9</span> Ketentuan Teknis, Etika &amp; Integritas</h2>
+    <ul>
+      <li>Seluruh pengujian wajib dilakukan pada environment lokal/lab yang telah disepakati dalam RoE.</li>
+      <li>Dilarang menyalin laporan/kode antar kelompok — kemiripan tinggi akan diperiksa dan berakibat sanksi akademik.</li>
+      <li>Penggunaan tools otomatis (scanner) diperbolehkan sebagai pendukung, namun setiap temuan wajib diverifikasi &amp; dibuktikan manual.</li>
+      <li>Screenshot/PoC harus menunjukkan identitas kelompok (mis. watermark/terminal prompt) sebagai bukti orisinalitas pengerjaan.</li>
+    </ul>
+    <div class="callout ok">
+      <b>Konsultasi</b>
+      Setiap kelompok wajib melakukan minimal 2 kali sesi asistensi (Minggu 1 dan Minggu 3) untuk memastikan arah pengerjaan sesuai target pembelajaran.
+    </div>
+  </section>
+
+  <!-- 10. PENGUMPULAN -->
+  <section class="card">
+    <h2 class="sec"><span class="num">10</span> Format Pengumpulan</h2>
+    <table>
+      <tr><th>Item</th><th>Format</th><th>Nama File</th></tr>
+      <tr><td>Laporan</td><td>PDF</td><td>UAS_RKS222_Kelompok[No]_Laporan.pdf</td></tr>
+      <tr><td>Source code/PoC</td><td>.zip atau tautan repositori Git</td><td>UAS_RKS222_Kelompok[No]_Repo.zip</td></tr>
+      <tr><td>Slide presentasi</td><td>PDF/PPTX</td><td>UAS_RKS222_Kelompok[No]_Slide.pdf</td></tr>
+    </table>
+    <p>Semua berkas dikumpulkan melalui platform yang ditentukan dosen paling lambat sesuai tenggat pada Minggu 4 (pukul 23.59 WIB), sebelum sesi presentasi.</p>
+  </section>
+
+  <footer>RKS222 Keamanan Perangkat Lunak · Program Studi D4 Rekayasa Keamanan Siber · Politeknik SSN · Semester Genap 2025/2026</footer>
+</div>
+</body>
+</html>
